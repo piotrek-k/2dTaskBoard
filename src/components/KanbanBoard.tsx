@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
-import { Column } from '../types';
+import { Column, Id } from '../types';
+import ColumnContainer from './ColumnContainer';
 
 function KanbanBoard() {
     const [columns, setColumns] = useState<Column[]>([]);
@@ -19,7 +20,11 @@ function KanbanBoard() {
             <div className="m-auto flex gap-2">
                 <div className='flex gap-4'>
                     {columns.map((col) => (
-                        <div>{col.title}</div>
+                        <ColumnContainer 
+                            key={col.id}
+                            column={col}
+                            deleteColumn={deleteColumn} 
+                        />
                     ))}
                 </div>
                 <button
@@ -42,7 +47,7 @@ function KanbanBoard() {
                 gap-2
                 "
                 >
-                    <PlusIcon/>
+                    <PlusIcon />
                     Add Columns
                 </button>
             </div>
@@ -57,9 +62,14 @@ function KanbanBoard() {
 
         setColumns([...columns, columnToAdd]);
     }
+
+    function deleteColumn(id: Id) {
+        const filteredColumns = columns.filter((col) => col.id !== id);
+        setColumns(filteredColumns);
+    }
 }
 
-function generateId(){
+function generateId() {
     return Math.floor(Math.random() * 10001)
 }
 
