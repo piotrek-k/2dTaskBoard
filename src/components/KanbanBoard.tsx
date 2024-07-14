@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
-import { Column, Id } from '../types';
+import { Column, Id, Task } from '../types';
 import ColumnContainer from './ColumnContainer';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
@@ -9,6 +9,8 @@ import { createPortal } from 'react-dom';
 function KanbanBoard() {
     const [columns, setColumns] = useState<Column[]>([]);
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
+
+    const [tasks, setTasks] = useState<Task[]>([]);
 
     const [activeColumn, setActiveColumn] = useState<Column | null>(null);
 
@@ -42,6 +44,9 @@ function KanbanBoard() {
                                     column={col}
                                     deleteColumn={deleteColumn}
                                     updateColumn={updateColumn}
+                                    createTask={createTask}
+                                    deleteTask={deleteTask}
+                                    tasks={tasks.filter(task => task.columnId === col.id)}
                                 />
                             ))}
                         </SortableContext>
@@ -77,6 +82,10 @@ function KanbanBoard() {
                             <ColumnContainer
                                 column={activeColumn}
                                 deleteColumn={deleteColumn}
+                                updateColumn={updateColumn}
+                                createTask={createTask}
+                                deleteTask={deleteTask}
+                                tasks={tasks.filter(task => task.columnId === activeColumn.id)}
                             />
                         )}
                     </DragOverlay>,
@@ -85,6 +94,21 @@ function KanbanBoard() {
             </DndContext>
         </div>
     )
+
+    function createTask(columnId: Id) {
+        const newTask: Task = {
+            id: generateId(),
+            columnId,
+            content: `Task ${tasks.length + 1}`
+        };
+
+        setTasks([...tasks, newTask]);
+    }
+
+    function deleteTask(id: Id) {
+        const filteredTasks = tasks.filter((task) => task.id !== id);
+        setTasks(filteredTasks);
+    }
 
     function createNewColumn() {
         const columnToAdd: Column = {
@@ -100,9 +124,9 @@ function KanbanBoard() {
         setColumns(filteredColumns);
     }
 
-    function updateColumn(id: Id, title: string){
+    function updateColumn(id: Id, title: string) {
         const newColumns = columns.map(col => {
-            if(col.id !== id) return col;
+            if (col.id !== id) return col;
             return { ...col, title };
         });
 
