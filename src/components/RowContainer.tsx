@@ -9,12 +9,16 @@ import TaskCard from './TaskCard';
 
 interface Props {
     row: Row;
+    columns: Column[];
+
+    deleteColumn: (id: Id) => void;
+    updateColumn: (id: Id, title: string) => void;
 }
 
 function RowContainer(props: Props) {
-    const { row } = props;
+    const { row, columns, deleteColumn, updateColumn } = props;
 
-    const [columns, setColumns] = useState<Column[]>([]);
+    
     const [rows, setRows] = useState<Row[]>();
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
@@ -66,29 +70,6 @@ function RowContainer(props: Props) {
                             ))}
                         </SortableContext>
                     </div>
-                    <button
-                        onClick={() => {
-                            createNewColumn();
-                        }}
-                        className="
-                h-[60px]
-                w-[350px]
-                min-w-[350px]
-                cursor-pointer
-                rounded-lg
-                bg-mainBackgroundColor
-                border-2
-                border-columnBackgroundColor
-                p-4
-                ring-rose-500
-                hover:ring-2
-                flex
-                gap-2
-                "
-                    >
-                        <PlusIcon />
-                        Add Columns
-                    </button>
                 </div>
 
                 {createPortal(
@@ -144,32 +125,6 @@ function RowContainer(props: Props) {
         setTasks(newTasks);
     }
 
-    function createNewColumn() {
-        const columnToAdd: Column = {
-            id: generateId(),
-            title: `Column ${columns.length + 1}`,
-        };
-
-        setColumns([...columns, columnToAdd]);
-    }
-
-    function deleteColumn(id: Id) {
-        const filteredColumns = columns.filter((col) => col.id !== id);
-        setColumns(filteredColumns);
-
-        const newTasks = tasks.filter(t => t.columnId !== id);
-        setTasks(newTasks);
-    }
-
-    function updateColumn(id: Id, title: string) {
-        const newColumns = columns.map(col => {
-            if (col.id !== id) return col;
-            return { ...col, title };
-        });
-
-        setColumns(newColumns);
-    }
-
     function onDragStart(event: DragStartEvent) {
         if (event.active.data.current?.type === "Column") {
             setActiveColumn(event.active.data.current.column);
@@ -194,17 +149,17 @@ function RowContainer(props: Props) {
 
         if (activeColumnId === overColumnId) return;
 
-        setColumns((columns) => {
-            const activeColumnIndex = columns.findIndex(
-                (col) => col.id === activeColumnId
-            );
+        // setColumns((columns) => {
+        //     const activeColumnIndex = columns.findIndex(
+        //         (col) => col.id === activeColumnId
+        //     );
 
-            const overColumnIndex = columns.findIndex(
-                (col) => col.id === overColumnId
-            );
+        //     const overColumnIndex = columns.findIndex(
+        //         (col) => col.id === overColumnId
+        //     );
 
-            return arrayMove(columns, activeColumnIndex, overColumnIndex);
-        });
+        //     return arrayMove(columns, activeColumnIndex, overColumnIndex);
+        // });
     }
 
     function onDragOver(event: DragOverEvent) {

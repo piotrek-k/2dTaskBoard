@@ -11,6 +11,7 @@ import RowContainer from './RowContainer';
 function KanbanBoard() {
     const [rows, setRows] = useState<Row[]>([]);
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
+    const [columns, setColumns] = useState<Column[]>([]);
 
     const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -41,6 +42,9 @@ function KanbanBoard() {
                             {rows.map((row) => (
                                 <RowContainer
                                     row={row}
+                                    columns={columns}
+                                    deleteColumn={deleteColumn}
+                                    updateColumn={updateColumn}
                                 />
                             ))}
                         </SortableContext>
@@ -55,6 +59,17 @@ function KanbanBoard() {
                     >
                         <PlusIcon />
                         Add Row
+                    </button>
+                    <button
+                        onClick={() => {
+                            createNewColumn();
+                        }}
+                        className="
+                            flex
+                            "
+                    >
+                        <PlusIcon />
+                        Add Columns
                     </button>
                 </div>
             </DndContext>
@@ -80,6 +95,32 @@ function KanbanBoard() {
         };
 
         setRows([...rows, rowToAdd]);
+    }
+
+    function createNewColumn() {
+        const columnToAdd: Column = {
+            id: generateId(),
+            title: `Column ${columns.length + 1}`,
+        };
+
+        setColumns([...columns, columnToAdd]);
+    }
+
+    function deleteColumn(id: Id) {
+        const filteredColumns = columns.filter((col) => col.id !== id);
+        setColumns(filteredColumns);
+
+        const newTasks = tasks.filter(t => t.columnId !== id);
+        setTasks(newTasks);
+    }
+
+    function updateColumn(id: Id, title: string) {
+        const newColumns = columns.map(col => {
+            if (col.id !== id) return col;
+            return { ...col, title };
+        });
+
+        setColumns(newColumns);
     }
 }
 
