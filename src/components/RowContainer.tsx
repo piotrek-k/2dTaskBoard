@@ -53,7 +53,7 @@ function RowContainer(props: Props) {
                 onDragEnd={onDragEnd}
                 onDragOver={onDragOver}>
                 <div className='flex w-full'>
-                    <RowDetails />
+                    <RowDetails name={row.title} />
                     <SortableContext items={columnsId}>
                         <div className='flex grow w-full'>
                             {columns.map((col) => (

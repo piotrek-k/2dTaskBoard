@@ -94,7 +94,7 @@ function KanbanBoard() {
     function createNewRow() {
         const rowToAdd: Row = {
             id: generateId(),
-            title: `Column ${rows.length + 1}`,
+            title: `Row ${rows.length + 1}`,
         };
 
         setRows([...rows, rowToAdd]);
