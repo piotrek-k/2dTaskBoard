@@ -48,7 +48,7 @@ function ColumnContainer(props: Props) {
             opacity-60
             border-2
             border-rose-500
-            w-[350px]
+            grow
             h-[500px]
             max-h-[500px]
             rounded-md
@@ -63,11 +63,10 @@ function ColumnContainer(props: Props) {
             style={style}
             className="
             bg-columnBackgroundColor
-            w-[350px]
-            h-[500px]
-            max-h-[500px]
+            min-h-[200px]
             flex
             flex-col
+            grow
             ">
             {/* Column title */}
             {/* <div

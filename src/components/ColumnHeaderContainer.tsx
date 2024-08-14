@@ -12,15 +12,18 @@ function ColumnHeaderContainer(props: Props) {
             w-full 
             items-center
             overflow-x-auto
-            overflow-y-hidden
-            px-[40px]'>
-                <div className='flex'>
-                    {headerNames.map((headerName) => (
-                        <div className="
+            overflow-y-hidden'>
+            <div className='flex flex-row w-full'>
+                <div className='w-[200px] flex-none'
+                >
+
+                </div>
+                <div className='flex grow'>
+                {headerNames.map((headerName) => (
+                    <div className="
                         bg-mainBackgroundColor
                         text-md
                         h-[60px]
-                        w-[350px]
                         cursor-grab
                         p-3
                         font-bold
@@ -28,11 +31,13 @@ function ColumnHeaderContainer(props: Props) {
                         flex
                         items-center
                         justify-between
+                        grow
                         ">
-                            {headerName}
-                        </div>
-                    ))}
+                        {headerName}
+                    </div>
+                ))}
                 </div>
+            </div>
         </div>
     )
 }

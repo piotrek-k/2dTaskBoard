@@ -81,7 +81,7 @@ function TaskCard({ task, deleteTask, updateTask }: Props) {
             onClick={toggleEditMode}
             className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
         items-center flex text-left rounded-xl hover-ring-2 hover:ring-inset
-        hover:ring-rose-500 relative task'
+        hover:ring-rose-500 relative task m-1'
             onMouseEnter={() => setMouseIsOver(true)}
             onMouseLeave={() => setMouseIsOver(false)}
         >
