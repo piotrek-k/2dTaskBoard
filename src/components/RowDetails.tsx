@@ -1,10 +1,16 @@
 import React from 'react'
 
-function RowDetails() {
+interface Props {
+    name: string;
+}
+
+function RowDetails(props: Props) {
+    const {name} = props;
+
     return (
         <div className='w-[200px] flex-none'
         >
-            RowDetails
+            {name}
         </div>
     )
 }
