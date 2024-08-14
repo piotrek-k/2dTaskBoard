@@ -6,6 +6,7 @@ import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, P
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
+import RowDetails from './RowDetails';
 
 interface Props {
     row: Row;
@@ -18,7 +19,7 @@ interface Props {
 function RowContainer(props: Props) {
     const { row, columns, deleteColumn, updateColumn } = props;
 
-    
+
     const [rows, setRows] = useState<Row[]>();
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
@@ -45,16 +46,16 @@ function RowContainer(props: Props) {
             items-center
             overflow-x-auto
             overflow-y-hidden
-            px-[40px]
             ">
             <DndContext
                 sensors={sensors}
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
                 onDragOver={onDragOver}>
-                <div className="m-auto flex gap-2">
-                    <div className='flex'>
-                        <SortableContext items={columnsId}>
+                <div className='flex w-full'>
+                    <RowDetails />
+                    <SortableContext items={columnsId}>
+                        <div className='flex grow w-full'>
                             {columns.map((col) => (
                                 <ColumnContainer
                                     key={col.id}
@@ -68,8 +69,8 @@ function RowContainer(props: Props) {
                                     tasks={tasks.filter(task => task.columnId === col.id)}
                                 />
                             ))}
-                        </SortableContext>
-                    </div>
+                        </div>
+                    </SortableContext>
                 </div>
 
                 {createPortal(

@@ -36,7 +36,7 @@ function KanbanBoard() {
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
                 onDragOver={onDragOver}>
-                <div className="m-auto flex gap-2  flex-col">
+                <div className="m-auto flex gap-2  flex-col w-[100vw]">
                     <div className='flex flex-col'>
                         <SortableContext items={rowsId}>
                             <ColumnHeaderContainer
