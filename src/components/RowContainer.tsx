@@ -53,7 +53,7 @@ function RowContainer(props: Props) {
                 onDragEnd={onDragEnd}
                 onDragOver={onDragOver}>
                 <div className="m-auto flex gap-2">
-                    <div className='flex gap-4'>
+                    <div className='flex'>
                         <SortableContext items={columnsId}>
                             {columns.map((col) => (
                                 <ColumnContainer

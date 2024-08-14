@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
 import { Column, Id, Row, Task } from '../types';
-import ColumnContainer from './ColumnContainer';
-import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext } from '@dnd-kit/sortable';
-import { createPortal } from 'react-dom';
-import TaskCard from './TaskCard';
+import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
+import ColumnHeaderContainer from './ColumnHeaderContainer';
 
 function KanbanBoard() {
     const [rows, setRows] = useState<Row[]>([]);
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
+   
     const [columns, setColumns] = useState<Column[]>([]);
+    const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
     const [tasks, setTasks] = useState<Task[]>([]);
 
@@ -39,6 +39,9 @@ function KanbanBoard() {
                 <div className="m-auto flex gap-2  flex-col">
                     <div className='flex flex-col'>
                         <SortableContext items={rowsId}>
+                            <ColumnHeaderContainer
+                                headerNames={headerNames}
+                            />
                             {rows.map((row) => (
                                 <RowContainer
                                     row={row}

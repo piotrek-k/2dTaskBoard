@@ -66,12 +66,11 @@ function ColumnContainer(props: Props) {
             w-[350px]
             h-[500px]
             max-h-[500px]
-            rounded-md
             flex
             flex-col
             ">
             {/* Column title */}
-            <div
+            {/* <div
                 {...attributes}
                 {...listeners}
                 onClick={() => {
@@ -137,10 +136,10 @@ function ColumnContainer(props: Props) {
                 >
                     <TrashIcon />
                 </button>
-            </div>
+            </div> */}
 
             {/* Tasks container */}
-            <div className="flex flex-grow flex-col gap-4 p-2 overflow-x-hidden overflow-y-auto">
+            <div className="flex flex-grow flex-col p-2 overflow-x-hidden overflow-y-auto">
                 <SortableContext items={tasksIds}>
                     {tasks.map((task) => (
                         <TaskCard key={task.id} task={task} deleteTask={deleteTask} updateTask={updateTask} />
