@@ -1,6 +1,6 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import TrashIcon from "../icons/TrashIcon";
-import { Column, Id, Task } from "../types"
+import { Column, Id, Row, Task } from "../types"
 import { CSS } from "@dnd-kit/utilities";
 import { useMemo, useState } from "react";
 import PlusIcon from "../icons/PlusIcon";
@@ -8,17 +8,18 @@ import TaskCard from "./TaskCard";
 
 interface Props {
     column: Column;
+    row: Row;
     deleteColumn: (id: Id) => void;
     updateColumn: (id: Id, title: string) => void;
 
-    createTask: (columnId: Id) => void;
+    createTask: (columnId: Id, rowId: Id) => void;
     deleteTask: (id: Id) => void;
     updateTask: (id: Id, content: string) => void;
     tasks: Task[];
 }
 
 function ColumnContainer(props: Props) {
-    const { column, deleteColumn, updateColumn, createTask, deleteTask, updateTask, tasks } = props;
+    const { column, row, deleteColumn, updateColumn, createTask, deleteTask, updateTask, tasks } = props;
 
     const [editMode, setEditMode] = useState(false);
 
@@ -154,7 +155,7 @@ function ColumnContainer(props: Props) {
             hover:bg-mainBackgroundColor hover:text-rose-500
             active:bg-black"
                 onClick={() => {
-                    createTask(column.id)
+                    createTask(column.id, row.id)
                 }}>
                 <PlusIcon />
                 Add Task
