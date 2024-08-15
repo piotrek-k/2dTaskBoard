@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
 import { Column, Id, Row, Task } from '../types';
 import ColumnContainer from './ColumnContainer';
@@ -7,6 +7,7 @@ import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
 import RowDetails from './RowDetails';
+import ModalContext, { ModalContextProps } from './modal/ModalContext';
 
 interface Props {
     row: Row;
@@ -33,6 +34,13 @@ function RowContainer(props: Props) {
     const [activeRow, setActiveRow] = useState<Row | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
+    const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
+
+    const handleClickOnRowDetails = () => {
+        setModalContent(<RowDetails />);
+        setModalOpen(true);
+    };
+
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -58,7 +66,8 @@ function RowContainer(props: Props) {
                 onDragOver={onDragOver}>
                 <div className='flex w-full'>
                     <div className='w-[200px] flex-none' onClick={() => {
-                        rowDescriptionClicked(row.id);
+                        // rowDescriptionClicked(row.id);
+                        handleClickOnRowDetails();
                     }}
                     >
                         {row.title}

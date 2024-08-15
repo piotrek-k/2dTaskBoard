@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import TrashIcon from '../icons/TrashIcon';
 import { Id, Task } from '../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import ModalContext, { ModalContextProps } from './modal/ModalContext';
+import TaskDetails from './TaskDetails';
 
 interface Props {
     task: Task;
@@ -15,6 +17,13 @@ interface Props {
 function TaskCard({ task, deleteTask, updateTask, showTaskDetails }: Props) {
     const [mouseIsOver, setMouseIsOver] = useState(false);
     const [editMode, setEditMode] = useState(false);
+
+    const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
+
+    const handleClickOnTask = (id: Id) => {
+        setModalContent(<TaskDetails />);
+        setModalOpen(true);
+    };
 
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: task.id,
@@ -80,7 +89,7 @@ function TaskCard({ task, deleteTask, updateTask, showTaskDetails }: Props) {
             style={style}
             {...attributes}
             {...listeners}
-            onClick={() => showTaskDetails(task.id)}
+            onClick={() => handleClickOnTask(task.id)}
             className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
         items-center flex text-left rounded-xl hover-ring-2 hover:ring-inset
         hover:ring-rose-500 relative task m-1'

@@ -1,6 +1,8 @@
 import ReactModal from 'react-modal';
 import './App.css'
 import KanbanBoard from './components/KanbanBoard'
+import ModalComponent from './components/modal/ModalComponent';
+import { ModalProvider } from './components/modal/ModalProvider';
 
 ReactModal.setAppElement('#root');
 if (ReactModal.defaultStyles.content) {
@@ -9,7 +11,12 @@ if (ReactModal.defaultStyles.content) {
 
 function App() {
   return (
-    <KanbanBoard></KanbanBoard>
+    <>
+      <ModalProvider>
+        <KanbanBoard></KanbanBoard>
+        <ModalComponent />
+      </ModalProvider>
+    </>
   )
 }
 
