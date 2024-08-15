@@ -5,9 +5,6 @@ import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, PointerSensor,
 import { SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
-import ReactModal from 'react-modal';
-import RowDetails from './RowDetails';
-import TaskDetails from './TaskDetails';
 
 enum ModalState {
     Hidden,
@@ -88,24 +85,6 @@ function KanbanBoard() {
                         <PlusIcon />
                         Add Columns
                     </button>
-
-                    <ReactModal
-                        isOpen={displayModal}
-                        shouldCloseOnOverlayClick={true}
-                        onRequestClose={handleCloseModal}
-                    >
-                        {modalState === ModalState.EditRowDescription &&
-                            <RowDetails />
-                        }
-
-                        {modalState === ModalState.EditTask &&
-                            <TaskDetails />
-                        }
-
-                        <p>
-                            <button onClick={handleCloseModal}>Close Modal</button>
-                        </p>
-                    </ReactModal>
                 </div>
             </DndContext>
         </div>
@@ -123,7 +102,7 @@ function KanbanBoard() {
 
     }
 
-    function handleCloseModal(event): void {
+    function handleCloseModal(): void {
         setModalState(ModalState.Hidden);
     }
 
