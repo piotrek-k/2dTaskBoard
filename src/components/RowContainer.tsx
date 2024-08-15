@@ -14,10 +14,14 @@ interface Props {
 
     deleteColumn: (id: Id) => void;
     updateColumn: (id: Id, title: string) => void;
+
+    rowDescriptionClicked: (id: Id) => void;
+
+    showTaskDetails: (id: Id) => void;
 }
 
 function RowContainer(props: Props) {
-    const { row, columns, deleteColumn, updateColumn } = props;
+    const { row, columns, deleteColumn, updateColumn, rowDescriptionClicked, showTaskDetails } = props;
 
 
     const [rows, setRows] = useState<Row[]>();
@@ -53,7 +57,13 @@ function RowContainer(props: Props) {
                 onDragEnd={onDragEnd}
                 onDragOver={onDragOver}>
                 <div className='flex w-full'>
-                    <RowDetails name={row.title} />
+                    <div className='w-[200px] flex-none' onClick={() => {
+                        rowDescriptionClicked(row.id);
+                    }}
+                    >
+                        {row.title}
+                    </div>
+
                     <SortableContext items={columnsId}>
                         <div className='flex grow w-full'>
                             {columns.map((col) => (
@@ -67,6 +77,7 @@ function RowContainer(props: Props) {
                                     deleteTask={deleteTask}
                                     updateTask={updateTask}
                                     tasks={tasks.filter(task => task.columnId === col.id)}
+                                    showTaskDetails={showTaskDetails}
                                 />
                             ))}
                         </div>
@@ -85,6 +96,7 @@ function RowContainer(props: Props) {
                                 deleteTask={deleteTask}
                                 updateTask={updateTask}
                                 tasks={tasks.filter(task => task.columnId === activeColumn.id)}
+                                showTaskDetails={showTaskDetails}
                             />
                         )}
                         {
@@ -92,6 +104,7 @@ function RowContainer(props: Props) {
                                 task={activeTask}
                                 deleteTask={deleteTask}
                                 updateTask={updateTask}
+                                showTaskDetails={showTaskDetails}
                             />
                         }
                     </DragOverlay>,

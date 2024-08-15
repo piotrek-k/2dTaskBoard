@@ -5,15 +5,26 @@ import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, PointerSensor,
 import { SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
+import ReactModal from 'react-modal';
+import RowDetails from './RowDetails';
+import TaskDetails from './TaskDetails';
+
+enum ModalState {
+    Hidden,
+    EditRowDescription,
+    EditTask
+}
 
 function KanbanBoard() {
     const [rows, setRows] = useState<Row[]>([]);
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
-   
+
     const [columns, setColumns] = useState<Column[]>([]);
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [modalState, setModalState] = useState<ModalState>(ModalState.Hidden);
+    const displayModal = useMemo(() => modalState !== ModalState.Hidden, [modalState]);
 
     const [activeColumn, setActiveColumn] = useState<Column | null>(null);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -48,6 +59,8 @@ function KanbanBoard() {
                                     columns={columns}
                                     deleteColumn={deleteColumn}
                                     updateColumn={updateColumn}
+                                    rowDescriptionClicked={editRowDescription}
+                                    showTaskDetails={showTaskDetails}
                                 />
                             ))}
                         </SortableContext>
@@ -74,6 +87,24 @@ function KanbanBoard() {
                         <PlusIcon />
                         Add Columns
                     </button>
+
+                    <ReactModal
+                        isOpen={displayModal}
+                        shouldCloseOnOverlayClick={true}
+                        onRequestClose={handleCloseModal}
+                    >
+                        {modalState === ModalState.EditRowDescription &&
+                            <RowDetails />
+                        }
+
+                        {modalState === ModalState.EditTask &&
+                            <TaskDetails />
+                        }
+
+                        <p>
+                            <button onClick={handleCloseModal}>Close Modal</button>
+                        </p>
+                    </ReactModal>
                 </div>
             </DndContext>
         </div>
@@ -89,6 +120,19 @@ function KanbanBoard() {
 
     function onDragOver(event: DragOverEvent) {
 
+    }
+
+    function handleCloseModal(event): void {
+        setModalState(ModalState.Hidden);
+    }
+
+    function editRowDescription() {
+        setModalState(ModalState.EditRowDescription);
+    }
+
+    function showTaskDetails(id: Id) {
+        setModalState(ModalState.EditTask);
+        console.log(id);
     }
 
     function createNewRow() {
