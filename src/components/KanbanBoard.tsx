@@ -49,12 +49,13 @@ function KanbanBoard() {
                 onDragOver={onDragOver}>
                 <div className="m-auto flex gap-2  flex-col w-[100vw]">
                     <div className='flex flex-col'>
+                        <ColumnHeaderContainer
+                            headerNames={headerNames}
+                        />
                         <SortableContext items={rowsId}>
-                            <ColumnHeaderContainer
-                                headerNames={headerNames}
-                            />
                             {rows.map((row) => (
                                 <RowContainer
+                                    key={row.id}
                                     row={row}
                                     columns={columns}
                                     deleteColumn={deleteColumn}

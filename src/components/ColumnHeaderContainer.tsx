@@ -20,7 +20,9 @@ function ColumnHeaderContainer(props: Props) {
                 </div>
                 <div className='flex grow'>
                 {headerNames.map((headerName) => (
-                    <div className="
+                    <div
+                        key={headerName} 
+                        className="
                         bg-mainBackgroundColor
                         text-md
                         h-[60px]
