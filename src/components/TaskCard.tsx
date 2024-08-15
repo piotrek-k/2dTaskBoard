@@ -8,9 +8,11 @@ interface Props {
     task: Task;
     deleteTask: (id: Id) => void;
     updateTask: (id: Id, content: string) => void;
+
+    showTaskDetails: (id: Id) => void;
 }
 
-function TaskCard({ task, deleteTask, updateTask }: Props) {
+function TaskCard({ task, deleteTask, updateTask, showTaskDetails }: Props) {
     const [mouseIsOver, setMouseIsOver] = useState(false);
     const [editMode, setEditMode] = useState(false);
 
@@ -43,34 +45,34 @@ function TaskCard({ task, deleteTask, updateTask }: Props) {
         </div>;
     }
 
-    if (editMode) {
-        return <div
-            ref={setNodeRef}
-            style={style}
-            {...attributes}
-            {...listeners}
-            className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
-    items-center flex text-left rounded-xl hover-ring-2 hover:ring-inset
-    hover:ring-rose-500 relative'
-        >
-            <textarea className="
-            h-[90%]
-            w-full resize-none border-none rounded bg-transparent
-            text-white focus:outline-none
-            "
-                value={task.content}
-                autoFocus
-                placeholder="Task content here"
-                onBlur={toggleEditMode}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter" && e.shiftKey) {
-                        toggleEditMode();
-                    }
-                }}
-                onChange={(e) => updateTask(task.id, e.target.value)}
-            ></textarea>
-        </div>
-    }
+    // if (editMode) {
+    //     return <div
+    //         ref={setNodeRef}
+    //         style={style}
+    //         {...attributes}
+    //         {...listeners}
+    //         className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
+    // items-center flex text-left rounded-xl hover-ring-2 hover:ring-inset
+    // hover:ring-rose-500 relative'
+    //     >
+    //         <textarea className="
+    //         h-[90%]
+    //         w-full resize-none border-none rounded bg-transparent
+    //         text-white focus:outline-none
+    //         "
+    //             value={task.content}
+    //             autoFocus
+    //             placeholder="Task content here"
+    //             onBlur={toggleEditMode}
+    //             onKeyDown={(e) => {
+    //                 if (e.key === "Enter" && e.shiftKey) {
+    //                     toggleEditMode();
+    //                 }
+    //             }}
+    //             onChange={(e) => updateTask(task.id, e.target.value)}
+    //         ></textarea>
+    //     </div>
+    // }
 
     return (
         <div
@@ -78,7 +80,7 @@ function TaskCard({ task, deleteTask, updateTask }: Props) {
             style={style}
             {...attributes}
             {...listeners}
-            onClick={toggleEditMode}
+            onClick={() => showTaskDetails(task.id)}
             className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
         items-center flex text-left rounded-xl hover-ring-2 hover:ring-inset
         hover:ring-rose-500 relative task m-1'

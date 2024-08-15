@@ -16,10 +16,12 @@ interface Props {
     deleteTask: (id: Id) => void;
     updateTask: (id: Id, content: string) => void;
     tasks: Task[];
+
+    showTaskDetails: (id: Id) => void;
 }
 
 function ColumnContainer(props: Props) {
-    const { column, row, deleteColumn, updateColumn, createTask, deleteTask, updateTask, tasks } = props;
+    const { column, row, deleteColumn, updateColumn, createTask, deleteTask, updateTask, tasks, showTaskDetails } = props;
 
     const [editMode, setEditMode] = useState(false);
 
@@ -141,7 +143,7 @@ function ColumnContainer(props: Props) {
             <div className="flex flex-grow flex-col p-2 overflow-x-hidden overflow-y-auto">
                 <SortableContext items={tasksIds}>
                     {tasks.map((task) => (
-                        <TaskCard key={task.id} task={task} deleteTask={deleteTask} updateTask={updateTask} />
+                        <TaskCard key={task.id} task={task} deleteTask={deleteTask} updateTask={updateTask} showTaskDetails={showTaskDetails} />
                     ))}
                 </SortableContext>
             </div>
