@@ -21,10 +21,11 @@ function ColumnContainer(props: Props) {
     }, [tasks]);
 
     const { setNodeRef, transform, transition } = useSortable({
-        id: column.id,
+        id: column.id + "-" + row.id,
         data: {
-            type: "Column",
-            column
+            type: "TaskContainer",
+            column: column,
+            row: row
         }
     });
 
