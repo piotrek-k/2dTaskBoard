@@ -1,16 +1,20 @@
 import { useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
 import { Column, Id, Row, Task } from '../types';
-import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
+import { createPortal } from 'react-dom';
+import TaskCard from './TaskCard';
 
 function KanbanBoard() {
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [rows, setRows] = useState<Row[]>([]);
     const [columns, setColumns] = useState<Column[]>([]);
+
+    const [activeTask, setActiveTask] = useState<Task | null>(null);
 
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
@@ -44,9 +48,22 @@ function KanbanBoard() {
                                     key={row.id}
                                     row={row}
                                     columns={columns}
+                                    createTask={createTask}
+                                    getTasks={getTasks}
                                 />
                             ))}
                         </SortableContext>
+
+                        {createPortal(
+                            <DragOverlay>
+                                {
+                                    activeTask && <TaskCard
+                                        task={activeTask}
+                                    />
+                                }
+                            </DragOverlay>,
+                            document.body
+                        )}
                     </div>
                     <button
                         onClick={() => {
@@ -76,15 +93,81 @@ function KanbanBoard() {
     )
 
     function onDragStart(event: DragStartEvent) {
-
+        if (event.active.data.current?.type === "Task") {
+            setActiveTask(event.active.data.current.task);
+            return;
+        }
     }
 
-    function onDragEnd(event: DragEndEvent) {
-
+    function onDragEnd(_event: DragEndEvent) {
+        setActiveTask(null);
     }
 
     function onDragOver(event: DragOverEvent) {
+        const { active, over } = event;
 
+        if (!over) return;
+
+        if (active.id === over.id) return;
+
+        const draggedObjectIsATask = active.data.current?.type === "Task";
+        const targetIsTask = over.data.current?.type === "Task";
+        const targetIsTaskContainer = over.data.current?.type === "TaskContainer";
+
+        if (!draggedObjectIsATask) return;
+
+        if (draggedObjectIsATask && targetIsTask) {
+            setTasks(tasks => {
+                const activeIndex = tasks.findIndex(t => t.id === active.id);
+                const overIndex = tasks.findIndex(t => t.id === over.id);
+
+                tasks[activeIndex].columnId = tasks[overIndex].columnId;
+                tasks[activeIndex].rowId = tasks[overIndex].rowId;
+
+                return arrayMove(tasks, activeIndex, overIndex);
+            });
+        }
+
+        
+        if (draggedObjectIsATask && targetIsTaskContainer) {
+            setTasks(tasks => {
+                const activeIndex = tasks.findIndex(t => t.id === active.id);
+
+                tasks[activeIndex].columnId = over.data.current?.column.id;
+                tasks[activeIndex].rowId = over.data.current?.row.id;
+                
+                return arrayMove(tasks, activeIndex, activeIndex);
+            });
+        }
+    }
+
+    function getTasks(columnId: Id, rowId: Id) {
+        return tasks.filter((task) => task.columnId === columnId && task.rowId === rowId);
+    }
+
+    function createTask(columnId: Id, rowId: Id) {
+        const newTask: Task = {
+            id: generateId(),
+            columnId,
+            rowId,
+            content: `Task ${tasks.length + 1}`
+        };
+
+        setTasks([...tasks, newTask]);
+    }
+
+    function deleteTask(id: Id) {
+        const filteredTasks = tasks.filter((task) => task.id !== id);
+        setTasks(filteredTasks);
+    }
+
+    function updateTask(id: Id, content: string) {
+        const newTasks = tasks.map((task) => {
+            if (task.id !== id) return task;
+            return { ...task, content };
+        });
+
+        setTasks(newTasks);
     }
 
     function createNewRow() {
