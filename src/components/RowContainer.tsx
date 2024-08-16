@@ -12,20 +12,11 @@ import ModalContext, { ModalContextProps } from './modal/ModalContext';
 interface Props {
     row: Row;
     columns: Column[];
-
-    deleteColumn: (id: Id) => void;
-    updateColumn: (id: Id, title: string) => void;
-
-    rowDescriptionClicked: (id: Id) => void;
-
-    showTaskDetails: (id: Id) => void;
 }
 
 function RowContainer(props: Props) {
-    const { row, columns, deleteColumn, updateColumn, rowDescriptionClicked, showTaskDetails } = props;
+    const { row, columns } = props;
 
-
-    const [rows, setRows] = useState<Row[]>();
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -66,7 +57,6 @@ function RowContainer(props: Props) {
                 onDragOver={onDragOver}>
                 <div className='flex w-full'>
                     <div className='w-[200px] flex-none' onClick={() => {
-                        // rowDescriptionClicked(row.id);
                         handleClickOnRowDetails();
                     }}
                     >
@@ -80,13 +70,8 @@ function RowContainer(props: Props) {
                                     key={col.id}
                                     column={col}
                                     row={row}
-                                    deleteColumn={deleteColumn}
-                                    updateColumn={updateColumn}
                                     createTask={createTask}
-                                    deleteTask={deleteTask}
-                                    updateTask={updateTask}
                                     tasks={tasks.filter(task => task.columnId === col.id)}
-                                    showTaskDetails={showTaskDetails}
                                 />
                             ))}
                         </div>
@@ -99,21 +84,13 @@ function RowContainer(props: Props) {
                             <ColumnContainer
                                 column={activeColumn}
                                 row={activeRow}
-                                deleteColumn={deleteColumn}
-                                updateColumn={updateColumn}
                                 createTask={createTask}
-                                deleteTask={deleteTask}
-                                updateTask={updateTask}
                                 tasks={tasks.filter(task => task.columnId === activeColumn.id)}
-                                showTaskDetails={showTaskDetails}
                             />
                         )}
                         {
                             activeTask && <TaskCard
                                 task={activeTask}
-                                deleteTask={deleteTask}
-                                updateTask={updateTask}
-                                showTaskDetails={showTaskDetails}
                             />
                         }
                     </DragOverlay>,

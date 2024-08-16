@@ -6,25 +6,14 @@ import { SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
 
-enum ModalState {
-    Hidden,
-    EditRowDescription,
-    EditTask
-}
-
 function KanbanBoard() {
-    const [rows, setRows] = useState<Row[]>([]);
-    const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
-
-    const [columns, setColumns] = useState<Column[]>([]);
-    const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [modalState, setModalState] = useState<ModalState>(ModalState.Hidden);
-    const displayModal = useMemo(() => modalState !== ModalState.Hidden, [modalState]);
+    const [rows, setRows] = useState<Row[]>([]);
+    const [columns, setColumns] = useState<Column[]>([]);
 
-    const [activeColumn, setActiveColumn] = useState<Column | null>(null);
-    const [activeTask, setActiveTask] = useState<Task | null>(null);
+    const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
+    const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
     const sensors = useSensors(
@@ -55,10 +44,6 @@ function KanbanBoard() {
                                     key={row.id}
                                     row={row}
                                     columns={columns}
-                                    deleteColumn={deleteColumn}
-                                    updateColumn={updateColumn}
-                                    rowDescriptionClicked={editRowDescription}
-                                    showTaskDetails={showTaskDetails}
                                 />
                             ))}
                         </SortableContext>
@@ -100,19 +85,6 @@ function KanbanBoard() {
 
     function onDragOver(event: DragOverEvent) {
 
-    }
-
-    function handleCloseModal(): void {
-        setModalState(ModalState.Hidden);
-    }
-
-    function editRowDescription() {
-        setModalState(ModalState.EditRowDescription);
-    }
-
-    function showTaskDetails(id: Id) {
-        setModalState(ModalState.EditTask);
-        console.log(id);
     }
 
     function createNewRow() {
