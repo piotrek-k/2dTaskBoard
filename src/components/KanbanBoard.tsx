@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
 import { Column, Id, Row, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -7,6 +7,7 @@ import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
+import { openDB } from 'idb';
 
 function KanbanBoard() {
 
@@ -27,6 +28,43 @@ function KanbanBoard() {
             }
         })
     )
+
+    async function restoreHandle(): Promise<FileSystemDirectoryHandle> {
+        const db = await openDB('file-handles-db', 1, {
+            upgrade(db) {
+                if (!db.objectStoreNames.contains('handles')) {
+                    db.createObjectStore('handles');
+                }
+            },
+        });
+
+        let handle = await db.get('handles', 'directoryHandle');
+
+        if (handle) {
+            console.log("Handle exists:", handle);
+
+            const permission = await (handle as any).queryPermission({ mode: 'readwrite' });
+            if (permission === 'granted') {
+                console.log('Handle restored:', handle);
+            } else {
+                handle = await handle.requestPermission({ mode: 'readwrite' });
+            }
+        } else {
+            handle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
+            await db.put('handles', handle, 'directoryHandle');
+        }
+
+        return handle;
+    }
+
+    useEffect(() => {
+        restoreHandle().then(async (handle: FileSystemDirectoryHandle) => {
+            const files = (handle as any).values();
+            for await (const file of files) {
+                console.log(file);
+            }
+        });
+    });
 
     return (
         <div className="
@@ -87,6 +125,17 @@ function KanbanBoard() {
                         <PlusIcon />
                         Add Columns
                     </button>
+                    <button
+                        onClick={() => {
+                            restoreHandle();
+                        }}
+                        className="
+                            flex
+                            "
+                    >
+                        <PlusIcon />
+                        Load data
+                    </button>
                 </div>
             </DndContext>
         </div>
@@ -128,14 +177,14 @@ function KanbanBoard() {
             });
         }
 
-        
+
         if (draggedObjectIsATask && targetIsTaskContainer) {
             setTasks(tasks => {
                 const activeIndex = tasks.findIndex(t => t.id === active.id);
 
                 tasks[activeIndex].columnId = over.data.current?.column.id;
                 tasks[activeIndex].rowId = over.data.current?.row.id;
-                
+
                 return arrayMove(tasks, activeIndex, activeIndex);
             });
         }
