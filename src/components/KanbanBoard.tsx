@@ -15,6 +15,7 @@ function KanbanBoard() {
     const [rows, setRows] = useState<Row[]>([]);
     const [columns, setColumns] = useState<Column[]>([]);
     const boardState: KanbanDataContainer = useMemo(() => ({ tasks, rows, columns } as KanbanDataContainer), [tasks, rows, columns]);
+    const [dataLoaded, setDataLoaded] = useState(false);
 
     const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
 
@@ -32,7 +33,7 @@ function KanbanBoard() {
         })
     )
 
-    async function getOrCreateHandle(): Promise<FileSystemDirectoryHandle>{
+    async function getOrCreateHandle(): Promise<FileSystemDirectoryHandle> {
         let activeHandle = directoryHandle;
 
         if (activeHandle == null) {
@@ -56,16 +57,24 @@ function KanbanBoard() {
         setTasks(dataContainer.tasks);
         setRows(dataContainer.rows);
         setColumns(dataContainer.columns);
+
+        setDataLoaded(true);
     }
 
     async function saveBoard() {
         const handle = await getOrCreateHandle();
 
+        if (!dataLoaded) {
+            return;
+        }
+
         await saveKanbanStateToFile(handle, boardState);
     }
 
     useEffect(() => {
-        saveBoard();
+        if (dataLoaded) {
+            saveBoard();
+        }
     }, [tasks, rows, columns]);
 
     return (
