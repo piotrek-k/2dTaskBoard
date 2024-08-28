@@ -8,6 +8,7 @@ import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
 import { loadKanbanStateFromFile, restoreHandle, saveKanbanStateToFile } from '../services/FileSystemStorage';
+import Modal from 'react-modal';
 
 function KanbanBoard() {
 
@@ -158,7 +159,24 @@ function KanbanBoard() {
                         <PlusIcon />
                         Save data
                     </button>
-                    {directoryHandle == null && <span>Directory handle not set up</span>}
+
+                    <Modal
+                        isOpen={directoryHandle == null}
+                    >
+                        <b>You need to choose directory</b>
+
+                        <button
+                            onClick={() => {
+                                loadBoard();
+                            }}
+                            className="
+                                flex
+                                "
+                        >
+                            <PlusIcon />
+                            Load data
+                        </button>
+                    </Modal>
                 </div>
             </DndContext>
         </div>
