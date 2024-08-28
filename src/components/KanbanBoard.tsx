@@ -15,6 +15,8 @@ function KanbanBoard() {
     const [rows, setRows] = useState<Row[]>([]);
     const [columns, setColumns] = useState<Column[]>([]);
 
+    const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
+
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
@@ -43,11 +45,16 @@ function KanbanBoard() {
         if (handle) {
             console.log("Handle exists:", handle);
 
-            const permission = await (handle as any).queryPermission({ mode: 'readwrite' });
-            if (permission === 'granted') {
-                console.log('Handle restored:', handle);
-            } else {
-                handle = await handle.requestPermission({ mode: 'readwrite' });
+            let opts = { mode: 'readwrite' };
+
+            if ((await handle.queryPermission(opts)) === "granted") {
+                setDirectoryHandle(handle);
+                return handle;
+            }
+
+            if ((await handle.requestPermission(opts)) === "granted") {
+                setDirectoryHandle(handle);
+                return handle;
             }
         } else {
             handle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
@@ -58,12 +65,6 @@ function KanbanBoard() {
     }
 
     useEffect(() => {
-        restoreHandle().then(async (handle: FileSystemDirectoryHandle) => {
-            const files = (handle as any).values();
-            for await (const file of files) {
-                console.log(file);
-            }
-        });
     });
 
     return (
@@ -136,6 +137,7 @@ function KanbanBoard() {
                         <PlusIcon />
                         Load data
                     </button>
+                    {directoryHandle == null && <span>Directory handle not set up</span>}
                 </div>
             </DndContext>
         </div>
