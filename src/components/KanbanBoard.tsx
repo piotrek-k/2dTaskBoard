@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
-import { Column, Id, Row, Task } from '../types';
+import { Column, Id, KanbanDataContainer, Row, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
-import { openDB } from 'idb';
+import { loadKanbanStateFromFile, restoreHandle, saveKanbanStateToFile } from '../services/FileSystemStorage';
 
 function KanbanBoard() {
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [rows, setRows] = useState<Row[]>([]);
     const [columns, setColumns] = useState<Column[]>([]);
+    const boardState: KanbanDataContainer = useMemo(() => ({ tasks, rows, columns } as KanbanDataContainer), [tasks, rows, columns]);
 
     const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
 
@@ -31,82 +32,41 @@ function KanbanBoard() {
         })
     )
 
-    async function restoreHandle(): Promise<FileSystemDirectoryHandle> {
-        const db = await openDB('file-handles-db', 1, {
-            upgrade(db) {
-                if (!db.objectStoreNames.contains('handles')) {
-                    db.createObjectStore('handles');
-                }
-            },
-        });
+    async function getOrCreateHandle(): Promise<FileSystemDirectoryHandle>{
+        let activeHandle = directoryHandle;
 
-        let handle = await db.get('handles', 'directoryHandle');
+        if (activeHandle == null) {
+            activeHandle = await restoreHandle();
 
-        if (handle) {
-            console.log("Handle exists:", handle);
-
-            let opts = { mode: 'readwrite' };
-
-            if ((await handle.queryPermission(opts)) !== "granted" && (await handle.requestPermission(opts)) !== "granted") {
-                throw new Error("Cannot create handle");
-            }
-        } else {
-            handle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
-            await db.put('handles', handle, 'directoryHandle');
+            setDirectoryHandle(activeHandle);
         }
 
-        setDirectoryHandle(handle);
-        return handle;
-    }
-
-    async function getMainFileHandle(): Promise<FileSystemFileHandle> {
-        if (directoryHandle == null) {
-            await restoreHandle();
-        }
-
-        if (directoryHandle == null) {
+        if (activeHandle == null) {
             throw new Error("Directory handle not set up");
         }
 
-        return await directoryHandle.getFileHandle('data.json', { create: true });
+        return activeHandle;
     }
 
-    async function loadKanbanStateFromFile() {
-        const fileHandle = await getMainFileHandle();
-        const file = await fileHandle.getFile();
-        const fileContents = await file.text();
+    async function loadBoard() {
+        const handle = await getOrCreateHandle();
 
-        if (fileContents.length === 0) {
-            await saveKanbanStateToFile();
-        }
-        else {
-            const dataContainer = JSON.parse(fileContents);
+        const dataContainer = await loadKanbanStateFromFile(handle);
 
-            setTasks(dataContainer.tasks);
-            setRows(dataContainer.rows);
-            setColumns(dataContainer.columns);
-        }
+        setTasks(dataContainer.tasks);
+        setRows(dataContainer.rows);
+        setColumns(dataContainer.columns);
     }
 
-    async function saveKanbanStateToFile() {
-        const fileHandle = await getMainFileHandle();
+    async function saveBoard() {
+        const handle = await getOrCreateHandle();
 
-        const dataContainer = {
-            tasks: tasks,
-            rows: rows,
-            columns: columns
-        }
-
-        const writable = await fileHandle.createWritable();
-        const dataToSave = JSON.stringify(dataContainer);
-
-        await writable.write(dataToSave);
-
-        await writable.close();
+        await saveKanbanStateToFile(handle, boardState);
     }
 
     useEffect(() => {
-    });
+        saveBoard();
+    }, [tasks, rows, columns]);
 
     return (
         <div className="
@@ -169,7 +129,7 @@ function KanbanBoard() {
                     </button>
                     <button
                         onClick={() => {
-                            loadKanbanStateFromFile();
+                            loadBoard();
                         }}
                         className="
                             flex
@@ -180,7 +140,7 @@ function KanbanBoard() {
                     </button>
                     <button
                         onClick={() => {
-                            saveKanbanStateToFile();
+                            saveBoard();
                         }}
                         className="
                             flex

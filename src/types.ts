@@ -16,3 +16,9 @@ export type Task = {
     rowId: Id;
     content: string;
 }
+
+export interface KanbanDataContainer {
+    tasks: Task[];
+    rows: Row[];
+    columns: Column[];
+}
