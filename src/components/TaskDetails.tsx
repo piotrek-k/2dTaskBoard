@@ -1,8 +1,12 @@
-import React from 'react'
+import React, { useContext } from 'react'
+import DataStorageContext from './filesystem/DataStorageContext';
 
 function TaskDetails() {
+
+  const dataStorageContext = useContext(DataStorageContext);
+
   return (
-    <div>TaskDetails</div>
+    <div>{dataStorageContext?.getTaskContent("111")}</div>
   )
 }
 

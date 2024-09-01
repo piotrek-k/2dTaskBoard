@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
 import { Column, Id, KanbanDataContainer, Row, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -7,8 +7,10 @@ import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
-import { loadKanbanStateFromFile, restoreHandle, saveKanbanStateToFile } from '../services/FileSystemStorage';
 import Modal from 'react-modal';
+import DataStorageContext from './filesystem/DataStorageContext';
+
+
 
 function KanbanBoard() {
 
@@ -18,7 +20,19 @@ function KanbanBoard() {
     const boardState: KanbanDataContainer = useMemo(() => ({ tasks, rows, columns } as KanbanDataContainer), [tasks, rows, columns]);
     const [dataLoaded, setDataLoaded] = useState(false);
 
-    const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
+    const [storageActive, setStorageActive] = useState<boolean>(false);
+
+    const dataStorage = useContext(DataStorageContext);
+
+    useEffect(() => {
+        dataStorage.registerOnChangeCallback((newState) => {
+            setStorageActive(() => newState);
+        });
+
+        return () => {
+            dataStorage.registerOnChangeCallback(() => { });
+        };
+    }, []);
 
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
@@ -34,26 +48,12 @@ function KanbanBoard() {
         })
     )
 
-    async function getOrCreateHandle(): Promise<FileSystemDirectoryHandle> {
-        let activeHandle = directoryHandle;
-
-        if (activeHandle == null) {
-            activeHandle = await restoreHandle();
-
-            setDirectoryHandle(activeHandle);
-        }
-
-        if (activeHandle == null) {
-            throw new Error("Directory handle not set up");
-        }
-
-        return activeHandle;
-    }
-
     async function loadBoard() {
-        const handle = await getOrCreateHandle();
+        const dataContainer = await dataStorage?.getKanbanState();
 
-        const dataContainer = await loadKanbanStateFromFile(handle);
+        if (dataContainer == undefined) {
+            throw new Error("Data storage not set");
+        }
 
         setTasks(dataContainer.tasks);
         setRows(dataContainer.rows);
@@ -63,13 +63,11 @@ function KanbanBoard() {
     }
 
     async function saveBoard() {
-        const handle = await getOrCreateHandle();
-
-        if (!dataLoaded) {
-            return;
+        if (dataStorage == undefined) {
+            throw new Error("Data storage not set");
         }
 
-        await saveKanbanStateToFile(handle, boardState);
+        await dataStorage.saveKanbanState(boardState);
     }
 
     useEffect(() => {
@@ -79,6 +77,7 @@ function KanbanBoard() {
     }, [tasks, rows, columns]);
 
     return (
+
         <div className="
             flex
             ">
@@ -160,8 +159,8 @@ function KanbanBoard() {
                         Save data
                     </button>
 
-                    <Modal
-                        isOpen={directoryHandle == null}
+                    {!storageActive && <Modal
+                        isOpen={true}
                     >
                         <b>You need to choose directory</b>
 
@@ -177,6 +176,7 @@ function KanbanBoard() {
                             Load data
                         </button>
                     </Modal>
+                    }
                 </div>
             </DndContext>
         </div>
