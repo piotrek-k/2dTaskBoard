@@ -1,8 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react'
-import DataStorageContext from './filesystem/DataStorageContext';
+import { useContext, useEffect, useState } from 'react'
 import { Task } from '../types';
 import MDEditor from '@uiw/react-md-editor';
 import PlusIcon from '../icons/PlusIcon';
+import { IAppStorageAccessor } from '../services/FileSystemStorage';
+import DataStorageContext from './filesystem/DataStorageContext';
 
 interface Props {
   task: Task;
@@ -10,9 +11,11 @@ interface Props {
 
 function TaskDetails({ task }: Props) {
 
-  const dataStorageContext = useContext(DataStorageContext);
+  const dataStorageContext = useContext(DataStorageContext) as IAppStorageAccessor;
   const [taskContent, setTaskContent] = useState<string | undefined>('');
   const [useEditMode, setUseEditMode] = useState(false);
+  const [taskName, setTaskName] = useState<string>('Initial value');
+  const [useTaskNameEditMode, setUseTaskNameEditMode] = useState(false);
 
   useEffect(() => {
     if (dataStorageContext) {
@@ -32,7 +35,7 @@ function TaskDetails({ task }: Props) {
   }, [taskContent]);
 
   return (
-    <div>
+    <div className='flex flex-col'>
       <div className='flex flex-row gap-2'>
         <div>{task.id}</div>
 
@@ -45,6 +48,25 @@ function TaskDetails({ task }: Props) {
           Switch edit mode
         </button>
       </div>
+
+      {!useTaskNameEditMode &&
+        <p className='w-auto bg-slate-800'
+         onClick={() => setUseTaskNameEditMode(true)}>
+          {taskName}
+        </p>
+      }
+
+      {useTaskNameEditMode && <input type='text'
+        value={taskName}
+        onChange={(e) => setTaskName(e.target.value)}
+        onBlur={() => setUseTaskNameEditMode(false)}
+        className='
+        bg-slate-700
+         rounded-md   
+         py-2 
+         pl-4 
+         pr-3 
+         my-1'></input>}
 
       {useEditMode && <MDEditor
         value={taskContent}
