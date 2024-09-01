@@ -1,5 +1,5 @@
 import { openDB } from "idb";
-import { KanbanDataContainer } from "../types";
+import { Id, KanbanDataContainer } from "../types";
 
 export interface IAppStorageAccessor {
     getKanbanState(): Promise<KanbanDataContainer>;
@@ -107,8 +107,17 @@ export class FileSystemStorage implements IAppStorageAccessor {
         return dataContainer;
     }
 
-    getTaskContent(taskId: string){
-        return taskId;
+    async getTaskContent(taskId: Id): Promise<string> {
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        const subDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
+        const taskDir = await subDir.getDirectoryHandle(`${taskId}`, { create: true });
+
+        const file = await taskDir.getFileHandle(`content.md`, { create: true });
+
+        return (await file.getFile()).text();
     }
 }
 
