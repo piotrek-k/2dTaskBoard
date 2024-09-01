@@ -13,8 +13,8 @@ function TaskCard({ task }: Props) {
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
-    const handleClickOnTask = (id: Id) => {
-        setModalContent(<TaskDetails />);
+    const handleClickOnTask = (task: Task) => {
+        setModalContent(<TaskDetails task={task} />);
         setModalOpen(true);
     };
 
@@ -47,7 +47,7 @@ function TaskCard({ task }: Props) {
             style={style}
             {...attributes}
             {...listeners}
-            onClick={() => handleClickOnTask(task.id)}
+            onClick={() => handleClickOnTask(task)}
             className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
         items-center flex text-left rounded-xl hover-ring-2 hover:ring-inset
         hover:ring-rose-500 relative task m-1'
