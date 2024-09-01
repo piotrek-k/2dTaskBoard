@@ -4,6 +4,8 @@ import { Id, KanbanDataContainer } from "../types";
 export interface IAppStorageAccessor {
     getKanbanState(): Promise<KanbanDataContainer>;
     saveKanbanState(boardStateContainer: KanbanDataContainer): Promise<KanbanDataContainer>;
+    getTaskContent(taskId: Id): Promise<string>;
+    saveTaskContent(taskId: Id, content: string): Promise<void>;
 }
 
 export class FileSystemStorage implements IAppStorageAccessor {
@@ -107,7 +109,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
         return dataContainer;
     }
 
-    async getTaskContent(taskId: Id): Promise<string> {
+    private async getTaskFileHandle(taskId: Id): Promise<FileSystemFileHandle> {
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }
@@ -115,9 +117,24 @@ export class FileSystemStorage implements IAppStorageAccessor {
         const subDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
         const taskDir = await subDir.getDirectoryHandle(`${taskId}`, { create: true });
 
-        const file = await taskDir.getFileHandle(`content.md`, { create: true });
+        return await taskDir.getFileHandle(`content.md`, { create: true });
+    }
+
+    async getTaskContent(taskId: Id): Promise<string> {
+
+        const file = await this.getTaskFileHandle(taskId);
 
         return (await file.getFile()).text();
+    }
+
+    async saveTaskContent(taskId: Id, content: string) {
+        const file = await this.getTaskFileHandle(taskId);
+
+        const writable = await file.createWritable();
+
+        await writable.write(content);
+
+        await writable.close();
     }
 }
 
