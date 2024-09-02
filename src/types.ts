@@ -14,7 +14,7 @@ export type Task = {
     id: Id;
     columnId: Id;
     rowId: Id;
-    content: string;
+    title: string;
 }
 
 export interface KanbanDataContainer {

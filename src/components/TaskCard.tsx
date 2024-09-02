@@ -7,14 +7,15 @@ import TaskDetails from './TaskDetails';
 
 interface Props {
     task: Task;
+    requestSavingDataToStorage: () => Promise<void>;
 }
 
-function TaskCard({ task }: Props) {
+function TaskCard({ task, requestSavingDataToStorage }: Props) {
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
     const handleClickOnTask = (task: Task) => {
-        setModalContent(<TaskDetails task={task} />);
+        setModalContent(<TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} />);
         setModalOpen(true);
     };
 
@@ -55,7 +56,7 @@ function TaskCard({ task }: Props) {
             <p
                 className='my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap'
             >
-                {task.content}
+                {task.title}
             </p>
         </div>
     )

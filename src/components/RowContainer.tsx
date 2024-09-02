@@ -10,9 +10,10 @@ interface Props {
     columns: Column[];
     createTask: (columnId: Id, rowId: Id) => void;
     getTasks: (columnId: Id, rowId: Id) => Task[];
+    requestSavingDataToStorage: () => Promise<void>;
 }
 
-function RowContainer({ row, columns, createTask, getTasks }: Props) {
+function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage }: Props) {
 
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
@@ -50,6 +51,7 @@ function RowContainer({ row, columns, createTask, getTasks }: Props) {
                                 row={row}
                                 createTask={createTask}
                                 tasks={getTasks(col.id, row.id)}
+                                requestSavingDataToStorage={requestSavingDataToStorage}
                             />
                         ))}
                     </div>

@@ -99,6 +99,7 @@ function KanbanBoard() {
                                     columns={columns}
                                     createTask={createTask}
                                     getTasks={getTasks}
+                                    requestSavingDataToStorage={saveBoard}
                                 />
                             ))}
                         </SortableContext>
@@ -108,6 +109,7 @@ function KanbanBoard() {
                                 {
                                     activeTask && <TaskCard
                                         task={activeTask}
+                                        requestSavingDataToStorage={saveBoard}
                                     />
                                 }
                             </DragOverlay>,
@@ -240,7 +242,7 @@ function KanbanBoard() {
             id: generateId(),
             columnId,
             rowId,
-            content: `Task ${tasks.length + 1}`
+            title: `Task ${tasks.length + 1}`
         };
 
         setTasks([...tasks, newTask]);
