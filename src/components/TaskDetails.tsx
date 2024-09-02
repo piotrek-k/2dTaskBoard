@@ -7,14 +7,15 @@ import DataStorageContext from './filesystem/DataStorageContext';
 
 interface Props {
   task: Task;
+  requestSavingDataToStorage: () => Promise<void>;
 }
 
-function TaskDetails({ task }: Props) {
+function TaskDetails({ task, requestSavingDataToStorage }: Props) {
 
   const dataStorageContext = useContext(DataStorageContext) as IAppStorageAccessor;
   const [taskContent, setTaskContent] = useState<string | undefined>('');
   const [useEditMode, setUseEditMode] = useState(false);
-  const [taskName, setTaskName] = useState<string>('Initial value');
+  const [taskName, setTaskName] = useState<string>(task.title);
   const [useTaskNameEditMode, setUseTaskNameEditMode] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,14 @@ function TaskDetails({ task }: Props) {
     dataStorageContext.saveTaskContent(task.id, taskContent ?? "");
   }, [taskContent]);
 
+  useEffect(() => {
+    (async function () {
+      task.title = taskName;
+
+      await requestSavingDataToStorage();
+    })();
+  }, [taskName]);
+
   return (
     <div className='flex flex-col'>
       <div className='flex flex-row gap-2'>
@@ -51,8 +60,8 @@ function TaskDetails({ task }: Props) {
 
       {!useTaskNameEditMode &&
         <p className='w-auto bg-slate-800'
-         onClick={() => setUseTaskNameEditMode(true)}>
-          {taskName}
+          onClick={() => setUseTaskNameEditMode(true)}>
+          {taskName ?? 'Task name'}
         </p>
       }
 

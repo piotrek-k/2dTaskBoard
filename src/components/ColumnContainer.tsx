@@ -11,10 +11,12 @@ interface Props {
 
     createTask: (columnId: Id, rowId: Id) => void;
     tasks: Task[];
+
+    requestSavingDataToStorage: () => Promise<void>;
 }
 
 function ColumnContainer(props: Props) {
-    const { column, row, createTask, tasks } = props;
+    const { column, row, createTask, tasks, requestSavingDataToStorage } = props;
 
     const tasksIds = useMemo(() => {
         return tasks.map(task => task.id);
@@ -50,7 +52,7 @@ function ColumnContainer(props: Props) {
             <div className="flex flex-grow flex-col p-2 overflow-x-hidden overflow-y-auto">
                 <SortableContext items={tasksIds}>
                     {tasks.map((task) => (
-                        <TaskCard key={task.id} task={task} />
+                        <TaskCard key={task.id} task={task} requestSavingDataToStorage={requestSavingDataToStorage} />
                     ))}
                 </SortableContext>
             </div>
