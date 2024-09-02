@@ -1,6 +1,6 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { Column, Id, Row, Task } from "../types"
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import PlusIcon from "../icons/PlusIcon";
 import TaskCard from "./TaskCard";
 import { CSS } from "@dnd-kit/utilities";
@@ -17,6 +17,7 @@ interface Props {
 
 function ColumnContainer(props: Props) {
     const { column, row, createTask, tasks, requestSavingDataToStorage } = props;
+    const [showButton, setShowButton] = useState<boolean>(false);
 
     const tasksIds = useMemo(() => {
         return tasks.map(task => task.id);
@@ -46,10 +47,15 @@ function ColumnContainer(props: Props) {
             flex
             flex-col
             grow
-            ">
+            basis-0
+            min-w-0
+            "
+            onMouseEnter={() => setShowButton(true)}
+            onMouseLeave={() => setShowButton(false)}
+            >
 
             {/* Tasks container */}
-            <div className="flex flex-grow flex-col p-2 overflow-x-hidden overflow-y-auto">
+            <div className="flex flex-grow flex-wrap p-2 overflow-x-hidden overflow-y-auto">
                 <SortableContext items={tasksIds}>
                     {tasks.map((task) => (
                         <TaskCard key={task.id} task={task} requestSavingDataToStorage={requestSavingDataToStorage} />
@@ -58,11 +64,11 @@ function ColumnContainer(props: Props) {
             </div>
 
             {/* Add Task button */}
-            <button className="flex gap-2 items-center
+            <button className={`flex gap-2 items-center
             border-columnBackgroundColor border-2 rounded-md p-4
             border-x-columnBackgroundColor
             hover:bg-mainBackgroundColor hover:text-rose-500
-            active:bg-black"
+            active:bg-black ${!showButton ? 'invisible' : ''}`}
                 onClick={() => {
                     createTask(column.id, row.id)
                 }}>
