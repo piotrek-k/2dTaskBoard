@@ -59,23 +59,18 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
       </div>
 
       {!useTaskNameEditMode &&
-        <p className='w-auto bg-slate-800'
+        <h1 className='my-3 text-4xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-white'
           onClick={() => setUseTaskNameEditMode(true)}>
           {taskName ?? 'Task name'}
-        </p>
+        </h1>
       }
 
-      {useTaskNameEditMode && <input type='text'
+      {useTaskNameEditMode && <textarea
         value={taskName}
         onChange={(e) => setTaskName(e.target.value)}
         onBlur={() => setUseTaskNameEditMode(false)}
         className='
-        bg-slate-700
-         rounded-md   
-         py-2 
-         pl-4 
-         pr-3 
-         my-1'></input>}
+        my-3 text-4xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-white bg-inherit'></textarea>}
 
       {useEditMode && <MDEditor
         value={taskContent}
@@ -83,7 +78,7 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
           setTaskContent(x)
         }}
       />}
-      {!useEditMode && <MDEditor.Markdown source={taskContent} style={{ whiteSpace: 'pre-wrap' }} />}
+      {!useEditMode && <MDEditor.Markdown source={taskContent} style={{ whiteSpace: 'pre-wrap' }} className='my-3 min-h-60 max-h-96 overflow-y-auto bg-slate-600' />}
 
 
     </div>
