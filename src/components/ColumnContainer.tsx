@@ -8,6 +8,7 @@ import { CSS } from "@dnd-kit/utilities";
 interface Props {
     column: Column;
     row: Row;
+    isFirstColumn: boolean;
 
     createTask: (columnId: Id, rowId: Id) => void;
     tasks: Task[];
@@ -16,7 +17,7 @@ interface Props {
 }
 
 function ColumnContainer(props: Props) {
-    const { column, row, createTask, tasks, requestSavingDataToStorage } = props;
+    const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn } = props;
     const [showButton, setShowButton] = useState<boolean>(false);
 
     const tasksIds = useMemo(() => {
@@ -64,17 +65,16 @@ function ColumnContainer(props: Props) {
             </div>
 
             {/* Add Task button */}
-            <button className={`flex gap-2 items-center
-            border-columnBackgroundColor border-2 rounded-md p-4
+            {isFirstColumn && <button className={`flex gap-2 items-center
+            border-columnBackgroundColor border-2 rounded-md p-2.5
             border-x-columnBackgroundColor
             hover:bg-mainBackgroundColor hover:text-rose-500
-            active:bg-black ${!showButton ? 'invisible' : ''}`}
+            active:bg-black text-gray-500`}
                 onClick={() => {
                     createTask(column.id, row.id)
                 }}>
                 <PlusIcon />
-                Add Task
-            </button>
+            </button>}
         </div>
     )
 }

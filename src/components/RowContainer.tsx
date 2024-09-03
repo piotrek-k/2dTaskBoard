@@ -81,6 +81,7 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
                                 createTask={createTask}
                                 tasks={getTasks(col.id, row.id)}
                                 requestSavingDataToStorage={requestSavingDataToStorage}
+                                isFirstColumn={col.id === columns[0].id}
                             />
                         ))}
                     </div>
