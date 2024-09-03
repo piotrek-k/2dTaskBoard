@@ -20,7 +20,10 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
     const handleClickOnRowDetails = () => {
-        setModalContent(<RowDetails />);
+        setModalContent(<RowDetails
+            requestSavingDataToStorage={requestSavingDataToStorage}
+            row={row}
+            />);
         setModalOpen(true);
     };
 
