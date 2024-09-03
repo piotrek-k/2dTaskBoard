@@ -14,7 +14,7 @@ function ColumnHeaderContainer(props: Props) {
             overflow-x-auto
             overflow-y-hidden'>
             <div className='flex flex-row w-full'>
-                <div className='w-[200px] flex-none'
+                <div className='w-[200px] flex-none bg-mainBackgroundColor'
                 >
 
                 </div>
