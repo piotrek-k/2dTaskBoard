@@ -8,7 +8,8 @@ export default {
     extend: {
       colors: {
         "mainBackgroundColor": "#0D1117",
-        "columnBackgroundColor": "#161C22"
+        "columnBackgroundColor": "#161C22",
+        "rowTitleBackgroundColor": "#1a2128",
       }
     },
   },

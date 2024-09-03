@@ -23,7 +23,7 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
         setModalContent(<RowDetails
             requestSavingDataToStorage={requestSavingDataToStorage}
             row={row}
-            />);
+        />);
         setModalOpen(true);
     };
 
@@ -38,11 +38,21 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
             overflow-y-hidden
             ">
             <div className='flex w-full'>
-                <div className='w-[200px] flex-none' onClick={() => {
+                <div className='w-[200px] flex-none bg-rowTitleBackgroundColor
+                flex justify-center
+                ' onClick={() => {
                     handleClickOnRowDetails();
                 }}
                 >
-                    {row.title}
+                    <div className="
+                        bg-mainBackgroundColor
+                        w-[150px] 
+                        p-2.5
+                        m-[12px]
+                        h-[100px]
+                        ">
+                        {row.title}
+                    </div>
                 </div>
 
                 <SortableContext items={columnsId}>
