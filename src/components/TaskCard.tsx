@@ -37,7 +37,7 @@ function TaskCard({ task, requestSavingDataToStorage }: Props) {
             ref={setNodeRef}
             style={style}
             className='opacity-50 bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
-    items-center flex text-left rounded-xl border-2 border-rose-500 relative'>
+    items-center flex text-left rounded-xl border-2 border-rose-500 relative m-1 w-[150px]'>
 
         </div>;
     }

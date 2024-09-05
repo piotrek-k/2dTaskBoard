@@ -56,7 +56,7 @@ function ColumnContainer(props: Props) {
             >
 
             {/* Tasks container */}
-            <div className="flex flex-grow flex-wrap p-2 overflow-x-hidden overflow-y-auto">
+            <div className="p-2 overflow-x-hidden overflow-y-hidden">
                 <SortableContext items={tasksIds}>
                     {tasks.map((task) => (
                         <TaskCard key={task.id} task={task} requestSavingDataToStorage={requestSavingDataToStorage} />
