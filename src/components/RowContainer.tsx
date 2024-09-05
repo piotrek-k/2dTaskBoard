@@ -9,6 +9,7 @@ import MoveDownIcon from '../icons/MoveDownIcon';
 import MoveTopIcon from '../icons/MoveTopIcon';
 import MoveBottomIcon from '../icons/MoveBottomIcon ';
 import ArchiveIcon from '../icons/ArchiveIcon';
+import { RowNavigation } from '../interfaces/RowNavigation';
 
 interface Props {
     row: Row;
@@ -16,9 +17,10 @@ interface Props {
     createTask: (columnId: Id, rowId: Id) => void;
     getTasks: (columnId: Id, rowId: Id) => Task[];
     requestSavingDataToStorage: () => Promise<void>;
+    rowNavigation: RowNavigation;
 }
 
-function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage }: Props) {
+function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage, rowNavigation }: Props) {
 
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
@@ -62,11 +64,11 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
                         <div className='flex flex-grow'></div>
 
                         <div className='flex flex-row flex-none p-2.5 text-gray-500'>
-                            <MoveUpIcon />
-                            <MoveDownIcon />
-                            <MoveTopIcon />
-                            <MoveBottomIcon />
-                            <ArchiveIcon />
+                            <button onClick={() => rowNavigation.moveUp(row.id) }><MoveUpIcon /></button>
+                            <button onClick={() => rowNavigation.moveDown(row.id) }><MoveDownIcon /></button>
+                            <button onClick={() => rowNavigation.moveTop(row.id) }><MoveTopIcon /></button>
+                            <button onClick={() => rowNavigation.moveBottom(row.id) }><MoveBottomIcon /></button>
+                            <button onClick={() => rowNavigation.archive(row.id) }><ArchiveIcon /></button>
                         </div>
                     </div>
                 </div>

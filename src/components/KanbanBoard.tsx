@@ -93,6 +93,7 @@ function KanbanBoard() {
                         />
                         <SortableContext items={rowsId}>
                             {rows.map((row) => (
+                                row.isVisible &&
                                 <RowContainer
                                     key={row.id}
                                     row={row}
@@ -100,6 +101,13 @@ function KanbanBoard() {
                                     createTask={createTask}
                                     getTasks={getTasks}
                                     requestSavingDataToStorage={saveBoard}
+                                    rowNavigation={{
+                                        moveUp: moveRowUp,
+                                        moveDown: moveRowDown,
+                                        moveTop: moveRowTop,
+                                        moveBottom: moveRowBottom,
+                                        archive: archiveRow
+                                    }}
                                 />
                             ))}
                         </SortableContext>
@@ -248,6 +256,53 @@ function KanbanBoard() {
         setTasks([...tasks, newTask]);
     }
 
+    function moveRowUp(rowId: Id) {
+        const rowIndex = rows.findIndex((row) => row.id === rowId);
+
+        if (rowIndex === 0) return;
+
+        const newRows = arrayMove(rows, rowIndex, rowIndex - 1);
+        setRows(newRows);
+    }
+
+    function moveRowDown(rowId: Id) {
+        const rowIndex = rows.findIndex((row) => row.id === rowId);
+
+        if (rowIndex === rows.length - 1) return;
+
+        const newRows = arrayMove(rows, rowIndex, rowIndex + 1);
+        setRows(newRows);
+    }
+
+    function moveRowTop(rowId: Id) {
+        const rowIndex = rows.findIndex((row) => row.id === rowId);
+
+        if (rowIndex === 0) return;
+
+        const newRows = arrayMove(rows, rowIndex, 0);
+        setRows(newRows);
+    }
+
+    function moveRowBottom(rowId: Id) {
+        const rowIndex = rows.findIndex((row) => row.id === rowId);
+
+        if (rowIndex === rows.length - 1) return;
+
+        const newRows = arrayMove(rows, rowIndex, rows.length - 1);
+        setRows(newRows);
+    }
+
+    function archiveRow(rowId: Id) {
+        setRows(rows => {
+            return rows.map(row => {
+                if (row.id === rowId) {
+                    return { ...row, isVisible: false };
+                }
+                return row;
+            });
+        });
+    }
+
     function deleteTask(id: Id) {
         const filteredTasks = tasks.filter((task) => task.id !== id);
         setTasks(filteredTasks);
@@ -266,6 +321,7 @@ function KanbanBoard() {
         const rowToAdd: Row = {
             id: generateId(),
             title: `Row ${rows.length + 1}`,
+            isVisible: true
         };
 
         setRows([...rows, rowToAdd]);

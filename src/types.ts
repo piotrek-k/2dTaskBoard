@@ -3,6 +3,7 @@ export type Id = string | number;
 export type Row = {
     id: Id;
     title: string;
+    isVisible: boolean;
 }
 
 export type Column = {
