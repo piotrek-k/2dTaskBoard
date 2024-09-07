@@ -55,11 +55,17 @@ function KanbanBoard() {
             throw new Error("Data storage not set");
         }
 
-        setTasks(dataContainer.tasks);
-        setRows(dataContainer.rows);
-        setColumns(dataContainer.columns);
+        setTasks(dataContainer.tasks ?? []);
+        setRows(dataContainer.rows ?? []);
+        setColumns(dataContainer.columns ?? []);
 
         setDataLoaded(true);
+    }
+
+    async function loadFromDifferentSource(){
+        await dataStorage.chooseDifferentSource();
+
+        await loadBoard();
     }
 
     async function saveBoard() {
@@ -156,6 +162,17 @@ function KanbanBoard() {
                     >
                         <PlusIcon />
                         Load data
+                    </button>
+                    <button
+                        onClick={() => {
+                            loadFromDifferentSource();
+                        }}
+                        className="
+                            flex
+                            "
+                    >
+                        <PlusIcon />
+                        Load different directory
                     </button>
                     <button
                         onClick={() => {
