@@ -62,7 +62,7 @@ function KanbanBoard() {
         setDataLoaded(true);
     }
 
-    async function loadFromDifferentSource(){
+    async function loadFromDifferentSource() {
         await dataStorage.chooseDifferentSource();
 
         await loadBoard();
@@ -85,14 +85,14 @@ function KanbanBoard() {
     return (
 
         <div className="
-            flex
+            flex flex-col max-w-full
             ">
             <DndContext
                 sensors={sensors}
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
                 onDragOver={onDragOver}>
-                <div className="m-auto flex gap-2  flex-col w-[100vw]">
+                <div className="m-auto flex gap-2  flex-col w-full">
                     <div className='flex flex-col'>
                         <ColumnHeaderContainer
                             headerNames={headerNames}
@@ -206,6 +206,9 @@ function KanbanBoard() {
                     }
                 </div>
             </DndContext>
+            <footer className='bg-mainBackgroundColor text-slate-600 text-sm'>
+                &copy; 2024 - {new Date().getFullYear()} Piotr Kozerski. All rights reserved.
+            </footer>
         </div>
     )
 
