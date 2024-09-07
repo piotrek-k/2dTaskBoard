@@ -18,13 +18,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
     }
 
     private async restoreHandle(): Promise<FileSystemDirectoryHandle> {
-        const db = await openDB('file-handles-db', 1, {
-            upgrade(db) {
-                if (!db.objectStoreNames.contains('handles')) {
-                    db.createObjectStore('handles');
-                }
-            },
-        });
+        const db = await getDbInstance();
 
         let handle = await db.get('handles', 'directoryHandle');
 
@@ -37,8 +31,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
                 throw new Error("Cannot create handle");
             }
         } else {
-            handle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
-            await db.put('handles', handle, 'directoryHandle');
+            handle = await this.chooseDifferentSource();
         }
 
         await this.checkHandle(handle, true);
@@ -46,6 +39,19 @@ export class FileSystemStorage implements IAppStorageAccessor {
         this.directoryHandle = handle;
 
         return handle;
+    }
+
+    public async chooseDifferentSource(): Promise<FileSystemDirectoryHandle>{
+        const db = await getDbInstance();
+
+        this.directoryHandle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
+        await db.put('handles', this.directoryHandle, 'directoryHandle');
+
+        if(this.onDirectoryHandleChange != null){
+            await this.onDirectoryHandleChange(true);
+        }
+
+        return this.directoryHandle;
     }
 
     private async checkHandle(handle: FileSystemDirectoryHandle, notifyAboutChanges: boolean = false): Promise<boolean> {
@@ -83,7 +89,13 @@ export class FileSystemStorage implements IAppStorageAccessor {
         const fileContents = await file.text();
 
         if (fileContents.length === 0) {
-            return await this.saveKanbanState({} as KanbanDataContainer);
+            return await this.saveKanbanState({
+                columns: [
+                    { id: '1', title: 'To Do' },
+                    { id: '2', title: 'In Progress' },
+                    { id: '3', title: 'Done' }
+                ]
+            } as KanbanDataContainer);
         }
         else {
             return JSON.parse(fileContents) as KanbanDataContainer;
@@ -138,3 +150,13 @@ export class FileSystemStorage implements IAppStorageAccessor {
     }
 }
 
+
+async function getDbInstance() {
+    return await openDB('file-handles-db', 1, {
+        upgrade(db) {
+            if (!db.objectStoreNames.contains('handles')) {
+                db.createObjectStore('handles');
+            }
+        },
+    });
+}
