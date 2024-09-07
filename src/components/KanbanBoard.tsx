@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
 import Modal from 'react-modal';
 import DataStorageContext from './filesystem/DataStorageContext';
+import WelcomeScreen from './WelcomeScreen';
 
 
 
@@ -188,8 +189,22 @@ function KanbanBoard() {
 
                     {!storageActive && <Modal
                         isOpen={true}
+                        style={{
+                            content: {
+                                top: '50%',
+                                left: '50%',
+                                right: 'auto',
+                                bottom: 'auto',
+                                marginRight: '-50%',
+                                transform: 'translate(-50%, -50%)',
+                            }
+                        }}
                     >
-                        <b>You need to choose directory</b>
+                        <p>
+                            Your browser lost access to directory storing your tasks.
+                        </p>
+
+                        <WelcomeScreen />
 
                         <button
                             onClick={() => {
@@ -200,7 +215,7 @@ function KanbanBoard() {
                                 "
                         >
                             <PlusIcon />
-                            Load data
+                            Click to regain access
                         </button>
                     </Modal>
                     }
