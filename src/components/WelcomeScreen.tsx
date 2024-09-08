@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import PlusIcon from '../icons/PlusIcon';
 import Modal from 'react-modal';
 
 function WelcomeScreen() {
