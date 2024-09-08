@@ -1,6 +1,6 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { Column, Id, Row, Task } from "../types"
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import PlusIcon from "../icons/PlusIcon";
 import TaskCard from "./TaskCard";
 import { CSS } from "@dnd-kit/utilities";
@@ -18,7 +18,6 @@ interface Props {
 
 function ColumnContainer(props: Props) {
     const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn } = props;
-    const [showButton, setShowButton] = useState<boolean>(false);
 
     const tasksIds = useMemo(() => {
         return tasks.map(task => task.id);
@@ -51,8 +50,6 @@ function ColumnContainer(props: Props) {
             basis-0
             min-w-0
             "
-            onMouseEnter={() => setShowButton(true)}
-            onMouseLeave={() => setShowButton(false)}
             >
 
             {/* Tasks container */}

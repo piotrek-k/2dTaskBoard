@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
 import { Column, Id, KanbanDataContainer, Row, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -338,19 +338,19 @@ function KanbanBoard() {
         });
     }
 
-    function deleteTask(id: Id) {
-        const filteredTasks = tasks.filter((task) => task.id !== id);
-        setTasks(filteredTasks);
-    }
+    // function deleteTask(id: Id) {
+    //     const filteredTasks = tasks.filter((task) => task.id !== id);
+    //     setTasks(filteredTasks);
+    // }
 
-    function updateTask(id: Id, content: string) {
-        const newTasks = tasks.map((task) => {
-            if (task.id !== id) return task;
-            return { ...task, content };
-        });
+    // function updateTask(id: Id, content: string) {
+    //     const newTasks = tasks.map((task) => {
+    //         if (task.id !== id) return task;
+    //         return { ...task, content };
+    //     });
 
-        setTasks(newTasks);
-    }
+    //     setTasks(newTasks);
+    // }
 
     function createNewRow() {
         const rowToAdd: Row = {
@@ -371,22 +371,22 @@ function KanbanBoard() {
         setColumns([...columns, columnToAdd]);
     }
 
-    function deleteColumn(id: Id) {
-        const filteredColumns = columns.filter((col) => col.id !== id);
-        setColumns(filteredColumns);
+    // function deleteColumn(id: Id) {
+    //     const filteredColumns = columns.filter((col) => col.id !== id);
+    //     setColumns(filteredColumns);
 
-        const newTasks = tasks.filter(t => t.columnId !== id);
-        setTasks(newTasks);
-    }
+    //     const newTasks = tasks.filter(t => t.columnId !== id);
+    //     setTasks(newTasks);
+    // }
 
-    function updateColumn(id: Id, title: string) {
-        const newColumns = columns.map(col => {
-            if (col.id !== id) return col;
-            return { ...col, title };
-        });
+    // function updateColumn(id: Id, title: string) {
+    //     const newColumns = columns.map(col => {
+    //         if (col.id !== id) return col;
+    //         return { ...col, title };
+    //     });
 
-        setColumns(newColumns);
-    }
+    //     setColumns(newColumns);
+    // }
 }
 
 

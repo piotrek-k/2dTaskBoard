@@ -1,5 +1,5 @@
-import { useContext, useState } from 'react';
-import { Id, Task } from '../types';
+import { useContext } from 'react';
+import { Task } from '../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import ModalContext, { ModalContextProps } from './modal/ModalContext';
