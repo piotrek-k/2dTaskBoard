@@ -115,10 +115,12 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
       <FileUploader
         onFileUpload={async (file) => {
           try {
-            let newFileName = await dataStorageContext.uploadFileForTask(task.id, file);
-            console.log('File uploaded successfully:', newFileName);
+            let fileHandle = (await dataStorageContext.uploadFileForTask(task.id, file)).fileHandle;
+            console.log('File uploaded successfully:', fileHandle.name);
 
-            setTaskContent((prevContent) => prevContent + `\n\n[${newFileName}](${newFileName})`);
+            const src = URL.createObjectURL(await fileHandle.getFile());
+
+            setTaskContent((prevContent) => prevContent + `\n\n![${fileHandle.name}](${src})`);
           } catch (error) {
             console.error('Error uploading file:', error);
           }
