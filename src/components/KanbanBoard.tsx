@@ -142,7 +142,7 @@ function KanbanBoard() {
                         <PlusIcon />
                         Add Row
                     </button>
-                    <button
+                    {/* <button
                         onClick={() => {
                             createNewColumn();
                         }}
@@ -152,8 +152,8 @@ function KanbanBoard() {
                     >
                         <PlusIcon />
                         Add Columns
-                    </button>
-                    <button
+                    </button> */}
+                    {/* <button
                         onClick={() => {
                             loadBoard();
                         }}
@@ -163,7 +163,7 @@ function KanbanBoard() {
                     >
                         <PlusIcon />
                         Load data
-                    </button>
+                    </button> */}
                     <button
                         onClick={() => {
                             loadFromDifferentSource();
@@ -175,7 +175,7 @@ function KanbanBoard() {
                         <PlusIcon />
                         Load different directory
                     </button>
-                    <button
+                    {/* <button
                         onClick={() => {
                             saveBoard();
                         }}
@@ -185,7 +185,7 @@ function KanbanBoard() {
                     >
                         <PlusIcon />
                         Save data
-                    </button>
+                    </button> */}
 
                     {!storageActive && <Modal
                         isOpen={true}
