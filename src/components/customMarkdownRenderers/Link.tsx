@@ -29,8 +29,9 @@ function Link({ taskId, props }: Props) {
             href={customSrc}
             target="_blank"
             rel="noopener noreferrer"
-            // {...props}
-        >Link</a>
+        >
+            {props.children}
+        </a>
     )
 }
 
