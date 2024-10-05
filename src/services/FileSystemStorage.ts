@@ -6,12 +6,13 @@ export interface IAppStorageAccessor {
     saveKanbanState(boardStateContainer: KanbanDataContainer): Promise<KanbanDataContainer>;
     getTaskContent(taskId: Id): Promise<string>;
     saveTaskContent(taskId: Id, content: string): Promise<void>;
+    uploadFileForTask(taskId: Id, file: File): Promise<{ fileName: string }>;
 }
 
 export class FileSystemStorage implements IAppStorageAccessor {
     directoryHandle: FileSystemDirectoryHandle | undefined;
-
     private onDirectoryHandleChange: ((newState: boolean) => void) | null = null;
+    private readonly reservedFileNames: string[] = ['content.md'];
 
     public registerOnChangeCallback(callback: (newState: boolean) => void) {
         this.onDirectoryHandleChange = callback;
@@ -41,13 +42,13 @@ export class FileSystemStorage implements IAppStorageAccessor {
         return handle;
     }
 
-    public async chooseDifferentSource(): Promise<FileSystemDirectoryHandle>{
+    public async chooseDifferentSource(): Promise<FileSystemDirectoryHandle> {
         const db = await getDbInstance();
 
         this.directoryHandle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
         await db.put('handles', this.directoryHandle, 'directoryHandle');
 
-        if(this.onDirectoryHandleChange != null){
+        if (this.onDirectoryHandleChange != null) {
             await this.onDirectoryHandleChange(true);
         }
 
@@ -147,6 +148,67 @@ export class FileSystemStorage implements IAppStorageAccessor {
         await writable.write(content);
 
         await writable.close();
+    }
+
+    private async generateUniqueFileName(directoryHandle: FileSystemDirectoryHandle, originalName: string): Promise<string> {
+        function extractFileInfo(filename: string): { baseFilename: string; counter: number | null; extension: string } {
+            const match = filename.match(/^(.+?)(?:_(\d+))?\.([^.]+)$/);
+            
+            if (!match) {
+                return { baseFilename: filename, counter: null, extension: '' };
+            }
+
+            const [, baseName, counterStr, extension] = match;
+            const counter = counterStr ? parseInt(counterStr, 10) : null;
+            const baseFilename = baseName;
+
+            return { baseFilename, counter, extension };
+        }
+
+        const { baseFilename, counter: initialCounter, extension } = extractFileInfo(originalName);
+        let counter = initialCounter ?? 0;
+
+        const fileExists = async (name: string) => {
+            try {
+                await directoryHandle.getFileHandle(name);
+                return true;
+            } catch {
+                return false;
+            }
+        };
+
+        let fileName = originalName;
+        while (this.reservedFileNames.includes(fileName) || await fileExists(fileName)) {
+            counter++;
+            fileName = `${baseFilename}_${counter}.${extension}`;
+        }
+
+        return fileName;
+    }
+
+    async uploadFileForTask(taskId: Id, file: File): Promise<{ fileName: string }> {
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+        
+        try {
+            const tasksDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
+            const taskDir = await tasksDir.getDirectoryHandle(`${taskId}`, { create: true });
+
+            const fileName = await this.generateUniqueFileName(taskDir, file.name);
+
+            const newFileHandle = await taskDir.getFileHandle(fileName, { create: true });
+
+            const writable = await newFileHandle.createWritable();
+            await writable.write(file);
+            await writable.close();
+
+            console.log(`File ${fileName} uploaded successfully for task ${taskId}`);
+            return { fileName };
+        } catch (error) {
+            console.error(`Error uploading file for task ${taskId}:`, error);
+            throw error;
+        }
     }
 }
 

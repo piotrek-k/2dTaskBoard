@@ -4,6 +4,7 @@ import MDEditor from '@uiw/react-md-editor';
 import PlusIcon from '../icons/PlusIcon';
 import { IAppStorageAccessor } from '../services/FileSystemStorage';
 import DataStorageContext from './filesystem/DataStorageContext';
+import FileUploader from './FileUploader';
 
 interface Props {
   task: Task;
@@ -79,6 +80,19 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
         }}
       />}
       {!useEditMode && <MDEditor.Markdown source={taskContent} style={{ whiteSpace: 'pre-wrap' }} className='my-3 min-h-60 max-h-96 overflow-y-auto bg-slate-600' />}
+
+      <FileUploader
+        onFileUpload={async (file) => {
+          try {
+            let newFileName = await dataStorageContext.uploadFileForTask(task.id, file);
+            console.log('File uploaded successfully:', newFileName);
+
+            setTaskContent((prevContent) => prevContent + `\n\n[${newFileName}](${newFileName})`);
+          } catch (error) {
+            console.error('Error uploading file:', error);
+          }
+        }}
+      />
 
 
     </div>
