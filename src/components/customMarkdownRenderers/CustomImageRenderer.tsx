@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
-import { IAppStorageAccessor } from '../services/FileSystemStorage';
-import DataStorageContext from './filesystem/DataStorageContext';
-import { Id } from '../types';
+import { IAppStorageAccessor } from '../../services/FileSystemStorage';
+import DataStorageContext from '../filesystem/DataStorageContext';
+import { Id } from '../../types';
 
 interface Props {
     taskId: Id;
