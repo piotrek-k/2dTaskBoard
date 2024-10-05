@@ -100,7 +100,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
 
                     <button
                         onClick={() => {
-                            setUseEditMode(!useEditMode)
+                            setUseEditMode(!useEditMode);
                         }}
                         className="flex">
                         <PlusIcon />
@@ -129,6 +129,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
             <div className="border-b border-gray-600 my-4"></div>
 
             {useEditMode ? (<MDEditor
+                autoFocus={true}
                 value={taskContent}
                 onChange={(x) => {
                     setTaskContent(x)
@@ -148,9 +149,11 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                         a: (props: any) => <Link props={props} taskId={task.id} />
                     }}
                     style={{ whiteSpace: 'pre-wrap', backgroundColor: 'inherit' }}
-                    className='my-3'
+                    className='m-3'
                 />
             )}
+
+            <div className="border-b border-gray-600 my-4"></div>
 
             <div className="mt-4 mb-2">
                 <h3 className="text-lg font-semibold mb-2">Attached Files:</h3>

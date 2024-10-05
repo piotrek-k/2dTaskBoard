@@ -270,7 +270,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
 
             const files: File[] = [];
             for await (const entry of (taskDir as any).values()) {
-                if (entry.kind === 'file' && !this.reservedFileNames.includes(entry.name)) {
+                if (entry.kind === 'file' && !this.reservedFileNames.includes(entry.name) && !entry.name.endsWith('.crswap')) {
                     const file = await entry.getFile();
                     files.push(file);
                 }
