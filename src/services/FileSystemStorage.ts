@@ -257,7 +257,9 @@ export class FileSystemStorage implements IAppStorageAccessor {
         }
 
         const tasksDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
-        return await tasksDir.getDirectoryHandle(`${taskId}`, { create: true });
+        const taskDir = await tasksDir.getDirectoryHandle(`${taskId}`, { create: true });
+
+        return await taskDir.getDirectoryHandle(`attachments`, { create: true });
     }
 
     async getFilesForTask(taskId: Id): Promise<File[]> {
