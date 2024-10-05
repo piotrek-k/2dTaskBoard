@@ -126,7 +126,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                 />
             )}
 
-            {useEditMode && <MDEditor
+            {useEditMode ? (<MDEditor
                 value={taskContent}
                 onChange={(x) => {
                     setTaskContent(x)
@@ -138,9 +138,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                     }
                 }}
                 className="min-h-[50vw]"
-            />}
-
-            {!useEditMode &&
+            />) : (
                 <MDEditor.Markdown
                     source={taskContent}
                     components={{
@@ -148,8 +146,9 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                         a: (props: any) => <Link props={props} taskId={task.id} />
                     }}
                     style={{ whiteSpace: 'pre-wrap' }}
-                    className='my-3 min-h-60 max-h-96 overflow-y-auto bg-slate-600'
-                />}
+                    className='my-3 bg-slate-600'
+                />
+            )}
 
             <div className="mt-4 mb-2">
                 <h3 className="text-lg font-semibold mb-2">Attached Files:</h3>
