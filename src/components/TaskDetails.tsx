@@ -92,7 +92,13 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
         onChange={(x) => {
           setTaskContent(x)
         }}
+        previewOptions={{
+          components: {
+            img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />
+          }
+        }}
       />}
+
       {!useEditMode &&
         <MDEditor.Markdown
           source={taskContent}
