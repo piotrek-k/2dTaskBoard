@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useMemo } from 'react';
 import { IAppStorageAccessor } from '../../services/FileSystemStorage';
 import DataStorageContext from '../filesystem/DataStorageContext';
 import { Id } from '../../types';
@@ -8,22 +8,30 @@ interface Props {
     props: any;
 }
 
+const srcCache: Record<string, string> = {};
+
 function CustomImageRenderer({ taskId, props }: Props) {
     const [customSrc, setCustomSrc] = useState<string>(props.src || '');
     const dataStorageContext = useContext(DataStorageContext) as IAppStorageAccessor;
 
+    const cacheKey = useMemo(() => `${taskId}-${props.src}`, [taskId, props.src]);
+
     useEffect(() => {
         const fetchCustomSrc = async () => {
-            const directory = await dataStorageContext.getDirectoryHandleForTaskAttachments(taskId);
+            if (srcCache[cacheKey]) {
+                setCustomSrc(srcCache[cacheKey]);
+                return;
+            }
 
+            const directory = await dataStorageContext.getDirectoryHandleForTaskAttachments(taskId);
             const src = await dataStorageContext.mapSrcToFileSystem(props.src, directory);
+            
+            srcCache[cacheKey] = src;
             setCustomSrc(src);
         };
 
         fetchCustomSrc();
-    }, [props.src]);
-
-    
+    }, [cacheKey, dataStorageContext]);
 
     return (
         <img
