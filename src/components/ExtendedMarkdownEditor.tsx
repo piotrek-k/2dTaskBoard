@@ -1,5 +1,5 @@
 import MDEditor from '@uiw/react-md-editor';
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState, useCallback } from 'react'
 import { IAppStorageAccessor } from '../services/FileSystemStorage';
 import CustomImageRenderer from './customMarkdownRenderers/CustomImageRenderer';
 import Link from './customMarkdownRenderers/Link';
@@ -7,6 +7,7 @@ import DataStorageContext from './filesystem/DataStorageContext';
 import FileUploader from './FileUploader';
 import { WorkUnit } from '../types';
 import PlusIcon from '../icons/PlusIcon';
+import ModalContext, { ModalContextProps } from './modal/ModalContext';
 
 interface Props {
     task: WorkUnit;
@@ -20,11 +21,13 @@ interface TaskFile {
 
 function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
     const dataStorageContext = useContext(DataStorageContext) as IAppStorageAccessor;
+    const { setModalContentHasUnsavedChanges } = useContext(ModalContext) as ModalContextProps;
     const [taskContent, setTaskContent] = useState<string | undefined>('');
     const [useEditMode, setUseEditMode] = useState(false);
     const [taskName, setTaskName] = useState<string>(task.title);
     const [useTaskNameEditMode, setUseTaskNameEditMode] = useState(false);
     const [taskFiles, setTaskFiles] = useState<TaskFile[]>([]);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     useEffect(() => {
         if (dataStorageContext) {
@@ -40,16 +43,31 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
     }, [dataStorageContext]);
 
     useEffect(() => {
-        dataStorageContext.saveTaskContent(task.id, taskContent ?? "");
-    }, [taskContent]);
-
-    useEffect(() => {
         (async function () {
-            task.title = taskName;
-
-            await requestSavingDataToStorage();
+            if (task.title != taskName) {
+                setHasUnsavedChanges(true);
+            }
         })();
     }, [taskName]);
+
+    useEffect(() => {
+        setModalContentHasUnsavedChanges(hasUnsavedChanges);
+    }, [hasUnsavedChanges]);
+
+    useEffect(() => {
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [hasUnsavedChanges]);
 
     function refreshAttachments() {
         if (dataStorageContext) {
@@ -96,6 +114,20 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
         setTaskContent((prevContent) => prevContent + `\n\n[${fileName}](${fileName})`);
     }
 
+    const handleContentChange = useCallback((newContent: string | undefined) => {
+        setTaskContent(newContent);
+        setHasUnsavedChanges(true);
+    }, [setHasUnsavedChanges]);
+
+    const handleSave = useCallback(async () => {
+        if (dataStorageContext && taskContent !== undefined) {
+            task.title = taskName;
+            await dataStorageContext.saveTaskContent(task.id, taskContent);
+            await requestSavingDataToStorage();
+            setHasUnsavedChanges(false);
+        }
+    }, [dataStorageContext, task, taskContent, taskName, requestSavingDataToStorage]);
+
     return (
         <>
             <div className='flex flex-col'>
@@ -109,6 +141,17 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                         className="flex">
                         <PlusIcon />
                         Switch edit mode
+                    </button>
+
+                    <button
+                        onClick={handleSave}
+                        className={`px-4 py-2 rounded-md font-semibold ${hasUnsavedChanges
+                            ? 'bg-yellow-500 hover:bg-yellow-600 text-black'
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                            } transition-colors duration-200`}
+                        disabled={!hasUnsavedChanges}
+                    >
+                        {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
                     </button>
                 </div>
             </div>
@@ -132,20 +175,19 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
 
             <div className="border-b border-gray-600 my-4"></div>
 
-            {useEditMode ? (<MDEditor
-                autoFocus={true}
-                value={taskContent}
-                onChange={(x) => {
-                    setTaskContent(x)
-                }}
-                previewOptions={{
-                    components: {
-                        img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
-                        a: (props: any) => <Link props={props} taskId={task.id} />
-                    }
-                }}
-                className="min-h-[50vw]"
-            />) : (
+            {useEditMode ? (
+                <MDEditor
+                    autoFocus={true}
+                    value={taskContent}
+                    onChange={handleContentChange}
+                    previewOptions={{
+                        components: {
+                            img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
+                            a: (props: any) => <Link props={props} taskId={task.id} />
+                        }
+                    }}
+                    className="min-h-[50vw]"
+                />) : (
                 <MDEditor.Markdown
                     source={taskContent}
                     components={{
@@ -158,6 +200,8 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
             )}
 
             <div className="border-b border-gray-600 my-4"></div>
+
+
 
             <div className="mt-4 mb-2">
                 <h3 className="text-lg font-semibold mb-2">Attached Files:</h3>

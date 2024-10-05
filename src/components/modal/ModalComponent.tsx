@@ -1,20 +1,27 @@
-import { useContext } from 'react';
+import { useContext, useCallback } from 'react';
 import Modal from 'react-modal';
 import ModalContext, { ModalContextProps } from './ModalContext';
 
 function ModalComponent() {
-  const { modalOpen, setModalOpen, modalContent } = useContext(ModalContext) as ModalContextProps;
+  const { modalOpen, setModalOpen, modalContent, modalContentHasUnsavedChanges } = useContext(ModalContext) as ModalContextProps;
+
+  const handleCloseModal = useCallback(() => {
+    if (modalContentHasUnsavedChanges && !window.confirm('You have unsaved changes. Are you sure you want to close the modal?')) {
+      return;
+    }
+    setModalOpen(false);
+  }, [modalContentHasUnsavedChanges, setModalOpen]);
 
   return (
     <Modal
       isOpen={modalOpen}
-      onRequestClose={() => setModalOpen(false)}
+      onRequestClose={handleCloseModal}
       className="fixed inset-0 flex items-center justify-center p-4"
       overlayClassName="fixed inset-0 bg-black bg-opacity-50"
     >
       <div className="relative bg-gray-800 dark:bg-gray-900 text-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         <button
-          onClick={() => setModalOpen(false)}
+          onClick={handleCloseModal}
           className="absolute top-2 right-2 text-gray-400 hover:text-gray-200 transition-colors duration-200"
           aria-label="Close modal"
         >
