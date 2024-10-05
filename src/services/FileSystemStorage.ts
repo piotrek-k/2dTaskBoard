@@ -14,11 +14,22 @@ export interface IAppStorageAccessor {
 
 export class FileSystemStorage implements IAppStorageAccessor {
     directoryHandle: FileSystemDirectoryHandle | undefined;
-    private onDirectoryHandleChange: ((newState: boolean) => void) | null = null;
+
     private readonly reservedFileNames: string[] = ['content.md'];
+
+    private onDirectoryHandleChange: ((newState: boolean) => void) | null = null;
 
     public registerOnChangeCallback(callback: (newState: boolean) => void) {
         this.onDirectoryHandleChange = callback;
+    }
+
+    private isHandleActive: boolean = false;
+    private registerPossibleSourceChange(newState: boolean) {
+        if (this.onDirectoryHandleChange != null && this.isHandleActive != newState) {
+            this.onDirectoryHandleChange(newState);
+        }
+
+        this.isHandleActive = newState;
     }
 
     private async restoreHandle(): Promise<FileSystemDirectoryHandle> {
@@ -29,47 +40,74 @@ export class FileSystemStorage implements IAppStorageAccessor {
         if (handle) {
             console.log("Handle exists:", handle);
 
-            let opts = { mode: 'readwrite' };
+            let stateOfHandle = await this.verifyExistingHandle(handle);
 
-            if (await this.checkHandle(handle) && (await handle.requestPermission(opts)) !== "granted") {
-                throw new Error("Cannot create handle");
+            console.log("State of handle:", stateOfHandle);
+
+            if (stateOfHandle) {
+                this.registerPossibleSourceChange(true);
+
+                return handle;
             }
-        } else {
-            handle = await this.chooseDifferentSource();
         }
 
-        await this.checkHandle(handle, true);
+        console.log("Handle does not exist. Letting user choose source...");
+
+        handle = await this.chooseDifferentSource();
+
+        this.registerPossibleSourceChange(true);
 
         this.directoryHandle = handle;
 
         return handle;
     }
 
+    private async verifyExistingHandle(handle: FileSystemDirectoryHandle): Promise<boolean> {
+        let opts = { mode: 'readwrite' };
+
+        if (await this.checkIfHandleStillHasPermission(handle)) {
+            return true;
+        }
+        else {
+            console.log("Handle exists, but lost permission. Requesting for permission...");
+        }
+
+        if ((await (handle as any).requestPermission(opts)) === "granted") {
+            this.registerPossibleSourceChange(true);
+            return true;
+        }
+        else {
+            this.registerPossibleSourceChange(false);
+            console.error("Requesting for permission failed");
+        }
+
+        return false;
+    }
+
+
     public async chooseDifferentSource(): Promise<FileSystemDirectoryHandle> {
         const db = await getDbInstance();
 
         this.directoryHandle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
-        await db.put('handles', this.directoryHandle, 'directoryHandle');
 
-        if (this.onDirectoryHandleChange != null) {
-            await this.onDirectoryHandleChange(true);
+        let stateOfHandle = await this.verifyExistingHandle(this.directoryHandle);
+
+        if (stateOfHandle) {
+            await db.put('handles', this.directoryHandle, 'directoryHandle');
+
+            this.registerPossibleSourceChange(true);
+
+            return this.directoryHandle;
         }
 
-        return this.directoryHandle;
+        throw new Error("No valid directory handle selected");
     }
 
-    private async checkHandle(handle: FileSystemDirectoryHandle, notifyAboutChanges: boolean = false): Promise<boolean> {
+    private async checkIfHandleStillHasPermission(handle: FileSystemDirectoryHandle): Promise<boolean> {
         let opts = { mode: 'readwrite' };
 
         if (await (handle as any).queryPermission(opts) === "granted") {
-            if (notifyAboutChanges && this.onDirectoryHandleChange != null) {
-                this.onDirectoryHandleChange(true);
-            }
             return true;
-        }
-
-        if (notifyAboutChanges && this.onDirectoryHandleChange != null) {
-            this.onDirectoryHandleChange(false);
         }
 
         return false;
@@ -77,7 +115,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
 
     private async getMainFileHandle(): Promise<FileSystemFileHandle> {
         if (this.directoryHandle == null) {
-            await this.restoreHandle();
+            this.directoryHandle = await this.restoreHandle();
         }
 
         if (this.directoryHandle == null) {
