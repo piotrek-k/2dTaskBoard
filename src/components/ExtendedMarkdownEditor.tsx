@@ -112,7 +112,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
             {!useTaskNameEditMode ? (
                 <h1
                     onClick={() => setUseTaskNameEditMode(true)}
-                    className="text-2xl font-bold text-white cursor-pointer hover:text-gray-300 transition-colors duration-200"
+                    className="text-2xl font-bold text-white cursor-pointer hover:text-gray-300 transition-colors duration-200 py-2 break-words"
                 >
                     {taskName ?? 'Task name'}
                 </h1>
@@ -125,6 +125,8 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                     className="w-full px-3 py-2 text-2xl font-bold text-white bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
             )}
+
+            <div className="border-b border-gray-600 my-4"></div>
 
             {useEditMode ? (<MDEditor
                 value={taskContent}
@@ -145,8 +147,8 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                         img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
                         a: (props: any) => <Link props={props} taskId={task.id} />
                     }}
-                    style={{ whiteSpace: 'pre-wrap' }}
-                    className='my-3 bg-slate-600'
+                    style={{ whiteSpace: 'pre-wrap', backgroundColor: 'inherit' }}
+                    className='my-3'
                 />
             )}
 

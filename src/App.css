@@ -15,3 +15,24 @@ body,
 .task > ::-webkit-scrollbar-thumb {
   background: #888; 
 } 
+
+/* Scrollbar styles */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #1f2937; /* gray-800 */
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #4b5563; /* gray-600 */
+  border-radius: 20px;
+  border: 2px solid #1f2937; /* gray-800 */
+}
+
+/* For Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937; /* thumb and track color */
+}
