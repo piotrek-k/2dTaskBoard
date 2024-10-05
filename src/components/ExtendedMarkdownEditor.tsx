@@ -1,5 +1,5 @@
 import MDEditor from '@uiw/react-md-editor';
-import { useContext, useEffect, useState, useCallback } from 'react'
+import { useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { IAppStorageAccessor } from '../services/FileSystemStorage';
 import CustomImageRenderer from './customMarkdownRenderers/CustomImageRenderer';
 import Link from './customMarkdownRenderers/Link';
@@ -128,6 +128,33 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
         }
     }, [dataStorageContext, task, taskContent, taskName, requestSavingDataToStorage]);
 
+    const memoizedMarkdown = useMemo(() => (
+        <MDEditor.Markdown
+            source={taskContent}
+            components={{
+                img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
+                a: (props: any) => <Link props={props} taskId={task.id} />
+            }}
+            style={{ whiteSpace: 'pre-wrap', backgroundColor: 'inherit' }}
+            className='m-3'
+        />
+    ), [taskContent, task.id]);
+
+    const memoizedEditor = useMemo(() => (
+        <MDEditor
+            autoFocus={true}
+            value={taskContent}
+            onChange={handleContentChange}
+            previewOptions={{
+                components: {
+                    img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
+                    a: (props: any) => <Link props={props} taskId={task.id} />
+                }
+            }}
+            className="min-h-[50vw]"
+        />
+    ), [taskContent, task.id, handleContentChange]);
+
     return (
         <>
             <div className='flex flex-col'>
@@ -175,29 +202,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
 
             <div className="border-b border-gray-600 my-4"></div>
 
-            {useEditMode ? (
-                <MDEditor
-                    autoFocus={true}
-                    value={taskContent}
-                    onChange={handleContentChange}
-                    previewOptions={{
-                        components: {
-                            img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
-                            a: (props: any) => <Link props={props} taskId={task.id} />
-                        }
-                    }}
-                    className="min-h-[50vw]"
-                />) : (
-                <MDEditor.Markdown
-                    source={taskContent}
-                    components={{
-                        img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
-                        a: (props: any) => <Link props={props} taskId={task.id} />
-                    }}
-                    style={{ whiteSpace: 'pre-wrap', backgroundColor: 'inherit' }}
-                    className='m-3'
-                />
-            )}
+            {useEditMode ? memoizedEditor : memoizedMarkdown}
 
             <div className="border-b border-gray-600 my-4"></div>
 
