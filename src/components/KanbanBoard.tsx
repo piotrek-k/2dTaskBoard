@@ -1,5 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../icons/PlusIcon';
+import FolderIcon from '../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { Column, Id, KanbanDataContainer, Row, Task } from '../types';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
@@ -10,8 +11,6 @@ import TaskCard from './TaskCard';
 import Modal from 'react-modal';
 import DataStorageContext from './filesystem/DataStorageContext';
 import WelcomeScreen from './WelcomeScreen';
-
-
 
 function KanbanBoard() {
 
@@ -84,110 +83,75 @@ function KanbanBoard() {
     }, [tasks, rows, columns]);
 
     return (
-
-        <div className="
-            flex flex-col max-w-full
-            ">
-            <DndContext
-                sensors={sensors}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
-                onDragOver={onDragOver}>
-                <div className="m-auto flex gap-2  flex-col w-full">
-                    <div className='flex flex-col'>
-                        <ColumnHeaderContainer
-                            headerNames={headerNames}
-                        />
-                        <SortableContext items={rowsId}>
-                            {rows.map((row) => (
-                                row.isVisible &&
-                                <RowContainer
-                                    key={row.id}
-                                    row={row}
-                                    columns={columns}
-                                    createTask={createTask}
-                                    getTasks={getTasks}
-                                    requestSavingDataToStorage={saveBoard}
-                                    rowNavigation={{
-                                        moveUp: moveRowUp,
-                                        moveDown: moveRowDown,
-                                        moveTop: moveRowTop,
-                                        moveBottom: moveRowBottom,
-                                        archive: archiveRow
-                                    }}
-                                />
-                            ))}
-                        </SortableContext>
-
-                        {createPortal(
-                            <DragOverlay>
-                                {
-                                    activeTask && <TaskCard
-                                        task={activeTask}
-                                        requestSavingDataToStorage={saveBoard}
-                                    />
-                                }
-                            </DragOverlay>,
-                            document.body
-                        )}
+        <div className="flex flex-col h-screen">
+            <nav className="bg-gray-800 py-2 px-4">
+                <div className="container mx-auto flex justify-between items-center">
+                    <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
+                    <div className="flex space-x-3">
+                        <button
+                            onClick={() => createNewRow()}
+                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                            <PlusIcon />
+                            Add Row
+                        </button>
+                        <button
+                            onClick={() => loadFromDifferentSource()}
+                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                            <FolderIcon/>
+                            Load Different Directory
+                        </button>
                     </div>
-                    <button
-                        onClick={() => {
-                            createNewRow();
-                        }}
-                        className="
-                            flex
-                            "
-                    >
-                        <PlusIcon />
-                        Add Row
-                    </button>
-                    {/* <button
-                        onClick={() => {
-                            createNewColumn();
-                        }}
-                        className="
-                            flex
-                            "
-                    >
-                        <PlusIcon />
-                        Add Columns
-                    </button> */}
-                    {/* <button
-                        onClick={() => {
-                            loadBoard();
-                        }}
-                        className="
-                            flex
-                            "
-                    >
-                        <PlusIcon />
-                        Load data
-                    </button> */}
-                    <button
-                        onClick={() => {
-                            loadFromDifferentSource();
-                        }}
-                        className="
-                            flex
-                            "
-                    >
-                        <PlusIcon />
-                        Load different directory
-                    </button>
-                    {/* <button
-                        onClick={() => {
-                            saveBoard();
-                        }}
-                        className="
-                            flex
-                            "
-                    >
-                        <PlusIcon />
-                        Save data
-                    </button> */}
+                </div>
+            </nav>
 
-                    {!storageActive && <Modal
+            <div className="flex-grow overflow-auto">
+                <DndContext
+                    sensors={sensors}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                    onDragOver={onDragOver}>
+                    <div className="m-auto flex gap-2  flex-col w-full">
+                        <div className='flex flex-col'>
+                            <ColumnHeaderContainer
+                                headerNames={headerNames}
+                            />
+                            <SortableContext items={rowsId}>
+                                {rows.map((row) => (
+                                    row.isVisible &&
+                                    <RowContainer
+                                        key={row.id}
+                                        row={row}
+                                        columns={columns}
+                                        createTask={createTask}
+                                        getTasks={getTasks}
+                                        requestSavingDataToStorage={saveBoard}
+                                        rowNavigation={{
+                                            moveUp: moveRowUp,
+                                            moveDown: moveRowDown,
+                                            moveTop: moveRowTop,
+                                            moveBottom: moveRowBottom,
+                                            archive: archiveRow
+                                        }}
+                                    />
+                                ))}
+                            </SortableContext>
+
+                            {createPortal(
+                                <DragOverlay>
+                                    {
+                                        activeTask && <TaskCard
+                                            task={activeTask}
+                                            requestSavingDataToStorage={saveBoard}
+                                        />
+                                    }
+                                </DragOverlay>,
+                                document.body
+                            )}
+                        </div>
+
+                        {!storageActive && <Modal
                         isOpen={true}
                         style={{
                             content: {
@@ -219,9 +183,12 @@ function KanbanBoard() {
                         </button>
                     </Modal>
                     }
-                </div>
-            </DndContext>
-            <footer className='bg-mainBackgroundColor text-slate-600 text-sm'>
+                    </div>
+                </DndContext>
+                
+            </div>
+
+            <footer className='bg-mainBackgroundColor text-slate-600 text-sm p-2'>
                 &copy; 2024 - {new Date().getFullYear()} Piotr Kozerski. All rights reserved.
             </footer>
         </div>
