@@ -51,7 +51,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
         })();
     }, [taskName]);
 
-    useEffect(() => {
+    function refreshAttachments() {
         if (dataStorageContext) {
             const fetchTaskFiles = async () => {
                 try {
@@ -71,6 +71,10 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
 
             fetchTaskFiles();
         }
+    }
+
+    useEffect(() => {
+        refreshAttachments();
     }, [dataStorageContext, task.id]);
 
     function appendFile(fileName: string) {
@@ -193,6 +197,8 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                         let fileHandle = (await dataStorageContext.uploadFileForTask(task.id, file)).fileHandle;
 
                         appendFile(fileHandle.name);
+
+                        refreshAttachments();
                     } catch (error) {
                         console.error('Error uploading file:', error);
                     }
