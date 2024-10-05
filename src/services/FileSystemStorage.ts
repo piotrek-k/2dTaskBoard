@@ -6,7 +6,7 @@ export interface IAppStorageAccessor {
     saveKanbanState(boardStateContainer: KanbanDataContainer): Promise<KanbanDataContainer>;
     getTaskContent(taskId: Id): Promise<string>;
     saveTaskContent(taskId: Id, content: string): Promise<void>;
-    uploadFileForTask(taskId: Id, file: File): Promise<{ fileName: string }>;
+    uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }>;
     getFilesForTask(taskId: Id): Promise<File[]>;
 }
 
@@ -187,7 +187,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
         return fileName;
     }
 
-    async uploadFileForTask(taskId: Id, file: File): Promise<{ fileName: string }> {
+    async uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }> {
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }
@@ -205,7 +205,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
             await writable.close();
 
             console.log(`File ${fileName} uploaded successfully for task ${taskId}`);
-            return { fileName };
+            return { fileHandle: newFileHandle };
         } catch (error) {
             console.error(`Error uploading file for task ${taskId}:`, error);
             throw error;
