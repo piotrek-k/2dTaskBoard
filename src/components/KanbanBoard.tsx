@@ -362,14 +362,14 @@ function KanbanBoard() {
         setRows([...rows, rowToAdd]);
     }
 
-    function createNewColumn() {
-        const columnToAdd: Column = {
-            id: generateId(),
-            title: `Column ${columns.length + 1}`,
-        };
+    // function createNewColumn() {
+    //     const columnToAdd: Column = {
+    //         id: generateId(),
+    //         title: `Column ${columns.length + 1}`,
+    //     };
 
-        setColumns([...columns, columnToAdd]);
-    }
+    //     setColumns([...columns, columnToAdd]);
+    // }
 
     // function deleteColumn(id: Id) {
     //     const filteredColumns = columns.filter((col) => col.id !== id);
