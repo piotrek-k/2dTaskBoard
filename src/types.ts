@@ -1,10 +1,13 @@
 export type Id = string | number;
 
-export type Row = {
+export type WorkUnit = {
     id: Id;
     title: string;
-    isVisible: boolean;
 }
+
+export type Row = {
+    isVisible: boolean;
+} & WorkUnit;
 
 export type Column = {
     id: Id;
@@ -12,11 +15,9 @@ export type Column = {
 }
 
 export type Task = {
-    id: Id;
     columnId: Id;
     rowId: Id;
-    title: string;
-}
+} & WorkUnit;
 
 export interface KanbanDataContainer {
     tasks: Task[];
