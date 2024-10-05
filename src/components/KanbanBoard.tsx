@@ -106,13 +106,13 @@ function KanbanBoard() {
                 </div>
             </nav>
 
-            <div className="flex-grow overflow-auto">
+            <div className="flex-grow overflow-auto scrollbar-thin">
                 <DndContext
                     sensors={sensors}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
                     onDragOver={onDragOver}>
-                    <div className="m-auto flex gap-2  flex-col w-full">
+                    <div className="m-auto flex gap-2 flex-col w-full">
                         <div className='flex flex-col'>
                             <ColumnHeaderContainer
                                 headerNames={headerNames}
