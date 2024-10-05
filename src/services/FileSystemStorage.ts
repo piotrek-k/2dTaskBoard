@@ -9,6 +9,7 @@ export interface IAppStorageAccessor {
     uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }>;
     getFilesForTask(taskId: Id): Promise<File[]>;
     getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
+    deleteFileForTask(taskId: Id, fileName: string): Promise<void>;
     mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string>;
 }
 
@@ -260,6 +261,15 @@ export class FileSystemStorage implements IAppStorageAccessor {
         const taskDir = await tasksDir.getDirectoryHandle(`${taskId}`, { create: true });
 
         return await taskDir.getDirectoryHandle(`attachments`, { create: true });
+    }
+
+    async deleteFileForTask(taskId: Id, fileName: string): Promise<void> {
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        const taskDir = await this.getDirectoryHandleForTaskAttachments(taskId);
+        await taskDir.removeEntry(fileName);
     }
 
     async getFilesForTask(taskId: Id): Promise<File[]> {
