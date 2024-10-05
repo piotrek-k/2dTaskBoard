@@ -6,7 +6,6 @@ import Link from './customMarkdownRenderers/Link';
 import DataStorageContext from './filesystem/DataStorageContext';
 import FileUploader from './FileUploader';
 import { WorkUnit } from '../types';
-import PlusIcon from '../icons/PlusIcon';
 import ModalContext, { ModalContextProps } from './modal/ModalContext';
 
 interface Props {
