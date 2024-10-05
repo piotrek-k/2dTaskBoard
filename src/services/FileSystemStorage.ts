@@ -8,6 +8,7 @@ export interface IAppStorageAccessor {
     saveTaskContent(taskId: Id, content: string): Promise<void>;
     uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }>;
     getFilesForTask(taskId: Id): Promise<File[]>;
+    getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
 }
 
 export class FileSystemStorage implements IAppStorageAccessor {
@@ -193,8 +194,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
         }
         
         try {
-            const tasksDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
-            const taskDir = await tasksDir.getDirectoryHandle(`${taskId}`, { create: true });
+            const taskDir = await this.getDirectoryHandleForTaskAttachments(taskId);
 
             const fileName = await this.generateUniqueFileName(taskDir, file.name);
 
@@ -212,14 +212,22 @@ export class FileSystemStorage implements IAppStorageAccessor {
         }
     }
 
+    async getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle> {
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        const tasksDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
+        return await tasksDir.getDirectoryHandle(`${taskId}`, { create: true });
+    }
+
     async getFilesForTask(taskId: Id): Promise<File[]> {
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }
 
         try {
-            const tasksDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
-            const taskDir = await tasksDir.getDirectoryHandle(`${taskId}`, { create: true });
+            const taskDir = await this.getDirectoryHandleForTaskAttachments(taskId);
 
             const files: File[] = [];
             for await (const entry of (taskDir as any).values()) {
