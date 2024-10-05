@@ -5,6 +5,7 @@ import PlusIcon from '../icons/PlusIcon';
 import { IAppStorageAccessor } from '../services/FileSystemStorage';
 import DataStorageContext from './filesystem/DataStorageContext';
 import FileUploader from './FileUploader';
+import CustomImageRenderer from './CustomImageRenderer';
 
 interface Props {
   task: Task;
@@ -92,7 +93,15 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
           setTaskContent(x)
         }}
       />}
-      {!useEditMode && <MDEditor.Markdown source={taskContent} style={{ whiteSpace: 'pre-wrap' }} className='my-3 min-h-60 max-h-96 overflow-y-auto bg-slate-600' />}
+      {!useEditMode &&
+        <MDEditor.Markdown
+          source={taskContent}
+          components={{
+            img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />
+          }}
+          style={{ whiteSpace: 'pre-wrap' }}
+          className='my-3 min-h-60 max-h-96 overflow-y-auto bg-slate-600'
+        />}
 
       <div className="mt-4 mb-2">
         <h3 className="text-lg font-semibold mb-2">Attached Files:</h3>
@@ -118,9 +127,7 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
             let fileHandle = (await dataStorageContext.uploadFileForTask(task.id, file)).fileHandle;
             console.log('File uploaded successfully:', fileHandle.name);
 
-            const src = URL.createObjectURL(await fileHandle.getFile());
-
-            setTaskContent((prevContent) => prevContent + `\n\n![${fileHandle.name}](${src})`);
+            setTaskContent((prevContent) => prevContent + `\n\n![${fileHandle.name}](${fileHandle.name})`);
           } catch (error) {
             console.error('Error uploading file:', error);
           }
