@@ -1,12 +1,14 @@
-import { createContext, Dispatch, SetStateAction, ReactNode } from 'react';
+import React from 'react';
 
 export interface ModalContextProps {
     modalOpen: boolean;
-    setModalOpen: Dispatch<SetStateAction<boolean>>;
-    modalContent: ReactNode;
-    setModalContent: Dispatch<SetStateAction<ReactNode>>;
+    setModalOpen: (open: boolean) => void;
+    modalContent: React.ReactNode;
+    setModalContent: (content: React.ReactNode) => void;
+    modalContentHasUnsavedChanges: boolean;
+    setModalContentHasUnsavedChanges: (hasChanges: boolean) => void;
 }
 
-const ModalContext = createContext<ModalContextProps | undefined>(undefined);
+const ModalContext = React.createContext<ModalContextProps | null>(null);
 
 export default ModalContext;
