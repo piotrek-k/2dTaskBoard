@@ -12,6 +12,11 @@ interface Props {
   requestSavingDataToStorage: () => Promise<void>;
 }
 
+interface TaskFile {
+  name: string;
+  src: string;
+}
+
 function TaskDetails({ task, requestSavingDataToStorage }: Props) {
 
   const dataStorageContext = useContext(DataStorageContext) as IAppStorageAccessor;
@@ -19,7 +24,7 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
   const [useEditMode, setUseEditMode] = useState(false);
   const [taskName, setTaskName] = useState<string>(task.title);
   const [useTaskNameEditMode, setUseTaskNameEditMode] = useState(false);
-  const [taskFiles, setTaskFiles] = useState<string[]>([]);
+  const [taskFiles, setTaskFiles] = useState<TaskFile[]>([]);
 
   useEffect(() => {
     if (dataStorageContext) {
@@ -48,15 +53,44 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
 
   useEffect(() => {
     if (dataStorageContext) {
-      dataStorageContext.getFilesForTask(task.id)
-        .then(files => {
-          setTaskFiles(files.map(file => file.name));
-        })
-        .catch(err => {
+      const fetchTaskFiles = async () => {
+        try {
+          const directory = await dataStorageContext.getDirectoryHandleForTaskAttachments(task.id);
+          const files = await dataStorageContext.getFilesForTask(task.id);
+
+          const mappedFiles = await Promise.all(files.map(async file => ({
+            name: file.name,
+            src: await dataStorageContext.mapSrcToFileSystem(file.name, directory)
+          })));
+
+          setTaskFiles(mappedFiles);
+        } catch (err) {
           console.error('Error fetching task files:', err);
-        });
+        }
+      };
+
+      fetchTaskFiles();
     }
   }, [dataStorageContext, task.id]);
+
+  function appendFile(fileName: string) {
+    const fileExtension = fileName.split('.').pop()?.toLowerCase();
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
+    
+    if (imageExtensions.includes(fileExtension || '')) {
+      appendAsImage(fileName);
+    } else {
+      appendAsLink(fileName);
+    }
+  }
+
+  function appendAsImage(fileName: string) {
+    setTaskContent((prevContent) => prevContent + `\n\n![${fileName}](${fileName})`);
+  }
+
+  function appendAsLink(fileName: string) {
+    setTaskContent((prevContent) => prevContent + `\n\n[${fileName}](${fileName})`);
+  }
 
   return (
     <div className='flex flex-col'>
@@ -97,6 +131,7 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
             img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />
           }
         }}
+        className="min-h-[50vw]"
       />}
 
       {!useEditMode &&
@@ -113,12 +148,26 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
         <h3 className="text-lg font-semibold mb-2">Attached Files:</h3>
         {taskFiles.length > 0 ? (
           <ul className="space-y-2">
-            {taskFiles.map((fileName, index) => (
+            {taskFiles.map((taskFile, index) => (
               <li key={index} className="flex items-center">
                 <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
                 </svg>
-                <span className="text-sm text-gray-700 dark:text-gray-300">{fileName}</span>
+                <a
+                  href={taskFile.src}
+                  className="text-sm text-gray-700 dark:text-gray-300"
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  {taskFile.name}
+                </a>
+                <button
+                  onClick={() => {
+                    appendFile(taskFile.name);
+                  }}
+                  className="ml-2 px-2 py-1 text-sm font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  +
+                </button>
               </li>
             ))}
           </ul>
@@ -131,9 +180,8 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
         onFileUpload={async (file) => {
           try {
             let fileHandle = (await dataStorageContext.uploadFileForTask(task.id, file)).fileHandle;
-            console.log('File uploaded successfully:', fileHandle.name);
 
-            setTaskContent((prevContent) => prevContent + `\n\n![${fileHandle.name}](${fileHandle.name})`);
+            appendFile(fileHandle.name);
           } catch (error) {
             console.error('Error uploading file:', error);
           }

@@ -9,6 +9,7 @@ export interface IAppStorageAccessor {
     uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }>;
     getFilesForTask(taskId: Id): Promise<File[]>;
     getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
+    mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string>;
 }
 
 export class FileSystemStorage implements IAppStorageAccessor {
@@ -155,7 +156,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
     private async generateUniqueFileName(directoryHandle: FileSystemDirectoryHandle, originalName: string): Promise<string> {
         function extractFileInfo(filename: string): { baseFilename: string; counter: number | null; extension: string } {
             const match = filename.match(/^(.+?)(?:_(\d+))?\.([^.]+)$/);
-            
+
             if (!match) {
                 return { baseFilename: filename, counter: null, extension: '' };
             }
@@ -192,7 +193,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }
-        
+
         try {
             const taskDir = await this.getDirectoryHandleForTaskAttachments(taskId);
 
@@ -241,6 +242,21 @@ export class FileSystemStorage implements IAppStorageAccessor {
         } catch (error) {
             console.error(`Error getting files for task ${taskId}:`, error);
             throw error;
+        }
+    }
+
+    async mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string> {
+        if (!originalSrc) return '';
+
+        try {
+            const fileName = originalSrc.split('/').pop();
+            if (!fileName) return originalSrc;
+
+            const fileHandle = await directory.getFileHandle(fileName);
+            const file = await fileHandle.getFile();
+            return URL.createObjectURL(file);
+        } catch (error) {
+            return originalSrc;
         }
     }
 }
