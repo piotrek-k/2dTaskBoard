@@ -108,19 +108,22 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
         </button>
       </div>
 
-      {!useTaskNameEditMode &&
-        <h1 className='my-3 text-4xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-white'
-          onClick={() => setUseTaskNameEditMode(true)}>
+      {!useTaskNameEditMode ? (
+        <h1
+          onClick={() => setUseTaskNameEditMode(true)}
+          className="text-2xl font-bold text-white cursor-pointer hover:text-gray-300 transition-colors duration-200"
+        >
           {taskName ?? 'Task name'}
         </h1>
-      }
-
-      {useTaskNameEditMode && <textarea
-        value={taskName}
-        onChange={(e) => setTaskName(e.target.value)}
-        onBlur={() => setUseTaskNameEditMode(false)}
-        className='
-        my-3 text-4xl font-extrabold leading-none tracking-tight text-gray-900 dark:text-white bg-inherit'></textarea>}
+      ) : (
+        <input
+          type="text"
+          value={taskName}
+          onChange={(e) => setTaskName(e.target.value)}
+          onBlur={() => setUseTaskNameEditMode(false)}
+          className="w-full px-3 py-2 text-2xl font-bold text-white bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      )}
 
       {useEditMode && <MDEditor
         value={taskContent}
