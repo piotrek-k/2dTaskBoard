@@ -5,7 +5,8 @@ import PlusIcon from '../icons/PlusIcon';
 import { IAppStorageAccessor } from '../services/FileSystemStorage';
 import DataStorageContext from './filesystem/DataStorageContext';
 import FileUploader from './FileUploader';
-import CustomImageRenderer from './CustomImageRenderer';
+import CustomImageRenderer from './customMarkdownRenderers/CustomImageRenderer';
+import Link from './customMarkdownRenderers/Link';
 
 interface Props {
   task: Task;
@@ -76,7 +77,7 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
   function appendFile(fileName: string) {
     const fileExtension = fileName.split('.').pop()?.toLowerCase();
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
-    
+
     if (imageExtensions.includes(fileExtension || '')) {
       appendAsImage(fileName);
     } else {
@@ -128,7 +129,8 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
         }}
         previewOptions={{
           components: {
-            img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />
+            img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
+            a: (props: any) => <Link props={props} taskId={task.id} />
           }
         }}
         className="min-h-[50vw]"
@@ -138,7 +140,8 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
         <MDEditor.Markdown
           source={taskContent}
           components={{
-            img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />
+            img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
+            a: (props: any) => <Link props={props} taskId={task.id} />
           }}
           style={{ whiteSpace: 'pre-wrap' }}
           className='my-3 min-h-60 max-h-96 overflow-y-auto bg-slate-600'
