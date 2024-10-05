@@ -18,6 +18,7 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
   const [useEditMode, setUseEditMode] = useState(false);
   const [taskName, setTaskName] = useState<string>(task.title);
   const [useTaskNameEditMode, setUseTaskNameEditMode] = useState(false);
+  const [taskFiles, setTaskFiles] = useState<string[]>([]);
 
   useEffect(() => {
     if (dataStorageContext) {
@@ -43,6 +44,18 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
       await requestSavingDataToStorage();
     })();
   }, [taskName]);
+
+  useEffect(() => {
+    if (dataStorageContext) {
+      dataStorageContext.getFilesForTask(task.id)
+        .then(files => {
+          setTaskFiles(files.map(file => file.name));
+        })
+        .catch(err => {
+          console.error('Error fetching task files:', err);
+        });
+    }
+  }, [dataStorageContext, task.id]);
 
   return (
     <div className='flex flex-col'>
@@ -80,6 +93,24 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
         }}
       />}
       {!useEditMode && <MDEditor.Markdown source={taskContent} style={{ whiteSpace: 'pre-wrap' }} className='my-3 min-h-60 max-h-96 overflow-y-auto bg-slate-600' />}
+
+      <div className="mt-4 mb-2">
+        <h3 className="text-lg font-semibold mb-2">Attached Files:</h3>
+        {taskFiles.length > 0 ? (
+          <ul className="space-y-2">
+            {taskFiles.map((fileName, index) => (
+              <li key={index} className="flex items-center">
+                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                </svg>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{fileName}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-gray-500 italic">No files attached</p>
+        )}
+      </div>
 
       <FileUploader
         onFileUpload={async (file) => {

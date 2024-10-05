@@ -7,6 +7,7 @@ export interface IAppStorageAccessor {
     getTaskContent(taskId: Id): Promise<string>;
     saveTaskContent(taskId: Id, content: string): Promise<void>;
     uploadFileForTask(taskId: Id, file: File): Promise<{ fileName: string }>;
+    getFilesForTask(taskId: Id): Promise<File[]>;
 }
 
 export class FileSystemStorage implements IAppStorageAccessor {
@@ -207,6 +208,30 @@ export class FileSystemStorage implements IAppStorageAccessor {
             return { fileName };
         } catch (error) {
             console.error(`Error uploading file for task ${taskId}:`, error);
+            throw error;
+        }
+    }
+
+    async getFilesForTask(taskId: Id): Promise<File[]> {
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        try {
+            const tasksDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
+            const taskDir = await tasksDir.getDirectoryHandle(`${taskId}`, { create: true });
+
+            const files: File[] = [];
+            for await (const entry of (taskDir as any).values()) {
+                if (entry.kind === 'file' && !this.reservedFileNames.includes(entry.name)) {
+                    const file = await entry.getFile();
+                    files.push(file);
+                }
+            }
+
+            return files;
+        } catch (error) {
+            console.error(`Error getting files for task ${taskId}:`, error);
             throw error;
         }
     }
