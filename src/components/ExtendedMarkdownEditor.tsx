@@ -158,28 +158,29 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
     return (
         <>
             <div className='flex flex-col'>
-                <div className='flex flex-row gap-2'>
-                    <div>{task.id}</div>
+                <div className='flex flex-row justify-between items-center py-2'>
+                    <div className="px-2 py-1 bg-gray-700 rounded-md text-base">#{task.id}</div>
+                    <div className='flex flex-row gap-2'>
+                        <button
+                            onClick={() => {
+                                setUseEditMode(!useEditMode);
+                            }}
+                            className="flex items-center px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-blue-800 text-white transition-colors duration-200">
+                            
+                            Switch edit mode
+                        </button>
 
-                    <button
-                        onClick={() => {
-                            setUseEditMode(!useEditMode);
-                        }}
-                        className="flex">
-                        <PlusIcon />
-                        Switch edit mode
-                    </button>
-
-                    <button
-                        onClick={handleSave}
-                        className={`px-4 py-2 rounded-md font-semibold ${hasUnsavedChanges
-                            ? 'bg-yellow-500 hover:bg-yellow-600 text-black'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
-                            } transition-colors duration-200`}
-                        disabled={!hasUnsavedChanges}
-                    >
-                        {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
-                    </button>
+                        <button
+                            onClick={handleSave}
+                            className={`px-4 py-2 rounded-md font-semibold ${hasUnsavedChanges
+                                ? 'bg-blue-600 hover:bg-yellow-700 text-white'
+                                : 'bg-gray-700 hover:bg-green-800 text-white'
+                                } transition-colors duration-200`}
+                            disabled={!hasUnsavedChanges}
+                        >
+                            {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
+                        </button>
+                    </div>
                 </div>
             </div>
 
