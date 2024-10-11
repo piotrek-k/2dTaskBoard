@@ -6,7 +6,7 @@ import Link from './customMarkdownRenderers/Link';
 import DataStorageContext from './filesystem/DataStorageContext';
 import FileUploader from './FileUploader';
 import { WorkUnit } from '../types';
-import ModalContext, { ModalContextProps } from './modal/ModalContext';
+import DataSavingContext, { DataSavingContextProps } from './DataSavingContext';
 
 interface Props {
     task: WorkUnit;
@@ -19,8 +19,8 @@ interface TaskFile {
 }
 
 function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
-    const dataStorageContext = useContext(DataStorageContext) as IAppStorageAccessor;
-    const { setModalContentHasUnsavedChanges } = useContext(ModalContext) as ModalContextProps;
+    const dataStorageContext = useContext(DataStorageContext);
+    const { setContextHasUnsavedChanges } = useContext(DataSavingContext) as DataSavingContextProps;
     const [taskContent, setTaskContent] = useState<string | undefined>('');
     const [useEditMode, setUseEditMode] = useState(false);
     const [taskName, setTaskName] = useState<string>(task.title);
@@ -30,7 +30,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
 
     useEffect(() => {
         if (dataStorageContext) {
-            dataStorageContext.getTaskContent(task.id)
+            dataStorageContext.fileSystemStorage.getTaskContent(task.id)
                 .then(content => {
                     setTaskContent(content);
                 })
@@ -39,7 +39,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                     setTaskContent('Error loading content');
                 });
         }
-    }, [dataStorageContext]);
+    }, [dataStorageContext?.storageReady]);
 
     useEffect(() => {
         (async function () {
@@ -50,7 +50,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
     }, [taskName]);
 
     useEffect(() => {
-        setModalContentHasUnsavedChanges(hasUnsavedChanges);
+        setContextHasUnsavedChanges(hasUnsavedChanges);
     }, [hasUnsavedChanges]);
 
     useEffect(() => {
@@ -69,15 +69,15 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
     }, [hasUnsavedChanges]);
 
     function refreshAttachments() {
-        if (dataStorageContext) {
+        if (dataStorageContext?.fileSystemStorage.storageIsReady()) {
             const fetchTaskFiles = async () => {
                 try {
-                    const directory = await dataStorageContext.getDirectoryHandleForTaskAttachments(task.id);
-                    const files = await dataStorageContext.getFilesForTask(task.id);
+                    const directory = await dataStorageContext.fileSystemStorage.getDirectoryHandleForTaskAttachments(task.id);
+                    const files = await dataStorageContext.fileSystemStorage.getFilesForTask(task.id);
 
                     const mappedFiles = await Promise.all(files.map(async file => ({
                         name: file.name,
-                        src: await dataStorageContext.mapSrcToFileSystem(file.name, directory)
+                        src: await dataStorageContext.fileSystemStorage.mapSrcToFileSystem(file.name, directory)
                     })));
 
                     setTaskFiles(mappedFiles);
@@ -121,11 +121,11 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
     const handleSave = useCallback(async () => {
         if (dataStorageContext && taskContent !== undefined) {
             task.title = taskName;
-            await dataStorageContext.saveTaskContent(task.id, taskContent);
+            await dataStorageContext.fileSystemStorage.saveTaskContent(task.id, taskContent);
             await requestSavingDataToStorage();
             setHasUnsavedChanges(false);
         }
-    }, [dataStorageContext, task, taskContent, taskName, requestSavingDataToStorage]);
+    }, [task, taskContent, taskName, requestSavingDataToStorage]);
 
     const memoizedMarkdown = useMemo(() => (
         <MDEditor.Markdown
@@ -235,7 +235,7 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
                                 <button
                                     onClick={() => {
                                         if (window.confirm(`Are you sure you want to delete ${taskFile.name}?`)) {
-                                            dataStorageContext.deleteFileForTask(task.id, taskFile.name);
+                                            dataStorageContext?.fileSystemStorage.deleteFileForTask(task.id, taskFile.name);
                                             refreshAttachments();
                                         }
                                     }}
@@ -256,8 +256,12 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
             <FileUploader
                 onFileUpload={async (file) => {
                     try {
-                        let fileHandle = (await dataStorageContext.uploadFileForTask(task.id, file)).fileHandle;
+                        let fileHandle = (await dataStorageContext?.fileSystemStorage.uploadFileForTask(task.id, file))?.fileHandle;
 
+                        if (fileHandle == undefined) {
+                            throw new Error("File handle not found");
+                        }
+                        
                         appendFile(fileHandle.name);
 
                         refreshAttachments();

@@ -12,7 +12,7 @@ const srcCache: Record<string, string> = {};
 
 function CustomImageRenderer({ taskId, props }: Props) {
     const [customSrc, setCustomSrc] = useState<string>(props.src || '');
-    const dataStorageContext = useContext(DataStorageContext) as IAppStorageAccessor;
+    const dataStorageContext = useContext(DataStorageContext);
 
     const cacheKey = useMemo(() => `${taskId}-${props.src}`, [taskId, props.src]);
 
@@ -23,8 +23,13 @@ function CustomImageRenderer({ taskId, props }: Props) {
                 return;
             }
 
-            const directory = await dataStorageContext.getDirectoryHandleForTaskAttachments(taskId);
-            const src = await dataStorageContext.mapSrcToFileSystem(props.src, directory);
+            const directory = await dataStorageContext?.fileSystemStorage.getDirectoryHandleForTaskAttachments(taskId);
+
+            if (directory == undefined) {
+                throw new Error("Directory not found");
+            }
+            
+            const src = await dataStorageContext?.fileSystemStorage.mapSrcToFileSystem(props.src, directory) ?? "";
             
             srcCache[cacheKey] = src;
             setCustomSrc(src);
