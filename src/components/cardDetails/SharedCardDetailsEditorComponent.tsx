@@ -159,7 +159,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
             <div className='flex flex-col'>
                 <div className='flex flex-row justify-between items-center py-2'>
                     <div className="px-2 py-1 bg-gray-700 rounded-md text-base">
-                        <Link to={`/card/${task.id}`} className="px-2 py-1 bg-gray-700 rounded-md text-base hover:bg-gray-600 transition-colors duration-200">
+                        <Link to={`/card/${task.id}`} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-gray-700 rounded-md text-base hover:bg-gray-600 transition-colors duration-200">
                             #{task.id}
                         </Link>
                     </div>
