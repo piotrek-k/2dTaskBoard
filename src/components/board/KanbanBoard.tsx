@@ -151,10 +151,6 @@ function KanbanBoard() {
                 </DndContext>
 
             </div>
-
-            <footer className='bg-mainBackgroundColor text-slate-600 text-sm p-2'>
-                &copy; 2024 - {new Date().getFullYear()} Piotr Kozerski. All rights reserved.
-            </footer>
         </div>
     )
 
