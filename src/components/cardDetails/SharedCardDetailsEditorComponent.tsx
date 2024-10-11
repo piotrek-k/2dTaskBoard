@@ -22,6 +22,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
     const dataStorageContext = useContext(DataStorageContext);
     const { setContextHasUnsavedChanges } = useContext(DataSavingContext) as DataSavingContextProps;
     const [taskContent, setTaskContent] = useState<string | undefined>('');
+    const [savedTaskContent, setSavedTaskContent] = useState(taskContent);
     const [useEditMode, setUseEditMode] = useState(false);
     const [taskName, setTaskName] = useState<string>(task.title);
     const [useTaskNameEditMode, setUseTaskNameEditMode] = useState(false);
@@ -33,6 +34,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
             dataStorageContext.fileSystemStorage.getTaskContent(task.id)
                 .then(content => {
                     setTaskContent(content);
+                    setSavedTaskContent(content);
                 })
                 .catch(err => {
                     console.error('Error fetching task content:', err);
@@ -52,6 +54,16 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
     useEffect(() => {
         setContextHasUnsavedChanges(hasUnsavedChanges);
     }, [hasUnsavedChanges]);
+
+    
+    useEffect(() => {
+        if (savedTaskContent !== taskContent) {
+            setHasUnsavedChanges(true);
+            return;
+        }
+
+        setHasUnsavedChanges(false);
+    }, [taskContent]);
 
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -122,6 +134,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
         if (dataStorageContext && taskContent !== undefined) {
             task.title = taskName;
             await dataStorageContext.fileSystemStorage.saveTaskContent(task.id, taskContent);
+            setSavedTaskContent(taskContent);
             await requestSavingDataToStorage();
             setHasUnsavedChanges(false);
         }
