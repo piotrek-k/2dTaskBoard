@@ -1,6 +1,6 @@
 import { useContext, useCallback } from 'react';
 import Modal from 'react-modal';
-import ModalContext, { ModalContextProps } from './ModalContext';
+import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 
 function ModalComponent() {
   const { modalOpen, setModalOpen, modalContent, modalContentHasUnsavedChanges } = useContext(ModalContext) as ModalContextProps;

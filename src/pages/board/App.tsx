@@ -1,11 +1,11 @@
 import ReactModal from 'react-modal';
 import './App.css'
-import KanbanBoard from './components/KanbanBoard'
-import ModalComponent from './components/modal/ModalComponent';
-import { ModalProvider } from './components/modal/ModalProvider';
-import { DataStorageProvider } from './components/filesystem/DataStorageProvider';
-import DataSavingContext from './components/DataSavingContext';
+import KanbanBoard from '../../components/board/KanbanBoard'
+import ModalComponent from '../../components/modal/ModalComponent';
+import DataSavingContext from '../../context/DataSavingContext';
 import { useState } from 'react';
+import { DataStorageProvider } from '../../context/DataStorageProvider';
+import { ModalProvider } from '../../context/ModalProvider';
 
 ReactModal.setAppElement('#root');
 if (ReactModal.defaultStyles.content) {

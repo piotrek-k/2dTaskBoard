@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
-import { IAppStorageAccessor } from '../../services/FileSystemStorage';
 import { Id } from '../../types';
-import DataStorageContext from '../filesystem/DataStorageContext';
+import DataStorageContext from '../../context/DataStorageContext';
 
 interface Props {
     taskId: Id;
@@ -11,13 +10,17 @@ interface Props {
 function Link({ taskId, props }: Props) {
     const [customSrc, setCustomSrc] = useState<string>(props.href || '');
 
-    const dataStorageContext = useContext(DataStorageContext) as IAppStorageAccessor;
+    const dataStorageContext = useContext(DataStorageContext);
 
     useEffect(() => {
         const fetchCustomSrc = async () => {
-            const directory = await dataStorageContext.getDirectoryHandleForTaskAttachments(taskId);
+            const directory = await dataStorageContext?.fileSystemStorage.getDirectoryHandleForTaskAttachments(taskId);
 
-            const src = await dataStorageContext.mapSrcToFileSystem(props.href, directory);
+            if (!directory) {
+                throw new Error('Directory not found');
+            }
+
+            const src = await dataStorageContext?.fileSystemStorage.mapSrcToFileSystem(props.href, directory) ?? "";
             setCustomSrc(src);
         };
 

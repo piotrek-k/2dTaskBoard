@@ -1,14 +1,14 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
-import PlusIcon from '../icons/PlusIcon';
-import FolderIcon from '../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
-import { Column, Id, KanbanDataContainer, Row, Task } from '../types';
+import PlusIcon from '../../icons/PlusIcon';
+import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
+import { Column, Id, KanbanDataContainer, Row, Task } from '../../types';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
-import DataStorageContext from './filesystem/DataStorageContext';
+import DataStorageContext from '../../context/DataStorageContext';
 
 function KanbanBoard() {
 

@@ -1,15 +1,15 @@
 import { useContext, useMemo } from 'react';
-import { Column, Id, Row, Task } from '../types';
+import { Column, Id, Row, Task } from '../../types';
 import ColumnContainer from './ColumnContainer';
 import { SortableContext } from '@dnd-kit/sortable';
-import RowDetails from './RowDetails';
-import ModalContext, { ModalContextProps } from './modal/ModalContext';
-import MoveUpIcon from '../icons/MoveUpIcon';
-import MoveDownIcon from '../icons/MoveDownIcon';
-import MoveTopIcon from '../icons/MoveTopIcon';
-import MoveBottomIcon from '../icons/MoveBottomIcon ';
-import ArchiveIcon from '../icons/ArchiveIcon';
-import { RowNavigation } from '../interfaces/RowNavigation';
+import MoveUpIcon from '../../icons/MoveUpIcon';
+import MoveDownIcon from '../../icons/MoveDownIcon';
+import MoveTopIcon from '../../icons/MoveTopIcon';
+import MoveBottomIcon from '../../icons/MoveBottomIcon ';
+import ArchiveIcon from '../../icons/ArchiveIcon';
+import { RowNavigation } from '../../interfaces/RowNavigation';
+import ModalContext, { ModalContextProps } from '../../context/ModalContext';
+import RowDetails from '../cardDetails/RowDetails';
 
 interface Props {
     row: Row;

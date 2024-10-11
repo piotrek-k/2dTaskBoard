@@ -1,12 +1,11 @@
 import MDEditor from '@uiw/react-md-editor';
-import { useContext, useEffect, useState, useCallback, useMemo } from 'react'
-import { IAppStorageAccessor } from '../services/FileSystemStorage';
-import CustomImageRenderer from './customMarkdownRenderers/CustomImageRenderer';
-import Link from './customMarkdownRenderers/Link';
-import DataStorageContext from './filesystem/DataStorageContext';
-import FileUploader from './FileUploader';
-import { WorkUnit } from '../types';
-import DataSavingContext, { DataSavingContextProps } from './DataSavingContext';
+import { useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import DataStorageContext from '../../context/DataStorageContext';
+import DataSavingContext, { DataSavingContextProps } from '../../context/DataSavingContext';
+import { WorkUnit } from '../../types';
+import CustomImageRenderer from '../customMarkdownRenderers/CustomImageRenderer';
+import FileUploader from '../fileUploader/FileUploader';
+import Link from '../customMarkdownRenderers/Link';
 
 interface Props {
     task: WorkUnit;

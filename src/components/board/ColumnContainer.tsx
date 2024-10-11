@@ -1,7 +1,7 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
-import { Column, Id, Row, Task } from "../types"
+import { Column, Id, Row, Task } from "../../types"
 import { useMemo } from "react";
-import PlusIcon from "../icons/PlusIcon";
+import PlusIcon from "../../icons/PlusIcon";
 import TaskCard from "./TaskCard";
 import { CSS } from "@dnd-kit/utilities";
 
