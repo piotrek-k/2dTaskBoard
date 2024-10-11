@@ -1,16 +1,19 @@
 import { useContext, useCallback } from 'react';
 import Modal from 'react-modal';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
+import DataSavingContext, { DataSavingContextProps } from '../../context/DataSavingContext';
 
 function ModalComponent() {
-  const { modalOpen, setModalOpen, modalContent, modalContentHasUnsavedChanges } = useContext(ModalContext) as ModalContextProps;
+  const { modalOpen, setModalOpen, modalContent } = useContext(ModalContext) as ModalContextProps;
 
+  const dataSavingContext = useContext(DataSavingContext) as DataSavingContextProps;
+  
   const handleCloseModal = useCallback(() => {
-    if (modalContentHasUnsavedChanges && !window.confirm('You have unsaved changes. Are you sure you want to close the modal?')) {
+    if (dataSavingContext.contextHasUnsavedChanges && !window.confirm('You have unsaved changes. Are you sure you want to close the modal?')) {
       return;
     }
     setModalOpen(false);
-  }, [modalContentHasUnsavedChanges, setModalOpen]);
+  }, [dataSavingContext.contextHasUnsavedChanges, setModalOpen]);
 
   return (
     <Modal
