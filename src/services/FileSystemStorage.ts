@@ -2,6 +2,9 @@ import { openDB } from "idb";
 import { Id, KanbanDataContainer } from "../types";
 
 export interface IAppStorageAccessor {
+    storageIsReady(): boolean;
+    restoreHandle(): Promise<FileSystemDirectoryHandle>;
+
     getKanbanState(): Promise<KanbanDataContainer>;
     saveKanbanState(boardStateContainer: KanbanDataContainer): Promise<KanbanDataContainer>;
     getTaskContent(taskId: Id): Promise<string>;
@@ -33,7 +36,11 @@ export class FileSystemStorage implements IAppStorageAccessor {
         this.isHandleActive = newState;
     }
 
-    private async restoreHandle(): Promise<FileSystemDirectoryHandle> {
+    public storageIsReady(): boolean {
+        return this.isHandleActive;
+    }
+
+    public async restoreHandle(): Promise<FileSystemDirectoryHandle> {
         const db = await getDbInstance();
 
         let handle = await db.get('handles', 'directoryHandle');
@@ -176,7 +183,6 @@ export class FileSystemStorage implements IAppStorageAccessor {
     }
 
     async getTaskContent(taskId: Id): Promise<string> {
-
         const file = await this.getTaskFileHandle(taskId);
 
         return (await file.getFile()).text();
