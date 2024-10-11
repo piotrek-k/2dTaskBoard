@@ -5,7 +5,8 @@ import DataSavingContext, { DataSavingContextProps } from '../../context/DataSav
 import { WorkUnit } from '../../types';
 import CustomImageRenderer from '../customMarkdownRenderers/CustomImageRenderer';
 import FileUploader from '../fileUploader/FileUploader';
-import Link from '../customMarkdownRenderers/Link';
+import LinkRenderer from '../customMarkdownRenderers/LinkRenderer';
+import { Link } from "react-router-dom";
 
 interface Props {
     task: WorkUnit;
@@ -131,7 +132,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
             source={taskContent}
             components={{
                 img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
-                a: (props: any) => <Link props={props} taskId={task.id} />
+                a: (props: any) => <LinkRenderer props={props} taskId={task.id} />
             }}
             style={{ whiteSpace: 'pre-wrap', backgroundColor: 'inherit' }}
             className='m-3'
@@ -146,7 +147,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
             previewOptions={{
                 components: {
                     img: (props: any) => <CustomImageRenderer props={props} taskId={task.id} />,
-                    a: (props: any) => <Link props={props} taskId={task.id} />
+                    a: (props: any) => <LinkRenderer props={props} taskId={task.id} />
                 }
             }}
             className="min-h-[50vw]"
@@ -157,14 +158,18 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
         <>
             <div className='flex flex-col'>
                 <div className='flex flex-row justify-between items-center py-2'>
-                    <div className="px-2 py-1 bg-gray-700 rounded-md text-base">#{task.id}</div>
+                    <div className="px-2 py-1 bg-gray-700 rounded-md text-base">
+                        <Link to={`/card/${task.id}`} className="px-2 py-1 bg-gray-700 rounded-md text-base hover:bg-gray-600 transition-colors duration-200">
+                            #{task.id}
+                        </Link>
+                    </div>
                     <div className='flex flex-row gap-2'>
                         <button
                             onClick={() => {
                                 setUseEditMode(!useEditMode);
                             }}
                             className="flex items-center px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-blue-800 text-white transition-colors duration-200">
-                            
+
                             Switch edit mode
                         </button>
 
@@ -260,7 +265,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
                         if (fileHandle == undefined) {
                             throw new Error("File handle not found");
                         }
-                        
+
                         appendFile(fileHandle.name);
 
                         refreshAttachments();

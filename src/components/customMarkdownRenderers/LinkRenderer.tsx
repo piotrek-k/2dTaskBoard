@@ -7,7 +7,7 @@ interface Props {
     props: any;
 }
 
-function Link({ taskId, props }: Props) {
+function LinkRenderer({ taskId, props }: Props) {
     const [customSrc, setCustomSrc] = useState<string>(props.href || '');
 
     const dataStorageContext = useContext(DataStorageContext);
@@ -38,4 +38,4 @@ function Link({ taskId, props }: Props) {
     )
 }
 
-export default Link
+export default LinkRenderer
