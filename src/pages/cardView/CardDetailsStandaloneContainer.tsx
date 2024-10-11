@@ -1,13 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react'
-import TaskDetails from './TaskDetails'
-import { Id, Task } from '../types';
-import { useParams } from 'react-router-dom';
-import { FileSystemStorage } from '../services/FileSystemStorage';
-import DataSavingContext from './DataSavingContext';
-import PlusIcon from '../icons/PlusIcon';
-import Modal from 'react-modal';
-import { DataStorageProvider } from './filesystem/DataStorageProvider';
-import DataStorageContext from './filesystem/DataStorageContext';
+import { useState } from 'react';
+import DataSavingContext from '../../context/DataSavingContext';
+import { DataStorageProvider } from '../../context/DataStorageProvider';
 import CardDetailsStandalone from './CardDetailsStandalone';
 
 interface Props {

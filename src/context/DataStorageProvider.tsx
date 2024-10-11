@@ -1,8 +1,8 @@
 import { ReactNode, useEffect, useState } from "react";
 import DataStorageContext from "./DataStorageContext";
-import { FileSystemStorage } from "../../services/FileSystemStorage";
 import Modal from 'react-modal';
-import PlusIcon from "../../icons/PlusIcon";
+import { FileSystemStorage } from "../services/FileSystemStorage";
+import PlusIcon from "../icons/PlusIcon";
 
 interface Props {
     children: ReactNode;
@@ -11,7 +11,7 @@ interface Props {
 export function DataStorageProvider({ children }: Props) {
     const [storageReady, setStorageReady] = useState<boolean>(false);
 
-    const [fileSystemStorage, setFileSystemStorage] = useState<FileSystemStorage>(new FileSystemStorage());
+    const [fileSystemStorage] = useState<FileSystemStorage>(new FileSystemStorage());
 
     useEffect(() => {
         fileSystemStorage.registerOnChangeCallback((newState) => {

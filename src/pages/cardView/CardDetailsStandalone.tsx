@@ -1,12 +1,8 @@
-import { useContext, useEffect, useState } from 'react'
-import TaskDetails from './TaskDetails'
-import { Id, Task } from '../types';
+import { useContext, useEffect, useState } from 'react';
+import { Id, Task } from '../../types';
 import { useParams } from 'react-router-dom';
-import DataSavingContext from './DataSavingContext';
-import PlusIcon from '../icons/PlusIcon';
-import Modal from 'react-modal';
-import { DataStorageProvider } from './filesystem/DataStorageProvider';
-import DataStorageContext from './filesystem/DataStorageContext';
+import DataStorageContext from '../../context/DataStorageContext';
+import TaskDetails from '../../components/cardDetails/TaskDetails';
 
 interface Props {
 }

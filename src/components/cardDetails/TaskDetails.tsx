@@ -1,4 +1,4 @@
-import { Task } from '../types';
+import { Task } from '../../types';
 import ExtendedMarkdownEditor from './ExtendedMarkdownEditor';
 
 interface Props {

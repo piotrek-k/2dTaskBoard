@@ -1,9 +1,9 @@
 import { useContext } from 'react';
-import { Task } from '../types';
+import { Task } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import ModalContext, { ModalContextProps } from './modal/ModalContext';
-import TaskDetails from './TaskDetails';
+import ModalContext, { ModalContextProps } from '../../context/ModalContext';
+import TaskDetails from '../cardDetails/TaskDetails';
 
 interface Props {
     task: Task;

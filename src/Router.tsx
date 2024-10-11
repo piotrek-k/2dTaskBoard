@@ -1,8 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import App from './App';
+import App from './pages/board/App';
 import MainPage from './MainPage';
-import CardDetailsStandalone from './components/CardDetailsStandalone';
-import CardDetailsStandaloneContainer from './components/CardDetailsStandaloneContainer';
+import CardDetailsStandaloneContainer from './pages/cardView/CardDetailsStandaloneContainer';
 
 const Router = () => {
   return (

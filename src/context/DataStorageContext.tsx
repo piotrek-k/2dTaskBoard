@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { FileSystemStorage } from "../../services/FileSystemStorage";
+import { FileSystemStorage } from "../services/FileSystemStorage";
 
 export interface DataStorageContextProps {
     storageReady: boolean;
