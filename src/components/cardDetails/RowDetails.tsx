@@ -1,5 +1,5 @@
 import { Row } from "../../types";
-import ExtendedMarkdownEditor from "./ExtendedMarkdownEditor";
+import SharedCardDetailsEditorComponent from "./SharedCardDetailsEditorComponent";
 
 interface Props {
   row: Row;
@@ -10,7 +10,7 @@ function RowDetails({ row, requestSavingDataToStorage }: Props) {
 
   return (
     <>
-      <ExtendedMarkdownEditor task={row} requestSavingDataToStorage={requestSavingDataToStorage} />
+      <SharedCardDetailsEditorComponent task={row} requestSavingDataToStorage={requestSavingDataToStorage} />
     </>
   )
 }

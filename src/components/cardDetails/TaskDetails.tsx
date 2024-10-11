@@ -1,5 +1,5 @@
 import { Task } from '../../types';
-import ExtendedMarkdownEditor from './ExtendedMarkdownEditor';
+import SharedCardDetailsEditorComponent from './SharedCardDetailsEditorComponent';
 
 interface Props {
   task: Task;
@@ -10,7 +10,7 @@ function TaskDetails({ task, requestSavingDataToStorage }: Props) {
 
   return (
     <>
-      <ExtendedMarkdownEditor task={task} requestSavingDataToStorage={requestSavingDataToStorage} />
+      <SharedCardDetailsEditorComponent task={task} requestSavingDataToStorage={requestSavingDataToStorage} />
     </>
   )
 }
