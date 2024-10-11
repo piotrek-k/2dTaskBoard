@@ -8,31 +8,18 @@ import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
-import Modal from 'react-modal';
 import DataStorageContext from './filesystem/DataStorageContext';
-import WelcomeScreen from './WelcomeScreen';
 
 function KanbanBoard() {
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [rows, setRows] = useState<Row[]>([]);
     const [columns, setColumns] = useState<Column[]>([]);
+
     const boardState: KanbanDataContainer = useMemo(() => ({ tasks, rows, columns } as KanbanDataContainer), [tasks, rows, columns]);
     const [dataLoaded, setDataLoaded] = useState(false);
 
-    const [storageActive, setStorageActive] = useState<boolean>(false);
-
     const dataStorage = useContext(DataStorageContext);
-
-    useEffect(() => {
-        dataStorage.registerOnChangeCallback((newState) => {
-            setStorageActive(() => newState);
-        });
-
-        return () => {
-            dataStorage.registerOnChangeCallback(() => { });
-        };
-    }, []);
 
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
@@ -48,8 +35,18 @@ function KanbanBoard() {
         })
     )
 
+    useEffect(() => {
+        const startFetch = async () => {
+            if (dataStorage?.storageReady) {
+                await loadBoard();
+            }
+        };
+
+        startFetch();
+    }, [dataStorage?.storageReady]);
+
     async function loadBoard() {
-        const dataContainer = await dataStorage?.getKanbanState();
+        const dataContainer = await dataStorage?.fileSystemStorage.getKanbanState();
 
         if (dataContainer == undefined) {
             throw new Error("Data storage not set");
@@ -63,7 +60,7 @@ function KanbanBoard() {
     }
 
     async function loadFromDifferentSource() {
-        await dataStorage.chooseDifferentSource();
+        await dataStorage?.fileSystemStorage.chooseDifferentSource();
 
         await loadBoard();
     }
@@ -73,7 +70,7 @@ function KanbanBoard() {
             throw new Error("Data storage not set");
         }
 
-        await dataStorage.saveKanbanState(boardState);
+        await dataStorage.fileSystemStorage.saveKanbanState(boardState);
     }
 
     useEffect(() => {
@@ -99,7 +96,7 @@ function KanbanBoard() {
                             onClick={() => loadFromDifferentSource()}
                             className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
                         >
-                            <FolderIcon/>
+                            <FolderIcon />
                             Load Different Directory
                         </button>
                     </div>
@@ -150,42 +147,9 @@ function KanbanBoard() {
                                 document.body
                             )}
                         </div>
-
-                        {!storageActive && <Modal
-                        isOpen={true}
-                        style={{
-                            content: {
-                                top: '50%',
-                                left: '50%',
-                                right: 'auto',
-                                bottom: 'auto',
-                                marginRight: '-50%',
-                                transform: 'translate(-50%, -50%)',
-                            }
-                        }}
-                    >
-                        <p>
-                            Your browser lost access to directory storing your tasks.
-                        </p>
-
-                        <WelcomeScreen />
-
-                        <button
-                            onClick={() => {
-                                loadBoard();
-                            }}
-                            className="
-                                flex
-                                "
-                        >
-                            <PlusIcon />
-                            Click to regain access
-                        </button>
-                    </Modal>
-                    }
                     </div>
                 </DndContext>
-                
+
             </div>
 
             <footer className='bg-mainBackgroundColor text-slate-600 text-sm p-2'>
@@ -305,20 +269,6 @@ function KanbanBoard() {
         });
     }
 
-    // function deleteTask(id: Id) {
-    //     const filteredTasks = tasks.filter((task) => task.id !== id);
-    //     setTasks(filteredTasks);
-    // }
-
-    // function updateTask(id: Id, content: string) {
-    //     const newTasks = tasks.map((task) => {
-    //         if (task.id !== id) return task;
-    //         return { ...task, content };
-    //     });
-
-    //     setTasks(newTasks);
-    // }
-
     function createNewRow() {
         const rowToAdd: Row = {
             id: generateId(),
@@ -328,32 +278,6 @@ function KanbanBoard() {
 
         setRows([...rows, rowToAdd]);
     }
-
-    // function createNewColumn() {
-    //     const columnToAdd: Column = {
-    //         id: generateId(),
-    //         title: `Column ${columns.length + 1}`,
-    //     };
-
-    //     setColumns([...columns, columnToAdd]);
-    // }
-
-    // function deleteColumn(id: Id) {
-    //     const filteredColumns = columns.filter((col) => col.id !== id);
-    //     setColumns(filteredColumns);
-
-    //     const newTasks = tasks.filter(t => t.columnId !== id);
-    //     setTasks(newTasks);
-    // }
-
-    // function updateColumn(id: Id, title: string) {
-    //     const newColumns = columns.map(col => {
-    //         if (col.id !== id) return col;
-    //         return { ...col, title };
-    //     });
-
-    //     setColumns(newColumns);
-    // }
 }
 
 
