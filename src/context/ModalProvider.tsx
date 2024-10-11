@@ -8,16 +8,14 @@ interface Props {
 export function ModalProvider({ children }: Props) {
     const [modalOpen, setModalOpen] = useState<boolean>(false);
     const [modalContent, setModalContent] = useState<ReactNode>(null);
-    const [modalContentHasUnsavedChanges, setModalContentHasUnsavedChanges] = useState<boolean>(false);
+    
     return (
         <ModalContext.Provider
             value={{
                 modalOpen,
                 setModalOpen,
                 modalContent,
-                setModalContent,
-                modalContentHasUnsavedChanges,
-                setModalContentHasUnsavedChanges
+                setModalContent
             }}
         >
             {children}
