@@ -17,7 +17,7 @@ interface TaskFile {
     src: string;
 }
 
-function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
+function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: Props) {
     const dataStorageContext = useContext(DataStorageContext);
     const { setContextHasUnsavedChanges } = useContext(DataSavingContext) as DataSavingContextProps;
     const [taskContent, setTaskContent] = useState<string | undefined>('');
@@ -273,4 +273,4 @@ function ExtendedMarkdownEditor({ task, requestSavingDataToStorage }: Props) {
     )
 }
 
-export default ExtendedMarkdownEditor
+export default SharedCardDetailsEditorComponent
