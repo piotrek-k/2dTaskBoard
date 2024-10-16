@@ -24,3 +24,17 @@ export interface KanbanDataContainer {
     rows: Row[];
     columns: Column[];
 }
+
+export interface Archive {
+    rows: ArchivedRow[];
+}
+
+export interface ArchivedRow {
+    row: Row;
+    columns: ArchivedColumn[];
+}
+
+export interface ArchivedColumn {
+    id: Id;
+    tasks: Task[];
+}

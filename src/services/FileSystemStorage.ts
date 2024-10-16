@@ -1,5 +1,5 @@
 import { openDB } from "idb";
-import { Id, KanbanDataContainer } from "../types";
+import { Archive, Id, KanbanDataContainer } from "../types";
 
 export interface IAppStorageAccessor {
     storageIsReady(): boolean;
@@ -14,6 +14,8 @@ export interface IAppStorageAccessor {
     getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
     deleteFileForTask(taskId: Id, fileName: string): Promise<void>;
     mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string>;
+
+    getArchive(): Promise<Archive>;
 }
 
 export class FileSystemStorage implements IAppStorageAccessor {
@@ -314,6 +316,34 @@ export class FileSystemStorage implements IAppStorageAccessor {
         } catch (error) {
             return originalSrc;
         }
+    }
+
+    private async getArchiveFileHandle(): Promise<FileSystemFileHandle> {
+        if (this.directoryHandle == null) {
+            this.directoryHandle = await this.restoreHandle();
+        }
+
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        return await this.directoryHandle.getFileHandle('archive.jsonl', { create: true });
+    }
+
+    async getArchive(): Promise<Archive> {
+        const fileHandle = await this.getArchiveFileHandle();
+        const file = await fileHandle.getFile();
+        const fileContents = await file.text();
+
+        const lines = fileContents.trim().split('\n').reverse();
+        const archive: Archive = { rows: [] };
+
+        for (const line of lines) {
+            const data = JSON.parse(line);
+            archive.rows.push(data);
+        }
+
+        return archive;
     }
 }
 
