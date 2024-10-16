@@ -9,12 +9,16 @@ import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
 import DataStorageContext from '../../context/DataStorageContext';
+import ArchiveIcon from '../../icons/ArchiveIcon';
+import ArchiveView from './ArchiveView';
 
 function KanbanBoard() {
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [rows, setRows] = useState<Row[]>([]);
     const [columns, setColumns] = useState<Column[]>([]);
+
+    const [showArchive, setShowArchive] = useState(false);
 
     const boardState: KanbanDataContainer = useMemo(() => ({ tasks, rows, columns } as KanbanDataContainer), [tasks, rows, columns]);
     const [dataLoaded, setDataLoaded] = useState(false);
@@ -86,6 +90,13 @@ function KanbanBoard() {
                     <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
                     <div className="flex space-x-3">
                         <button
+                            onClick={() => { setShowArchive(!showArchive) }}
+                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                            <ArchiveIcon />
+                            Show archive
+                        </button>
+                        <button
                             onClick={() => createNewRow()}
                             className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
                         >
@@ -104,7 +115,7 @@ function KanbanBoard() {
             </nav>
 
             <div className="flex-grow overflow-auto scrollbar-thin">
-                <DndContext
+                {!showArchive ? <DndContext
                     sensors={sensors}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}
@@ -148,7 +159,9 @@ function KanbanBoard() {
                             )}
                         </div>
                     </div>
-                </DndContext>
+                </DndContext> : 
+                <ArchiveView />
+                }
 
             </div>
         </div>
