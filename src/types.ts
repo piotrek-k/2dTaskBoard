@@ -1,8 +1,14 @@
 export type Id = string | number;
 
+export enum WorkUnitType {
+    Task = 0,
+    Row = 1,
+}
+
 export type WorkUnit = {
     id: Id;
     title: string;
+    type: WorkUnitType;
 }
 
 export type Row = {

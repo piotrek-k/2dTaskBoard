@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { Id, Row, Task } from '../../types';
+import { Id, Row, Task, WorkUnitType } from '../../types';
 import { useParams } from 'react-router-dom';
 import DataStorageContext from '../../context/DataStorageContext';
 import TaskDetails from '../../components/cardDetails/TaskDetails';
@@ -19,6 +19,20 @@ function CardDetailsStandalone({ }: Props) {
 
     async function fetchTask() {
         try {
+            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(taskId as Id);
+
+            if (metadata != undefined) {
+                if (metadata.type == WorkUnitType.Task) {
+                    setTask(metadata as Task);
+
+                    return;
+                }
+
+                setRow(metadata as Row);
+
+                return;
+            }
+
             const dataContainer = await dataStorage?.fileSystemStorage.getKanbanState();
 
             if (dataContainer == undefined) {
@@ -61,8 +75,8 @@ function CardDetailsStandalone({ }: Props) {
 
     return (
         <>
-            {task ? <TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} /> :
-                row ? <RowDetails row={row} requestSavingDataToStorage={requestSavingDataToStorage} /> :
+            {task ? <TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={false} /> :
+                row ? <RowDetails row={row} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={false} /> :
                     <div>Loading...</div>}
         </>
     )
