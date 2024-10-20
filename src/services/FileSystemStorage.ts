@@ -9,7 +9,7 @@ export interface IAppStorageAccessor {
     saveKanbanState(boardStateContainer: KanbanDataContainer): Promise<KanbanDataContainer>;
     getTaskContent(taskId: Id): Promise<string>;
     saveTaskContent(taskId: Id, content: string): Promise<void>;
-    getCardMetadata(cardId: Id): Promise<WorkUnit>;
+    getCardMetadata(cardId: Id): Promise<WorkUnit | undefined>;
     saveCardMetadata(card: WorkUnit): Promise<void>;
     uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }>;
     getFilesForTask(taskId: Id): Promise<File[]>;
@@ -216,10 +216,14 @@ export class FileSystemStorage implements IAppStorageAccessor {
         return (await file.getFile()).text();
     }
 
-    async getCardMetadata(cardId: Id): Promise<WorkUnit> {
+    async getCardMetadata(cardId: Id): Promise<WorkUnit | undefined> {
         const file = await this.getCardMetadataFileHandle(cardId);
 
         const content = await (await file.getFile()).text();
+
+        if(content.length === 0) {
+            return undefined;
+        }
 
         return JSON.parse(content);
     }

@@ -55,6 +55,22 @@ function KanbanBoard() {
         if (dataContainer == undefined) {
             throw new Error("Data storage not set");
         }
+        
+        for (const taskIndex in dataContainer.tasks) {
+            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
+
+            if (metadata) {
+                Object.assign(dataContainer.tasks[taskIndex], metadata);
+            }
+        }
+
+        for (const taskIndex in dataContainer.rows) {
+            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(dataContainer.rows[taskIndex].id);
+
+            if (metadata) {
+                Object.assign(dataContainer.rows[taskIndex], metadata);
+            }
+        }
 
         setTasks(dataContainer.tasks ?? []);
         setRows(dataContainer.rows ?? []);
