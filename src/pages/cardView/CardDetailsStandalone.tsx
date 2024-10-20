@@ -5,12 +5,11 @@ import DataStorageContext from '../../context/DataStorageContext';
 import TaskDetails from '../../components/cardDetails/TaskDetails';
 import RowDetails from '../../components/cardDetails/RowDetails';
 
-interface Props {
-}
 
-function CardDetailsStandalone({ }: Props) {
+function CardDetailsStandalone() {
 
-    const { taskId } = useParams();
+    const { taskIdProp } = useParams();
+    const [taskId] = useState<Id>(Number(taskIdProp));
 
     const dataStorage = useContext(DataStorageContext);
 

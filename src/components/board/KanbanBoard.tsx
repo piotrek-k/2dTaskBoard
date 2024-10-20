@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
-import { Column, Id, KanbanDataContainer, Row, Task } from '../../types';
+import { Column, Id, KanbanDataContainer, Row, Task, WorkUnitType } from '../../types';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
@@ -236,12 +236,13 @@ function KanbanBoard() {
         return tasks.filter((task) => task.columnId === columnId && task.rowId === rowId);
     }
 
-    function createTask(columnId: Id, rowId: Id) {
+    async function createTask(columnId: Id, rowId: Id) {
         const newTask: Task = {
-            id: generateId(),
+            id: await generateId(),
             columnId,
             rowId,
-            title: `Task ${tasks.length + 1}`
+            title: `Task ${tasks.length + 1}`,
+            type: WorkUnitType.Task
         };
 
         setTasks([...tasks, newTask]);
@@ -311,20 +312,26 @@ function KanbanBoard() {
         });
     }
 
-    function createNewRow() {
+    async function createNewRow() {
         const rowToAdd: Row = {
-            id: generateId(),
+            id: await generateId(),
             title: `Row ${rows.length + 1}`,
-            isVisible: true
+            isVisible: true,
+            type: WorkUnitType.Row
         };
 
         setRows([...rows, rowToAdd]);
     }
-}
 
+    async function generateId(): Promise<number> {
+        const archive = await dataStorage?.fileSystemStorage.getArchive();
+        const maxRowIdInArchive = archive?.rows.reduce((max, row) => row.row.id > max ? row.row.id : max, 0) ?? 0;
+        const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, task) => task.id > max ? task.id : max, max), max), 0) ?? 0;
+        const maxTaskIdOnBoard = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
+        const maxRowIdOnBoard = rows.reduce((max, row) => row.id > max ? row.id : max, 0);
 
-function generateId() {
-    return Math.floor(Math.random() * 10001)
+        return Math.max(maxRowIdInArchive, maxTaskIdInArchive, maxTaskIdOnBoard, maxRowIdOnBoard) + 1;
+    }
 }
 
 export default KanbanBoard
