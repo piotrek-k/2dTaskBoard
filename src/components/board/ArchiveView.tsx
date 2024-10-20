@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
 import DataStorageContext from '../../context/DataStorageContext';
-import { Archive } from '../../types';
+import { Archive, Id } from '../../types';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 
 function ArchiveView() {
@@ -8,17 +8,42 @@ function ArchiveView() {
 
     const [archive, setArchive] = useState<Archive | null>(null);
 
-    const headerNames = useMemo(() => ['', 'A', 'B', 'C'], []);
-
     useEffect(() => {
         const startFetch = async () => {
-            if (dataStorage?.storageReady) {
-                setArchive(await dataStorage.fileSystemStorage.getArchive());
-            }
+            await loadArchive();
         };
 
         startFetch();
     }, [dataStorage?.fileSystemStorage, dataStorage?.storageReady]);
+
+    async function loadArchive() {
+        if (dataStorage?.storageReady) {
+            setArchive(await dataStorage.fileSystemStorage.getArchive());
+        }
+    }
+
+    async function restoreFromArchive(rowId: Id): Promise<void> {
+        const archivedRow = archive?.rows.find((row) => row.row.id === rowId);
+
+        if (archivedRow == null) {
+            throw new Error("Row not found in archive");
+        }
+
+        const boardState = await dataStorage?.fileSystemStorage.getKanbanState();
+
+        if(boardState == null) {
+            throw new Error("Board state not found");
+        }
+
+        boardState?.rows.unshift(archivedRow.row);
+        boardState?.tasks.push(...archivedRow.columns.flatMap((column) => column.tasks));
+
+        await dataStorage?.fileSystemStorage.saveKanbanState(boardState);
+
+        await dataStorage?.fileSystemStorage.removeFromArchive(rowId);
+
+        loadArchive();
+    }
 
     return (
         <>
@@ -58,7 +83,7 @@ function ArchiveView() {
                                             <div className='flex flex-grow'></div>
 
                                             <div className='flex flex-row flex-none p-2.5 text-gray-500'>
-                                                <button onClick={() => {} }><ArchiveIcon />Restore from archive</button>
+                                                <button onClick={() => restoreFromArchive(archivedRow.row.id) }><ArchiveIcon />Restore from archive</button>
                                             </div>
                                         </div>
                                     </div>

@@ -1,5 +1,5 @@
 import { openDB } from "idb";
-import { Archive, Id, KanbanDataContainer } from "../types";
+import { Archive, ArchivedColumn, ArchivedRow, Column, Id, KanbanDataContainer, Row, Task } from "../types";
 
 export interface IAppStorageAccessor {
     storageIsReady(): boolean;
@@ -16,6 +16,11 @@ export interface IAppStorageAccessor {
     mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string>;
 
     getArchive(): Promise<Archive>;
+    addToArchive(archivedRow: ArchivedRow): Promise<void>;
+    removeFromArchive(rowId: Id): Promise<void>;
+
+    createArchiveRow(row: Row, tasks: Task[], columns: Column[]): ArchivedRow;
+    unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] };
 }
 
 export class FileSystemStorage implements IAppStorageAccessor {
@@ -339,11 +344,86 @@ export class FileSystemStorage implements IAppStorageAccessor {
         const archive: Archive = { rows: [] };
 
         for (const line of lines) {
-            const data = JSON.parse(line);
+            if (line.trim() === '') {
+                continue;
+            }
+
+            const data: ArchivedRow = JSON.parse(line);
             archive.rows.push(data);
         }
 
         return archive;
+    }
+
+    async addToArchive(archivedRow: ArchivedRow): Promise<void> {
+        const jsonl = JSON.stringify(archivedRow) + '\n';
+
+        const fileHandle = await this.getArchiveFileHandle();
+
+        const writable = await fileHandle.createWritable();
+        const file = await fileHandle.getFile();
+
+        let existingContent = await file.text();
+        existingContent = existingContent.endsWith('\n') ? existingContent + '\n' : existingContent;
+
+        const newContent = existingContent + jsonl;
+
+        await writable.write(newContent);
+        await writable.close();
+    }
+
+    async removeFromArchive(rowId: Id): Promise<void> {
+        const fileHandle = await this.getArchiveFileHandle();
+
+        const file = await fileHandle.getFile();
+        const existingContent = await file.text();
+
+        const rows = existingContent.split('\n').filter(line => line.trim() !== '');
+
+        const updatedRows = rows.filter(line => {
+            try {
+                const row: ArchivedRow = JSON.parse(line);
+                return row.row.id !== rowId;
+            } catch (e) {
+                console.error('Error parsing JSON line:', e);
+                return true;
+            }
+        });
+
+        const newContent = updatedRows.join('\n') + '\n';
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(newContent);
+        await writable.close();
+    }
+
+    createArchiveRow(row: Row, tasks: Task[], columns: Column[]): ArchivedRow {
+        const archivedColumns: ArchivedColumn[] = [];
+
+        for (const column of columns) {
+            archivedColumns.push({
+                id: column.id,
+                tasks: tasks.filter(task => task.columnId === column.id)
+            });
+        }
+
+        const result: ArchivedRow = {
+            row: row,
+            columns: archivedColumns
+        };
+
+        return result;
+    }
+
+    unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] } {
+        const row = archivedRow.row;
+        const tasks: Task[] = [];
+
+        for (const column of archivedRow.columns) {
+            tasks.push(...column.tasks);
+        }
+
+        return { row, tasks };
     }
 }
 
