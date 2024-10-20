@@ -15,7 +15,7 @@ function TaskCard({ task, requestSavingDataToStorage }: Props) {
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
     const handleClickOnTask = (task: Task) => {
-        setModalContent(<TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} />);
+        setModalContent(<TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={false} />);
         setModalOpen(true);
     };
 

@@ -152,9 +152,9 @@ export class FileSystemStorage implements IAppStorageAccessor {
         if (fileContents.length === 0) {
             return await this.saveKanbanState({
                 columns: [
-                    { id: '1', title: 'To Do' },
-                    { id: '2', title: 'In Progress' },
-                    { id: '3', title: 'Done' }
+                    { id: 1, title: 'To Do' },
+                    { id: 2, title: 'In Progress' },
+                    { id: 3, title: 'Done' }
                 ]
             } as KanbanDataContainer);
         }

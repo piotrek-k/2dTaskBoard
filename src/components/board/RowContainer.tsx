@@ -30,6 +30,7 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
         setModalContent(<RowDetails
             requestSavingDataToStorage={requestSavingDataToStorage}
             row={row}
+            isReadOnly={false}
         />);
         setModalOpen(true);
     };

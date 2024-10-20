@@ -1,4 +1,4 @@
-export type Id = string | number;
+export type Id = number;
 
 export enum WorkUnitType {
     Task = 0,
