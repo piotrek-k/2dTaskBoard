@@ -47,7 +47,7 @@ function KanbanBoard() {
         };
 
         startFetch();
-    }, [dataStorage?.storageReady]);
+    }, [dataStorage?.storageReady, showArchive]);
 
     async function loadBoard() {
         const dataContainer = await dataStorage?.fileSystemStorage.getKanbanState();
@@ -159,8 +159,8 @@ function KanbanBoard() {
                             )}
                         </div>
                     </div>
-                </DndContext> : 
-                <ArchiveView />
+                </DndContext> :
+                    <ArchiveView />
                 }
 
             </div>
@@ -268,12 +268,29 @@ function KanbanBoard() {
     }
 
     function archiveRow(rowId: Id) {
+        dataStorage?.fileSystemStorage.addToArchive(
+            dataStorage.fileSystemStorage.createArchiveRow(
+                rows.find(row => row.id === rowId) as Row,
+                tasks.filter(task => task.rowId === rowId),
+                columns
+            )
+        )
+
         setRows(rows => {
-            return rows.map(row => {
+            return rows.filter(row => {
                 if (row.id === rowId) {
-                    return { ...row, isVisible: false };
+                    return false;
                 }
-                return row;
+                return true;
+            });
+        });
+
+        setTasks(tasks => {
+            return tasks.filter(task => {
+                if (task.rowId === rowId) {
+                    return false;
+                }
+                return true;
             });
         });
     }
