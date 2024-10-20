@@ -4,13 +4,14 @@ import SharedCardDetailsEditorComponent from './SharedCardDetailsEditorComponent
 interface Props {
   task: Task;
   requestSavingDataToStorage: () => Promise<void>;
+  isReadOnly: boolean;
 }
 
-function TaskDetails({ task, requestSavingDataToStorage }: Props) {
+function TaskDetails({ task, requestSavingDataToStorage, isReadOnly }: Props) {
 
   return (
     <>
-      <SharedCardDetailsEditorComponent task={task} requestSavingDataToStorage={requestSavingDataToStorage} />
+      <SharedCardDetailsEditorComponent task={task} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={isReadOnly} />
     </>
   )
 }

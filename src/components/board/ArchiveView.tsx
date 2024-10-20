@@ -1,10 +1,14 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
 import DataStorageContext from '../../context/DataStorageContext';
-import { Archive, Id } from '../../types';
+import { Archive, Id, Row, Task } from '../../types';
 import ArchiveIcon from '../../icons/ArchiveIcon';
+import ModalContext, { ModalContextProps } from '../../context/ModalContext';
+import TaskDetails from '../cardDetails/TaskDetails';
+import RowDetails from '../cardDetails/RowDetails';
 
 function ArchiveView() {
     const dataStorage = useContext(DataStorageContext);
+    const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
     const [archive, setArchive] = useState<Archive | null>(null);
 
@@ -22,6 +26,16 @@ function ArchiveView() {
         }
     }
 
+    const handleClickOnTask = (task: Task) => {
+        setModalContent(<TaskDetails task={task} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
+        setModalOpen(true);
+    };
+
+    const handleClickOnRow = (row: Row) => {
+        setModalContent(<RowDetails row={row} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
+        setModalOpen(true);
+    };
+
     async function restoreFromArchive(rowId: Id): Promise<void> {
         const archivedRow = archive?.rows.find((row) => row.row.id === rowId);
 
@@ -31,7 +45,7 @@ function ArchiveView() {
 
         const boardState = await dataStorage?.fileSystemStorage.getKanbanState();
 
-        if(boardState == null) {
+        if (boardState == null) {
             throw new Error("Board state not found");
         }
 
@@ -75,15 +89,16 @@ function ArchiveView() {
                                                 p-2.5
                                                 m-[12px]
                                                 h-[100px]
-                                                " onClick={() => {
-                                                }}>
+                                                "
+                                                onClick={() => handleClickOnRow(archivedRow.row)}
+                                            >
                                                 {archivedRow.row.title}
                                             </div>
 
                                             <div className='flex flex-grow'></div>
 
                                             <div className='flex flex-row flex-none p-2.5 text-gray-500'>
-                                                <button onClick={() => restoreFromArchive(archivedRow.row.id) }><ArchiveIcon />Restore from archive</button>
+                                                <button onClick={() => restoreFromArchive(archivedRow.row.id)}><ArchiveIcon />Restore from archive</button>
                                             </div>
                                         </div>
                                     </div>
@@ -104,7 +119,7 @@ function ArchiveView() {
                                                 <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
                                                     {archivedColumn.tasks.map((task) => (
                                                         <div
-                                                            // onClick={() => handleClickOnTask(task)}
+                                                            onClick={() => handleClickOnTask(task)}
                                                             className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
                                                         items-center flex text-left hover-ring-2 hover:ring-inset
                                                         hover:ring-rose-500 relative task m-1 w-[150px]'
