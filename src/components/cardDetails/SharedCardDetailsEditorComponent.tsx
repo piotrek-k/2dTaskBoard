@@ -135,6 +135,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
         if (dataStorageContext && taskContent !== undefined) {
             task.title = taskName;
             await dataStorageContext.fileSystemStorage.saveTaskContent(task.id, taskContent);
+            await dataStorageContext.fileSystemStorage.saveCardMetadata(task);
             setSavedTaskContent(taskContent);
             await requestSavingDataToStorage();
             setHasUnsavedChanges(false);

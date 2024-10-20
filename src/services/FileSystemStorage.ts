@@ -1,5 +1,5 @@
 import { openDB } from "idb";
-import { Archive, ArchivedColumn, ArchivedRow, Column, Id, KanbanDataContainer, Row, Task } from "../types";
+import { Archive, ArchivedColumn, ArchivedRow, Column, Id, KanbanDataContainer, Row, Task, WorkUnit } from "../types";
 
 export interface IAppStorageAccessor {
     storageIsReady(): boolean;
@@ -9,6 +9,8 @@ export interface IAppStorageAccessor {
     saveKanbanState(boardStateContainer: KanbanDataContainer): Promise<KanbanDataContainer>;
     getTaskContent(taskId: Id): Promise<string>;
     saveTaskContent(taskId: Id, content: string): Promise<void>;
+    getCardMetadata(cardId: Id): Promise<WorkUnit>;
+    saveCardMetadata(card: WorkUnit): Promise<void>;
     uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }>;
     getFilesForTask(taskId: Id): Promise<File[]>;
     getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
@@ -60,6 +62,8 @@ export class FileSystemStorage implements IAppStorageAccessor {
             console.log("State of handle:", stateOfHandle);
 
             if (stateOfHandle) {
+                this.directoryHandle = handle;
+
                 this.registerPossibleSourceChange(true);
 
                 return handle;
@@ -70,9 +74,9 @@ export class FileSystemStorage implements IAppStorageAccessor {
 
         handle = await this.chooseDifferentSource();
 
-        this.registerPossibleSourceChange(true);
-
         this.directoryHandle = handle;
+
+        this.registerPossibleSourceChange(true);
 
         return handle;
     }
@@ -189,10 +193,45 @@ export class FileSystemStorage implements IAppStorageAccessor {
         return await taskDir.getFileHandle(`content.md`, { create: true });
     }
 
+    private async getCardMetadataFileHandle(taskId: Id): Promise<FileSystemFileHandle> {
+        let handle = this.directoryHandle;
+
+        if (this.directoryHandle == null) {
+            handle = await this.restoreHandle();
+        }
+        
+        if (handle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        const subDir = await handle.getDirectoryHandle('tasks', { create: true });
+        const taskDir = await subDir.getDirectoryHandle(`${taskId}`, { create: true });
+
+        return await taskDir.getFileHandle(`metadata.md`, { create: true });
+    }
+
     async getTaskContent(taskId: Id): Promise<string> {
         const file = await this.getTaskFileHandle(taskId);
 
         return (await file.getFile()).text();
+    }
+
+    async getCardMetadata(cardId: Id): Promise<WorkUnit> {
+        const file = await this.getCardMetadataFileHandle(cardId);
+
+        const content = await (await file.getFile()).text();
+
+        return JSON.parse(content);
+    }
+
+    async saveCardMetadata(card: WorkUnit): Promise<void> {
+        const file = await this.getCardMetadataFileHandle(card.id);
+
+        const writable = await file.createWritable();
+
+        await writable.write(JSON.stringify(card, null, 2));
+
+        await writable.close();
     }
 
     async saveTaskContent(taskId: Id, content: string) {
