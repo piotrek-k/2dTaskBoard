@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 interface Props {
     task: WorkUnit;
     requestSavingDataToStorage: () => Promise<void>;
+    isReadOnly: boolean;
 }
 
 interface TaskFile {
@@ -18,7 +19,7 @@ interface TaskFile {
     src: string;
 }
 
-function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: Props) {
+function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, isReadOnly }: Props) {
     const dataStorageContext = useContext(DataStorageContext);
     const { setContextHasUnsavedChanges } = useContext(DataSavingContext) as DataSavingContextProps;
     const [taskContent, setTaskContent] = useState<string | undefined>('');
@@ -177,25 +178,27 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
                         </Link>
                     </div>
                     <div className='flex flex-row gap-2'>
-                        <button
-                            onClick={() => {
-                                setUseEditMode(!useEditMode);
-                            }}
-                            className="flex items-center px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-blue-800 text-white transition-colors duration-200">
+                        {!isReadOnly ? <>
+                            <button
+                                onClick={() => {
+                                    setUseEditMode(!useEditMode);
+                                }}
+                                className="flex items-center px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-blue-800 text-white transition-colors duration-200">
 
-                            Switch edit mode
-                        </button>
+                                Switch edit mode
+                            </button>
 
-                        <button
-                            onClick={handleSave}
-                            className={`px-4 py-2 rounded-md font-semibold ${hasUnsavedChanges
-                                ? 'bg-blue-600 hover:bg-yellow-700 text-white'
-                                : 'bg-gray-700 hover:bg-green-800 text-white'
-                                } transition-colors duration-200`}
-                            disabled={!hasUnsavedChanges}
-                        >
-                            {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
-                        </button>
+                            <button
+                                onClick={handleSave}
+                                className={`px-4 py-2 rounded-md font-semibold ${hasUnsavedChanges
+                                    ? 'bg-blue-600 hover:bg-yellow-700 text-white'
+                                    : 'bg-gray-700 hover:bg-green-800 text-white'
+                                    } transition-colors duration-200`}
+                                disabled={!hasUnsavedChanges}
+                            >
+                                {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
+                            </button>
+                        </> : null}
                     </div>
                 </div>
             </div>
@@ -270,7 +273,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
                 )}
             </div>
 
-            <FileUploader
+            {!isReadOnly ? <FileUploader
                 onFileUpload={async (file) => {
                     try {
                         let fileHandle = (await dataStorageContext?.fileSystemStorage.uploadFileForTask(task.id, file))?.fileHandle;
@@ -286,7 +289,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage }: 
                         console.error('Error uploading file:', error);
                     }
                 }}
-            />
+            /> : null}
         </>
     )
 }
