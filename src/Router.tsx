@@ -9,7 +9,7 @@ const Router = () => {
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/board" element={<App />} />
-        <Route path="/card/:taskId" element={<CardDetailsStandaloneContainer />} />
+        <Route path="/card/:taskIdProp" element={<CardDetailsStandaloneContainer />} />
       </Routes>
     </BrowserRouter>
   );

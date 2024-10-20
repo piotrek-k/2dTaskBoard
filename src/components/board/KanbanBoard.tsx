@@ -245,6 +245,8 @@ function KanbanBoard() {
             type: WorkUnitType.Task
         };
 
+        dataStorage?.fileSystemStorage.saveCardMetadata(newTask);
+
         setTasks([...tasks, newTask]);
     }
 
@@ -319,6 +321,8 @@ function KanbanBoard() {
             isVisible: true,
             type: WorkUnitType.Row
         };
+
+        dataStorage?.fileSystemStorage.saveCardMetadata(rowToAdd);
 
         setRows([...rows, rowToAdd]);
     }
