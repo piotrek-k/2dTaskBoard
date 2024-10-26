@@ -8,6 +8,9 @@ const startLocalServer = (done) => {
   localServerApp.use(express.json({ limit: "100mb" }));
   localServerApp.use(cors());
   localServerApp.use(express.static(__dirname + '/dist'));
+  localServerApp.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  });
   localServerApp.listen(PORT, async () => {
     console.log("Server Started on PORT ", PORT);
     done();
