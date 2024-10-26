@@ -26,14 +26,35 @@ jobs:
         with:
           node-version: '20.18.0'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies (web)
+        run: |
+          cd web
+          npm install
 
-      # - name: Run tests
-      #   run: npm test
+      # - name: Run tests (web)
+      #   run: |
+      #     cd web
+      #     npm test
 
-      - name: Build app
-        run: npm run build
+      - name: Build app (web)
+        run: |
+          cd web
+          npm run build
+
+      - name: Install dependencies (desktop)
+        run: |
+          cd desktop
+          npm install
+
+      # - name: Run tests (desktop)
+      #   run: |
+      #     cd desktop
+      #     npm test
+
+      - name: Build app (desktop)
+        run: |
+          cd desktop
+          npm run build
 
   build_and_deploy_job:
     if: github.ref == 'refs/heads/release'
