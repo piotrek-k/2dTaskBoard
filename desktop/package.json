@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "rm -r dist && cp -r ../web/dist . && electron-builder"
+    "build": "rm -rf dist && cp -r ../web/dist . && electron-builder"
   },
   "author": "Piotr Kozerski",
   "license": "ISC",
