@@ -5,15 +5,36 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rm -r dist && cp -r ../web/dist . && electron-builder"
   },
   "author": "Piotr Kozerski",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^33.0.2"
+    "electron": "^33.0.2",
+    "electron-builder": "^25.1.8"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.21.1"
+  },
+  "build": {
+    "appId": "pl.pk.2d-task-board",
+    "productName": "TaskBoard2D",
+    "directories": {
+      "output": "release-builds"
+    },
+    "files": [
+      "./dist/**/*",
+      "index.js"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }

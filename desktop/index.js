@@ -7,7 +7,7 @@ const PORT = 8088;
 const startLocalServer = (done) => {
   localServerApp.use(express.json({ limit: "100mb" }));
   localServerApp.use(cors());
-  localServerApp.use(express.static('../web/dist/'));
+  localServerApp.use(express.static(__dirname + '/dist'));
   localServerApp.listen(PORT, async () => {
     console.log("Server Started on PORT ", PORT);
     done();
