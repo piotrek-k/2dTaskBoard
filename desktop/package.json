@@ -1,6 +1,6 @@
 {
   "name": "task-board-desktop",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "2d task board app",
   "main": "index.js",
   "scripts": {
