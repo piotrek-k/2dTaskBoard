@@ -10,6 +10,7 @@ import ArchiveIcon from '../../icons/ArchiveIcon';
 import { RowNavigation } from '../../interfaces/RowNavigation';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import RowDetails from '../cardDetails/RowDetails';
+import { HotKeys } from 'react-hotkeys';
 
 interface Props {
     row: Row;
@@ -19,6 +20,10 @@ interface Props {
     requestSavingDataToStorage: () => Promise<void>;
     rowNavigation: RowNavigation;
 }
+
+const keyMap = {
+    OPEN: 'enter'
+};
 
 function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage, rowNavigation }: Props) {
 
@@ -35,6 +40,10 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
         setModalOpen(true);
     };
 
+    const handlers = {
+        OPEN: () => handleClickOnRowDetails()
+    };
+
     return (
         <div
             className="
@@ -44,32 +53,36 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
             items-center
             overflow-x-auto
             overflow-y-hidden
-            ">
+            " >
             <div className='flex w-full'>
                 <div className='w-[200px] flex-none bg-rowTitleBackgroundColor
                 flex justify-center
                 '>
                     <div className="flex flex-col">
-                        <div className="
-                        bg-mainBackgroundColor
-                        w-[150px] 
-                        p-2.5
-                        m-[12px]
-                        h-[100px]
-                        " onClick={() => {
-                                handleClickOnRowDetails();
-                            }}>
-                            {row.title}
-                        </div>
+                        <HotKeys keyMap={keyMap} handlers={handlers}>
+                            <div className="
+                                bg-mainBackgroundColor
+                                w-[150px] 
+                                p-2.5
+                                m-[12px]
+                                h-[100px]
+                                "
+                                onClick={() => {
+                                    handleClickOnRowDetails();
+                                }}
+                                tabIndex={0}>
+                                {row.title}
+                            </div>
+                        </HotKeys>
 
                         <div className='flex flex-grow'></div>
 
                         <div className='flex flex-row flex-none p-2.5 text-gray-500'>
-                            <button onClick={() => rowNavigation.moveUp(row.id) }><MoveUpIcon /></button>
-                            <button onClick={() => rowNavigation.moveDown(row.id) }><MoveDownIcon /></button>
-                            <button onClick={() => rowNavigation.moveTop(row.id) }><MoveTopIcon /></button>
-                            <button onClick={() => rowNavigation.moveBottom(row.id) }><MoveBottomIcon /></button>
-                            <button onClick={() => rowNavigation.archive(row.id) }><ArchiveIcon /></button>
+                            <button onClick={() => rowNavigation.moveUp(row.id)}><MoveUpIcon /></button>
+                            <button onClick={() => rowNavigation.moveDown(row.id)}><MoveDownIcon /></button>
+                            <button onClick={() => rowNavigation.moveTop(row.id)}><MoveTopIcon /></button>
+                            <button onClick={() => rowNavigation.moveBottom(row.id)}><MoveBottomIcon /></button>
+                            <button onClick={() => rowNavigation.archive(row.id)}><ArchiveIcon /></button>
                         </div>
                     </div>
                 </div>
