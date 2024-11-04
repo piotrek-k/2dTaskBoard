@@ -1,25 +1,26 @@
 import { openDB } from "idb";
 import { IStorageHandler } from "./IStorageHandler";
+import { EventWatcher } from "./EventWatcher";
 
 class FileSystemHandler implements IStorageHandler {
     directoryHandle: FileSystemDirectoryHandle | undefined;
 
-    private onDirectoryHandleChange: ((newState: boolean) => void) | null = null;
+    readinessWatcher: EventWatcher<boolean> = new EventWatcher<boolean>();
 
-    public registerOnChangeCallback(callback: (newState: boolean) => void) {
-        this.onDirectoryHandleChange = callback;
+    public getReadinessWatcher() : EventWatcher<boolean> {
+        return this.readinessWatcher;
     }
 
     private isHandleActive: boolean = false;
     private registerPossibleSourceChange(newState: boolean) {
-        if (this.onDirectoryHandleChange != null && this.isHandleActive != newState) {
-            this.onDirectoryHandleChange(newState);
+        if (this.isHandleActive != newState) {
+            this.readinessWatcher.notify(newState);
         }
 
         this.isHandleActive = newState;
     }
 
-    public storageIsReady(): boolean {
+    public storageReady(): boolean {
         return this.isHandleActive;
     }
 

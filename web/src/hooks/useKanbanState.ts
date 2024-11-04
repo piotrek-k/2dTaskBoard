@@ -3,7 +3,7 @@ import { KanbanDataContainer } from "../types";
 import fileSystemHandler from "../services/FileSystemHandler";
 
 export function useKanbanState() {
-    const [isReady, setIsReady] = useState<boolean>(false);
+    const [isReady, setIsReady] = useState<boolean>(true);
 
     const fileName = 'data.json';
 
