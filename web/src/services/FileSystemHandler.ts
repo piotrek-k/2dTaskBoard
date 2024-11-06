@@ -142,12 +142,9 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        let subDir = this.directoryHandle;
-        for (const folderName of folderNames) {
-            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
-        }
+        const targetDir = await this.followDirectories(folderNames);
 
-        const fileHandle = await subDir.getFileHandle(dataContainerName, { create: true });
+        const fileHandle = await targetDir.getFileHandle(dataContainerName, { create: true });
 
         const file = await fileHandle.getFile();
         return await file.text();
@@ -162,12 +159,9 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        let subDir = this.directoryHandle;
-        for (const folderName of folderNames) {
-            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
-        }
+        const targetDir = await this.followDirectories(folderNames);
 
-        const fileHandle = await subDir.getFileHandle(dataContainerName, { create: true });
+        const fileHandle = await targetDir.getFileHandle(dataContainerName, { create: true });
 
         const writable = await fileHandle.createWritable();
         const dataToSave = JSON.stringify(dataContainer);
@@ -186,12 +180,9 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        let subDir = this.directoryHandle;
-        for (const folderName of folderNames) {
-            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
-        }
+        const targetDir = await this.followDirectories(folderNames);
 
-        const fileHandle = await subDir.getFileHandle(dataContainerName, { create: true });
+        const fileHandle = await targetDir.getFileHandle(dataContainerName, { create: true });
 
         const writable = await fileHandle.createWritable();
 
@@ -205,16 +196,13 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        let subDir = this.directoryHandle;
-        for (const folderName of folderNames) {
-            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
-        }
+        const targetDir = await this.followDirectories(folderNames);
 
         if (ensureUniqueName) {
-            targetFileName = await this.generateUniqueFileName(subDir, targetFileName);
+            targetFileName = await this.generateUniqueFileName(targetDir, targetFileName);
         }
 
-        const fileHandle = await subDir.getFileHandle(targetFileName, { create: true });
+        const fileHandle = await targetDir.getFileHandle(targetFileName, { create: true });
 
         const writable = await fileHandle.createWritable();
         await writable.write(file);
@@ -282,13 +270,13 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        let subDir = this.directoryHandle;
+        let targetDir = this.directoryHandle;
 
         for (const folderName of folderNames) {
-            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
+            targetDir = await targetDir.getDirectoryHandle(folderName, { create: true });
         }
 
-        return subDir;
+        return targetDir;
     }
 
     public async getLinkToFile(fileName: string, folderNames: string[]): Promise<string> {
