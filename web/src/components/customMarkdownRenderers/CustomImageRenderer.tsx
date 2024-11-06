@@ -22,12 +22,6 @@ function CustomImageRenderer({ taskId, props }: Props) {
                 setCustomSrc(srcCache[cacheKey]);
                 return;
             }
-
-            const directory = await dataStorageContext?.fileSystemStorage.getDirectoryHandleForTaskAttachments(taskId);
-
-            if (directory == undefined) {
-                throw new Error("Directory not found");
-            }
             
             const src = await attachmentsStorage.getLinkForAttachment(taskId, props.src);
             

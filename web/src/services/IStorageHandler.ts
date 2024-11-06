@@ -10,6 +10,7 @@ export interface IStorageHandler {
     saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]): Promise<void>;
 
     uploadFile(file: File, targetFileName: string, folderNames: string[]): Promise<string>;
+    deleteFile(fileName: string, folderNames: string[]): Promise<void>;
     listFilesInDirectory(folderNames: string[]): Promise<string[]>;
     getLinkToFile(fileName: string, folderNames: string[]): Promise<string>;
 }

@@ -255,9 +255,9 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
                                     +
                                 </button>
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (window.confirm(`Are you sure you want to delete ${taskFile.name}?`)) {
-                                            dataStorageContext?.fileSystemStorage.deleteFileForTask(task.id, taskFile.name);
+                                            await attachmentsStorage.deleteFileForTask(task.id, taskFile.name);
                                             refreshAttachments();
                                         }
                                     }}

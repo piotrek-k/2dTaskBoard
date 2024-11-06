@@ -296,8 +296,14 @@ class FileSystemHandler implements IStorageHandler {
 
         const fileHandle = await directory.getFileHandle(fileName);
         const file = await fileHandle.getFile();
-        
+
         return URL.createObjectURL(file);
+    }
+
+    public async deleteFile(fileName: string, folderNames: string[]): Promise<void> {
+        const directory = await this.followDirectories(folderNames);
+
+        await directory.removeEntry(fileName);
     }
 
 }

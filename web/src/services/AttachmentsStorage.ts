@@ -12,6 +12,10 @@ class AttachmentsStorage {
         return fileName;
     }
 
+    async deleteFileForTask(taskId: Id, fileName: string): Promise<void> {
+        await this.storageHandler.deleteFile(fileName, ['attachments', `${taskId}`]);
+    }
+
     public async getFileNamesForTask(taskId: Id): Promise<string[]> {
         return await this.storageHandler.listFilesInDirectory(['attachments', `${taskId}`]);
     }
