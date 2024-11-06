@@ -118,19 +118,8 @@ class FileSystemHandler implements IStorageHandler {
         });
     }
 
-    public async getContent(dataContainerName: string) {
-        if (this.directoryHandle == null) {
-            this.directoryHandle = await this.restoreHandle();
-        }
-
-        if (this.directoryHandle == null) {
-            throw new Error("Directory handle not set up");
-        }
-
-        const fileHandle = await this.directoryHandle.getFileHandle(dataContainerName, { create: true });
-
-        const file = await fileHandle.getFile();
-        return await file.text();
+    public async getContent(dataContainerName: string): Promise<string> {
+        return this.getContentFromDirectory(dataContainerName, []);
     }
 
     public async getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string> {
@@ -151,24 +140,9 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async saveJsonContentToDirectory<Type>(dataContainerName: string, dataContainer: Type, folderNames: string[]) {
-        if (this.directoryHandle == null) {
-            this.directoryHandle = await this.restoreHandle();
-        }
-
-        if (this.directoryHandle == null) {
-            throw new Error("Directory handle not set up");
-        }
-
-        const targetDir = await this.followDirectories(folderNames);
-
-        const fileHandle = await targetDir.getFileHandle(dataContainerName, { create: true });
-
-        const writable = await fileHandle.createWritable();
         const dataToSave = JSON.stringify(dataContainer);
 
-        await writable.write(dataToSave);
-
-        await writable.close();
+        this.saveTextContentToDirectory(dataContainerName, dataToSave, folderNames);
     }
 
     public async saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]) {
@@ -187,7 +161,6 @@ class FileSystemHandler implements IStorageHandler {
         const writable = await fileHandle.createWritable();
 
         await writable.write(dataContainer);
-
         await writable.close();
     }
 
