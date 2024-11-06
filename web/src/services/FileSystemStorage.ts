@@ -7,7 +7,6 @@ export interface IAppStorageAccessor {
 
     getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
     deleteFileForTask(taskId: Id, fileName: string): Promise<void>;
-    mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string>;
 
     getArchive(): Promise<Archive>;
     addToArchive(archivedRow: ArchivedRow): Promise<void>;
@@ -144,21 +143,6 @@ export class FileSystemStorage implements IAppStorageAccessor {
 
         const taskDir = await this.getDirectoryHandleForTaskAttachments(taskId);
         await taskDir.removeEntry(fileName);
-    }
-
-    async mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string> {
-        if (!originalSrc) return '';
-
-        try {
-            const fileName = originalSrc.split('/').pop();
-            if (!fileName) return originalSrc;
-
-            const fileHandle = await directory.getFileHandle(fileName);
-            const file = await fileHandle.getFile();
-            return URL.createObjectURL(file);
-        } catch (error) {
-            return originalSrc;
-        }
     }
 
     private async getArchiveFileHandle(): Promise<FileSystemFileHandle> {

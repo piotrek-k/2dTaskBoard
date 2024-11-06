@@ -87,12 +87,11 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
         if (dataStorageContext?.fileSystemStorage.storageIsReady()) {
             const fetchTaskFiles = async () => {
                 try {
-                    const directory = await dataStorageContext.fileSystemStorage.getDirectoryHandleForTaskAttachments(task.id);
                     const files = await attachmentsStorage.getFileNamesForTask(task.id);
 
                     const mappedFiles = await Promise.all(files.map(async file => ({
                         name: file,
-                        src: await dataStorageContext.fileSystemStorage.mapSrcToFileSystem(file, directory)
+                        src: await attachmentsStorage.getLinkForAttachment(task.id, file)
                     })));
 
                     setTaskFiles(mappedFiles);

@@ -27,7 +27,7 @@ class TaskStorage {
     }
 
     async saveCardMetadata(card: WorkUnit): Promise<void> {
-        this.storageHandler.saveJsonContentToDirectory<WorkUnit>('content.md', card, ['tasks', `${card.id}`]);
+        this.storageHandler.saveJsonContentToDirectory<WorkUnit>('metadata.md', card, ['tasks', `${card.id}`]);
     }
 }
 

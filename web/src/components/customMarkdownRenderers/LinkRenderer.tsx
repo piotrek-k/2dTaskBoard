@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 import { Id } from '../../types';
 import DataStorageContext from '../../context/DataStorageContext';
+import attachmentsStorage from '../../services/AttachmentsStorage';
 
 interface Props {
     taskId: Id;
@@ -20,7 +21,8 @@ function LinkRenderer({ taskId, props }: Props) {
                 throw new Error('Directory not found');
             }
 
-            const src = await dataStorageContext?.fileSystemStorage.mapSrcToFileSystem(props.href, directory) ?? "";
+            const src = await attachmentsStorage.getLinkForAttachment(taskId, props.href);
+
             setCustomSrc(src);
         };
 

@@ -15,6 +15,10 @@ class AttachmentsStorage {
     public async getFileNamesForTask(taskId: Id): Promise<string[]> {
         return await this.storageHandler.listFilesInDirectory(['attachments', `${taskId}`]);
     }
+
+    public async getLinkForAttachment(taskId: Id, fileName: string): Promise<string> {
+        return await this.storageHandler.getLinkToFile(fileName, ['attachments', `${taskId}`]);
+    }
     
 }
 

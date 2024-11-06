@@ -291,6 +291,15 @@ class FileSystemHandler implements IStorageHandler {
         return subDir;
     }
 
+    public async getLinkToFile(fileName: string, folderNames: string[]): Promise<string> {
+        const directory = await this.followDirectories(folderNames);
+
+        const fileHandle = await directory.getFileHandle(fileName);
+        const file = await fileHandle.getFile();
+        
+        return URL.createObjectURL(file);
+    }
+
 }
 
 const fileSystemHandler = new FileSystemHandler();

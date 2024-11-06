@@ -11,4 +11,5 @@ export interface IStorageHandler {
 
     uploadFile(file: File, targetFileName: string, folderNames: string[]): Promise<string>;
     listFilesInDirectory(folderNames: string[]): Promise<string[]>;
+    getLinkToFile(fileName: string, folderNames: string[]): Promise<string>;
 }
