@@ -1,4 +1,5 @@
 import { KanbanDataContainer } from "../types";
+import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
 export class KanbanBoardStorage {
@@ -43,3 +44,7 @@ export class KanbanBoardStorage {
         await this.storageHandler.saveContent(this.fileName, dataContainer);
     }
 }
+
+const kanbanBoardStorage = new KanbanBoardStorage(fileSystemHandler);
+
+export default kanbanBoardStorage;

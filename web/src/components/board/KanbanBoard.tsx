@@ -11,6 +11,7 @@ import TaskCard from './TaskCard';
 import DataStorageContext from '../../context/DataStorageContext';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import ArchiveView from './ArchiveView';
+import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 
 function KanbanBoard() {
 
@@ -50,7 +51,7 @@ function KanbanBoard() {
     }, [dataStorage?.storageReady, showArchive]);
 
     async function loadBoard() {
-        const dataContainer = await dataStorage?.fileSystemStorage.getKanbanState();
+        const dataContainer = await kanbanBoardStorage.getKanbanState();
 
         if (dataContainer == undefined) {
             throw new Error("Data storage not set");
@@ -90,7 +91,7 @@ function KanbanBoard() {
             throw new Error("Data storage not set");
         }
 
-        await dataStorage.fileSystemStorage.saveKanbanState(boardState);
+        await kanbanBoardStorage.saveKanbanState(boardState);
     }
 
     useEffect(() => {

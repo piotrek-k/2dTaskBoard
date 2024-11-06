@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import DataStorageContext from '../../context/DataStorageContext';
 import TaskDetails from '../../components/cardDetails/TaskDetails';
 import RowDetails from '../../components/cardDetails/RowDetails';
+import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 
 
 function CardDetailsStandalone() {
@@ -32,7 +33,7 @@ function CardDetailsStandalone() {
                 return;
             }
 
-            const dataContainer = await dataStorage?.fileSystemStorage.getKanbanState();
+            const dataContainer = await kanbanBoardStorage.getKanbanState();
 
             if (dataContainer == undefined) {
                 throw new Error("Data storage not set");

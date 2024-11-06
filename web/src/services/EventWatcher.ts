@@ -9,7 +9,7 @@ export class EventWatcher<Type> {
     this.watchers.push(callback);
   }
 
-  public unsubscribe(callback: () => void) {
+  public unsubscribe(callback: (value: Type) => void) {
     this.watchers = this.watchers.filter((cb) => cb !== callback);
   }
 

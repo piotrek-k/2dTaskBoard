@@ -1,12 +1,10 @@
 import { openDB } from "idb";
-import { Archive, ArchivedColumn, ArchivedRow, Column, Id, KanbanDataContainer, Row, Task, WorkUnit } from "../types";
+import { Archive, ArchivedColumn, ArchivedRow, Column, Id, Row, Task, WorkUnit } from "../types";
 
 export interface IAppStorageAccessor {
     storageIsReady(): boolean;
     restoreHandle(): Promise<FileSystemDirectoryHandle>;
 
-    getKanbanState(): Promise<KanbanDataContainer>;
-    saveKanbanState(boardStateContainer: KanbanDataContainer): Promise<KanbanDataContainer>;
     getTaskContent(taskId: Id): Promise<string>;
     saveTaskContent(taskId: Id, content: string): Promise<void>;
     getCardMetadata(cardId: Id): Promise<WorkUnit | undefined>;
@@ -130,56 +128,6 @@ export class FileSystemStorage implements IAppStorageAccessor {
         }
 
         return false;
-    }
-
-    private async getMainFileHandle(): Promise<FileSystemFileHandle> {
-        if (this.directoryHandle == null) {
-            this.directoryHandle = await this.restoreHandle();
-        }
-
-        if (this.directoryHandle == null) {
-            throw new Error("Directory handle not set up");
-        }
-
-        return await this.directoryHandle.getFileHandle('data.json', { create: true });
-    }
-
-    async getKanbanState(): Promise<KanbanDataContainer> {
-        const fileHandle = await this.getMainFileHandle();
-        const file = await fileHandle.getFile();
-        const fileContents = await file.text();
-
-        if (fileContents.length === 0) {
-            return await this.saveKanbanState({
-                columns: [
-                    { id: 1, title: 'To Do' },
-                    { id: 2, title: 'In Progress' },
-                    { id: 3, title: 'Done' }
-                ]
-            } as KanbanDataContainer);
-        }
-        else {
-            return JSON.parse(fileContents) as KanbanDataContainer;
-        }
-    }
-
-    async saveKanbanState(boardStateContainer: KanbanDataContainer) {
-        const fileHandle = await this.getMainFileHandle();
-
-        const dataContainer = {
-            tasks: boardStateContainer.tasks,
-            rows: boardStateContainer.rows,
-            columns: boardStateContainer.columns
-        }
-
-        const writable = await fileHandle.createWritable();
-        const dataToSave = JSON.stringify(dataContainer);
-
-        await writable.write(dataToSave);
-
-        await writable.close();
-
-        return dataContainer;
     }
 
     private async getTaskFileHandle(taskId: Id): Promise<FileSystemFileHandle> {

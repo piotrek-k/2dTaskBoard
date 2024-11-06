@@ -5,6 +5,7 @@ import ArchiveIcon from '../../icons/ArchiveIcon';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import TaskDetails from '../cardDetails/TaskDetails';
 import RowDetails from '../cardDetails/RowDetails';
+import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 
 function ArchiveView() {
     const dataStorage = useContext(DataStorageContext);
@@ -43,7 +44,7 @@ function ArchiveView() {
             throw new Error("Row not found in archive");
         }
 
-        const boardState = await dataStorage?.fileSystemStorage.getKanbanState();
+        const boardState = await kanbanBoardStorage.getKanbanState();
 
         if (boardState == null) {
             throw new Error("Board state not found");
@@ -52,7 +53,7 @@ function ArchiveView() {
         boardState?.rows.unshift(archivedRow.row);
         boardState?.tasks.push(...archivedRow.columns.flatMap((column) => column.tasks));
 
-        await dataStorage?.fileSystemStorage.saveKanbanState(boardState);
+        await kanbanBoardStorage.saveKanbanState(boardState);
 
         await dataStorage?.fileSystemStorage.removeFromArchive(rowId);
 
