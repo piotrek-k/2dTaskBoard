@@ -5,5 +5,7 @@ export interface IStorageHandler {
     getReadinessWatcher() : EventWatcher<boolean>;
 
     getContent(dataContainerName: string): Promise<string>;
-    saveContent<Type>(dataContainerName: string, dataContainer: Type): Promise<void>;
+    getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string>;
+    saveJsonContentToDirectory<Type>(dataContainerName: string, dataContainer: Type, folderNames: string[]): Promise<void>;
+    saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]): Promise<void>;
 }

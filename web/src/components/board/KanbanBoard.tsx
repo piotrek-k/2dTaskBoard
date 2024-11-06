@@ -12,6 +12,7 @@ import DataStorageContext from '../../context/DataStorageContext';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import ArchiveView from './ArchiveView';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
+import taskStorage from '../../services/TaskStorage';
 
 function KanbanBoard() {
 
@@ -58,7 +59,7 @@ function KanbanBoard() {
         }
         
         for (const taskIndex in dataContainer.tasks) {
-            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
+            const metadata = await taskStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
 
             if (metadata) {
                 Object.assign(dataContainer.tasks[taskIndex], metadata);
@@ -66,7 +67,7 @@ function KanbanBoard() {
         }
 
         for (const taskIndex in dataContainer.rows) {
-            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(dataContainer.rows[taskIndex].id);
+            const metadata = await taskStorage.getCardMetadata(dataContainer.rows[taskIndex].id);
 
             if (metadata) {
                 Object.assign(dataContainer.rows[taskIndex], metadata);
@@ -246,7 +247,7 @@ function KanbanBoard() {
             type: WorkUnitType.Task
         };
 
-        dataStorage?.fileSystemStorage.saveCardMetadata(newTask);
+        taskStorage.saveCardMetadata(newTask);
 
         setTasks([...tasks, newTask]);
     }
@@ -323,7 +324,7 @@ function KanbanBoard() {
             type: WorkUnitType.Row
         };
 
-        dataStorage?.fileSystemStorage.saveCardMetadata(rowToAdd);
+        taskStorage.saveCardMetadata(rowToAdd);
 
         setRows([...rows, rowToAdd]);
     }

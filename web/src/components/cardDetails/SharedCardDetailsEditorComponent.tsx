@@ -7,6 +7,7 @@ import CustomImageRenderer from '../customMarkdownRenderers/CustomImageRenderer'
 import FileUploader from '../fileUploader/FileUploader';
 import LinkRenderer from '../customMarkdownRenderers/LinkRenderer';
 import { Link } from "react-router-dom";
+import taskStorage from '../../services/TaskStorage';
 
 interface Props {
     task: WorkUnit;
@@ -32,7 +33,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
 
     useEffect(() => {
         if (dataStorageContext) {
-            dataStorageContext.fileSystemStorage.getTaskContent(task.id)
+            taskStorage.getTaskContent(task.id)
                 .then(content => {
                     setTaskContent(content);
                     setSavedTaskContent(content);
@@ -134,8 +135,8 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
     const handleSave = useCallback(async () => {
         if (dataStorageContext && taskContent !== undefined) {
             task.title = taskName;
-            await dataStorageContext.fileSystemStorage.saveTaskContent(task.id, taskContent);
-            await dataStorageContext.fileSystemStorage.saveCardMetadata(task);
+            await taskStorage.saveTaskContent(task.id, taskContent);
+            await taskStorage.saveCardMetadata(task);
             setSavedTaskContent(taskContent);
             await requestSavingDataToStorage();
             setHasUnsavedChanges(false);

@@ -5,6 +5,7 @@ import DataStorageContext from '../../context/DataStorageContext';
 import TaskDetails from '../../components/cardDetails/TaskDetails';
 import RowDetails from '../../components/cardDetails/RowDetails';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
+import taskStorage from '../../services/TaskStorage';
 
 
 function CardDetailsStandalone() {
@@ -19,7 +20,7 @@ function CardDetailsStandalone() {
 
     async function fetchTask() {
         try {
-            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(taskId as Id);
+            const metadata = await taskStorage.getCardMetadata(taskId as Id);
 
             if (metadata != undefined) {
                 if (metadata.type == WorkUnitType.Task) {

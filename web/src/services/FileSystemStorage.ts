@@ -1,14 +1,10 @@
 import { openDB } from "idb";
-import { Archive, ArchivedColumn, ArchivedRow, Column, Id, Row, Task, WorkUnit } from "../types";
+import { Archive, ArchivedColumn, ArchivedRow, Column, Id, Row, Task } from "../types";
 
 export interface IAppStorageAccessor {
     storageIsReady(): boolean;
     restoreHandle(): Promise<FileSystemDirectoryHandle>;
 
-    getTaskContent(taskId: Id): Promise<string>;
-    saveTaskContent(taskId: Id, content: string): Promise<void>;
-    getCardMetadata(cardId: Id): Promise<WorkUnit | undefined>;
-    saveCardMetadata(card: WorkUnit): Promise<void>;
     uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }>;
     getFilesForTask(taskId: Id): Promise<File[]>;
     getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
@@ -128,72 +124,6 @@ export class FileSystemStorage implements IAppStorageAccessor {
         }
 
         return false;
-    }
-
-    private async getTaskFileHandle(taskId: Id): Promise<FileSystemFileHandle> {
-        if (this.directoryHandle == null) {
-            throw new Error("Directory handle not set up");
-        }
-
-        const subDir = await this.directoryHandle.getDirectoryHandle('tasks', { create: true });
-        const taskDir = await subDir.getDirectoryHandle(`${taskId}`, { create: true });
-
-        return await taskDir.getFileHandle(`content.md`, { create: true });
-    }
-
-    private async getCardMetadataFileHandle(taskId: Id): Promise<FileSystemFileHandle> {
-        let handle = this.directoryHandle;
-
-        if (this.directoryHandle == null) {
-            handle = await this.restoreHandle();
-        }
-        
-        if (handle == null) {
-            throw new Error("Directory handle not set up");
-        }
-
-        const subDir = await handle.getDirectoryHandle('tasks', { create: true });
-        const taskDir = await subDir.getDirectoryHandle(`${taskId}`, { create: true });
-
-        return await taskDir.getFileHandle(`metadata.md`, { create: true });
-    }
-
-    async getTaskContent(taskId: Id): Promise<string> {
-        const file = await this.getTaskFileHandle(taskId);
-
-        return (await file.getFile()).text();
-    }
-
-    async getCardMetadata(cardId: Id): Promise<WorkUnit | undefined> {
-        const file = await this.getCardMetadataFileHandle(cardId);
-
-        const content = await (await file.getFile()).text();
-
-        if(content.length === 0) {
-            return undefined;
-        }
-
-        return JSON.parse(content);
-    }
-
-    async saveCardMetadata(card: WorkUnit): Promise<void> {
-        const file = await this.getCardMetadataFileHandle(card.id);
-
-        const writable = await file.createWritable();
-
-        await writable.write(JSON.stringify(card, null, 2));
-
-        await writable.close();
-    }
-
-    async saveTaskContent(taskId: Id, content: string) {
-        const file = await this.getTaskFileHandle(taskId);
-
-        const writable = await file.createWritable();
-
-        await writable.write(content);
-
-        await writable.close();
     }
 
     private async generateUniqueFileName(directoryHandle: FileSystemDirectoryHandle, originalName: string): Promise<string> {

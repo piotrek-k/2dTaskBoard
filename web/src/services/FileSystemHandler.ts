@@ -131,7 +131,7 @@ class FileSystemHandler implements IStorageHandler {
         return await file.text();
     }
 
-    public async saveContent<Type>(dataContainerName: string, dataContainer: Type) {
+    public async getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string> {
         if (this.directoryHandle == null) {
             this.directoryHandle = await this.restoreHandle();
         }
@@ -140,12 +140,60 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        const fileHandle = await this.directoryHandle.getFileHandle(dataContainerName, { create: true });
+        let subDir = this.directoryHandle;
+        for (const folderName of folderNames) {
+            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
+        }
+
+        const fileHandle = await subDir.getFileHandle(dataContainerName, { create: true });
+
+        const file = await fileHandle.getFile();
+        return await file.text();
+    }
+
+    public async saveJsonContentToDirectory<Type>(dataContainerName: string, dataContainer: Type, folderNames: string[]) {
+        if (this.directoryHandle == null) {
+            this.directoryHandle = await this.restoreHandle();
+        }
+
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        let subDir = this.directoryHandle;
+        for (const folderName of folderNames) {
+            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
+        }
+
+        const fileHandle = await subDir.getFileHandle(dataContainerName, { create: true });
 
         const writable = await fileHandle.createWritable();
         const dataToSave = JSON.stringify(dataContainer);
 
         await writable.write(dataToSave);
+
+        await writable.close();
+    }
+
+    public async saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]) {
+        if (this.directoryHandle == null) {
+            this.directoryHandle = await this.restoreHandle();
+        }
+
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        let subDir = this.directoryHandle;
+        for (const folderName of folderNames) {
+            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
+        }
+
+        const fileHandle = await subDir.getFileHandle(dataContainerName, { create: true });
+
+        const writable = await fileHandle.createWritable();
+
+        await writable.write(dataContainer);
 
         await writable.close();
     }

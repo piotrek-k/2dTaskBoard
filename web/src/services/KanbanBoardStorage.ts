@@ -41,7 +41,7 @@ export class KanbanBoardStorage {
             columns: boardStateContainer.columns
         }
 
-        await this.storageHandler.saveContent(this.fileName, dataContainer);
+        await this.storageHandler.saveJsonContentToDirectory<KanbanDataContainer>(this.fileName, dataContainer, []);
     }
 }
 
