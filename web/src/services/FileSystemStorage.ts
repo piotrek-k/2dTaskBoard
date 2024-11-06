@@ -5,7 +5,6 @@ export interface IAppStorageAccessor {
     storageIsReady(): boolean;
     restoreHandle(): Promise<FileSystemDirectoryHandle>;
 
-    uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }>;
     getFilesForTask(taskId: Id): Promise<File[]>;
     getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
     deleteFileForTask(taskId: Id, fileName: string): Promise<void>;
@@ -126,65 +125,9 @@ export class FileSystemStorage implements IAppStorageAccessor {
         return false;
     }
 
-    private async generateUniqueFileName(directoryHandle: FileSystemDirectoryHandle, originalName: string): Promise<string> {
-        function extractFileInfo(filename: string): { baseFilename: string; counter: number | null; extension: string } {
-            const match = filename.match(/^(.+?)(?:_(\d+))?\.([^.]+)$/);
+    
 
-            if (!match) {
-                return { baseFilename: filename, counter: null, extension: '' };
-            }
-
-            const [, baseName, counterStr, extension] = match;
-            const counter = counterStr ? parseInt(counterStr, 10) : null;
-            const baseFilename = baseName;
-
-            return { baseFilename, counter, extension };
-        }
-
-        const { baseFilename, counter: initialCounter, extension } = extractFileInfo(originalName);
-        let counter = initialCounter ?? 0;
-
-        const fileExists = async (name: string) => {
-            try {
-                await directoryHandle.getFileHandle(name);
-                return true;
-            } catch {
-                return false;
-            }
-        };
-
-        let fileName = originalName;
-        while (this.reservedFileNames.includes(fileName) || await fileExists(fileName)) {
-            counter++;
-            fileName = `${baseFilename}_${counter}.${extension}`;
-        }
-
-        return fileName;
-    }
-
-    async uploadFileForTask(taskId: Id, file: File): Promise<{ fileHandle: FileSystemFileHandle }> {
-        if (this.directoryHandle == null) {
-            throw new Error("Directory handle not set up");
-        }
-
-        try {
-            const taskDir = await this.getDirectoryHandleForTaskAttachments(taskId);
-
-            const fileName = await this.generateUniqueFileName(taskDir, file.name);
-
-            const newFileHandle = await taskDir.getFileHandle(fileName, { create: true });
-
-            const writable = await newFileHandle.createWritable();
-            await writable.write(file);
-            await writable.close();
-
-            console.log(`File ${fileName} uploaded successfully for task ${taskId}`);
-            return { fileHandle: newFileHandle };
-        } catch (error) {
-            console.error(`Error uploading file for task ${taskId}:`, error);
-            throw error;
-        }
-    }
+    
 
     async getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle> {
         if (this.directoryHandle == null) {

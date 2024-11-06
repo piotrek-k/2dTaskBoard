@@ -8,4 +8,6 @@ export interface IStorageHandler {
     getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string>;
     saveJsonContentToDirectory<Type>(dataContainerName: string, dataContainer: Type, folderNames: string[]): Promise<void>;
     saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]): Promise<void>;
+
+    uploadFile(file: File, targetFileName: string, folderNames: string[]): Promise<string> ;
 }

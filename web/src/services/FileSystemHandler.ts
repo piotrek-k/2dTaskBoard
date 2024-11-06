@@ -7,7 +7,9 @@ class FileSystemHandler implements IStorageHandler {
 
     readinessWatcher: EventWatcher<boolean> = new EventWatcher<boolean>();
 
-    public getReadinessWatcher() : EventWatcher<boolean> {
+    private readonly reservedFileNames: string[] = ['content.md'];
+
+    public getReadinessWatcher(): EventWatcher<boolean> {
         return this.readinessWatcher;
     }
 
@@ -196,6 +198,65 @@ class FileSystemHandler implements IStorageHandler {
         await writable.write(dataContainer);
 
         await writable.close();
+    }
+
+    public async uploadFile(file: File, targetFileName: string, folderNames: string[], ensureUniqueName: boolean = true): Promise<string> {
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        let subDir = this.directoryHandle;
+        for (const folderName of folderNames) {
+            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
+        }
+
+        if (ensureUniqueName) {
+            targetFileName = await this.generateUniqueFileName(subDir, targetFileName);
+        }
+
+        const fileHandle = await subDir.getFileHandle(targetFileName, { create: true });
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(file);
+        await writable.close();
+
+        return targetFileName;
+    }
+
+    private async generateUniqueFileName(directoryHandle: FileSystemDirectoryHandle, originalName: string): Promise<string> {
+        function extractFileInfo(filename: string): { baseFilename: string; counter: number | null; extension: string } {
+            const match = filename.match(/^(.+?)(?:_(\d+))?\.([^.]+)$/);
+
+            if (!match) {
+                return { baseFilename: filename, counter: null, extension: '' };
+            }
+
+            const [, baseName, counterStr, extension] = match;
+            const counter = counterStr ? parseInt(counterStr, 10) : null;
+            const baseFilename = baseName;
+
+            return { baseFilename, counter, extension };
+        }
+
+        const { baseFilename, counter: initialCounter, extension } = extractFileInfo(originalName);
+        let counter = initialCounter ?? 0;
+
+        const fileExists = async (name: string) => {
+            try {
+                await directoryHandle.getFileHandle(name);
+                return true;
+            } catch {
+                return false;
+            }
+        };
+
+        let fileName = originalName;
+        while (this.reservedFileNames.includes(fileName) || await fileExists(fileName)) {
+            counter++;
+            fileName = `${baseFilename}_${counter}.${extension}`;
+        }
+
+        return fileName;
     }
 
 }

@@ -8,6 +8,7 @@ import FileUploader from '../fileUploader/FileUploader';
 import LinkRenderer from '../customMarkdownRenderers/LinkRenderer';
 import { Link } from "react-router-dom";
 import taskStorage from '../../services/TaskStorage';
+import attachmentsStorage from '../../services/AttachmentsStorage';
 
 interface Props {
     task: WorkUnit;
@@ -278,13 +279,9 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
             {!isReadOnly ? <FileUploader
                 onFileUpload={async (file) => {
                     try {
-                        let fileHandle = (await dataStorageContext?.fileSystemStorage.uploadFileForTask(task.id, file))?.fileHandle;
+                        const newFileName = await attachmentsStorage.uploadFileForTask(task.id, file);
 
-                        if (fileHandle == undefined) {
-                            throw new Error("File handle not found");
-                        }
-
-                        appendFile(fileHandle.name);
+                        appendFile(newFileName);
 
                         refreshAttachments();
                     } catch (error) {
