@@ -259,6 +259,38 @@ class FileSystemHandler implements IStorageHandler {
         return fileName;
     }
 
+    public async listFilesInDirectory(folderNames: string[]): Promise<string[]> {
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        const directory = await this.followDirectories(folderNames);
+
+        const files: File[] = [];
+        for await (const entry of (directory as any).values()) {
+            if (entry.kind === 'file' && !this.reservedFileNames.includes(entry.name) && !entry.name.endsWith('.crswap')) {
+                const file = await entry.getFile();
+                files.push(file);
+            }
+        }
+
+        return files.map(f => f.name);
+    }
+
+    private async followDirectories(folderNames: string[]): Promise<FileSystemDirectoryHandle> {
+        if (this.directoryHandle == null) {
+            throw new Error("Directory handle not set up");
+        }
+
+        let subDir = this.directoryHandle;
+
+        for (const folderName of folderNames) {
+            subDir = await subDir.getDirectoryHandle(folderName, { create: true });
+        }
+
+        return subDir;
+    }
+
 }
 
 const fileSystemHandler = new FileSystemHandler();

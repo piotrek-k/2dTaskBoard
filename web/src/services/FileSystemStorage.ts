@@ -5,7 +5,6 @@ export interface IAppStorageAccessor {
     storageIsReady(): boolean;
     restoreHandle(): Promise<FileSystemDirectoryHandle>;
 
-    getFilesForTask(taskId: Id): Promise<File[]>;
     getDirectoryHandleForTaskAttachments(taskId: Id): Promise<FileSystemDirectoryHandle>;
     deleteFileForTask(taskId: Id, fileName: string): Promise<void>;
     mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string>;
@@ -20,8 +19,6 @@ export interface IAppStorageAccessor {
 
 export class FileSystemStorage implements IAppStorageAccessor {
     directoryHandle: FileSystemDirectoryHandle | undefined;
-
-    private readonly reservedFileNames: string[] = ['content.md'];
 
     private onDirectoryHandleChange: ((newState: boolean) => void) | null = null;
 
@@ -147,29 +144,6 @@ export class FileSystemStorage implements IAppStorageAccessor {
 
         const taskDir = await this.getDirectoryHandleForTaskAttachments(taskId);
         await taskDir.removeEntry(fileName);
-    }
-
-    async getFilesForTask(taskId: Id): Promise<File[]> {
-        if (this.directoryHandle == null) {
-            throw new Error("Directory handle not set up");
-        }
-
-        try {
-            const taskDir = await this.getDirectoryHandleForTaskAttachments(taskId);
-
-            const files: File[] = [];
-            for await (const entry of (taskDir as any).values()) {
-                if (entry.kind === 'file' && !this.reservedFileNames.includes(entry.name) && !entry.name.endsWith('.crswap')) {
-                    const file = await entry.getFile();
-                    files.push(file);
-                }
-            }
-
-            return files;
-        } catch (error) {
-            console.error(`Error getting files for task ${taskId}:`, error);
-            throw error;
-        }
     }
 
     async mapSrcToFileSystem(originalSrc: string | undefined, directory: FileSystemDirectoryHandle): Promise<string> {
