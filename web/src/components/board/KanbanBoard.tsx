@@ -13,6 +13,7 @@ import ArchiveIcon from '../../icons/ArchiveIcon';
 import ArchiveView from './ArchiveView';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 import taskStorage from '../../services/TaskStorage';
+import archiveStorage from '../../services/ArchiveStorage';
 
 function KanbanBoard() {
 
@@ -330,7 +331,7 @@ function KanbanBoard() {
     }
 
     async function generateId(): Promise<number> {
-        const archive = await dataStorage?.fileSystemStorage.getArchive();
+        const archive = await archiveStorage.getArchive();
         const maxRowIdInArchive = archive?.rows.reduce((max, row) => row.row.id > max ? row.row.id : max, 0) ?? 0;
         const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, task) => task.id > max ? task.id : max, max), max), 0) ?? 0;
         const maxTaskIdOnBoard = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);

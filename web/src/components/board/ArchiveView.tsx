@@ -6,6 +6,7 @@ import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import TaskDetails from '../cardDetails/TaskDetails';
 import RowDetails from '../cardDetails/RowDetails';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
+import archiveStorage from '../../services/ArchiveStorage';
 
 function ArchiveView() {
     const dataStorage = useContext(DataStorageContext);
@@ -23,7 +24,7 @@ function ArchiveView() {
 
     async function loadArchive() {
         if (dataStorage?.storageReady) {
-            setArchive(await dataStorage.fileSystemStorage.getArchive());
+            setArchive(await archiveStorage.getArchive());
         }
     }
 

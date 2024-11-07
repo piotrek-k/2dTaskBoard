@@ -1,11 +1,10 @@
 import { openDB } from "idb";
-import { Archive, ArchivedColumn, ArchivedRow, Column, Id, Row, Task } from "../types";
+import { ArchivedColumn, ArchivedRow, Column, Id, Row, Task } from "../types";
 
 export interface IAppStorageAccessor {
     storageIsReady(): boolean;
     restoreHandle(): Promise<FileSystemDirectoryHandle>;
 
-    getArchive(): Promise<Archive>;
     addToArchive(archivedRow: ArchivedRow): Promise<void>;
     removeFromArchive(rowId: Id): Promise<void>;
 
@@ -128,26 +127,6 @@ export class FileSystemStorage implements IAppStorageAccessor {
         }
 
         return await this.directoryHandle.getFileHandle('archive.jsonl', { create: true });
-    }
-
-    async getArchive(): Promise<Archive> {
-        const fileHandle = await this.getArchiveFileHandle();
-        const file = await fileHandle.getFile();
-        const fileContents = await file.text();
-
-        const lines = fileContents.trim().split('\n').reverse();
-        const archive: Archive = { rows: [] };
-
-        for (const line of lines) {
-            if (line.trim() === '') {
-                continue;
-            }
-
-            const data: ArchivedRow = JSON.parse(line);
-            archive.rows.push(data);
-        }
-
-        return archive;
     }
 
     async addToArchive(archivedRow: ArchivedRow): Promise<void> {
