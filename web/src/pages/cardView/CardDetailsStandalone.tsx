@@ -20,6 +20,10 @@ function CardDetailsStandalone() {
 
     const fetchTask = useCallback(async () => {
         try {
+            if (!storageIsReady) {
+                return;
+            }
+
             const metadata = await taskStorage.getCardMetadata(taskId as Id);
 
             if (metadata != undefined) {

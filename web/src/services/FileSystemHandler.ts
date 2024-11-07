@@ -83,7 +83,13 @@ class FileSystemHandler implements IStorageHandler {
     public async chooseDifferentSource(): Promise<FileSystemDirectoryHandle> {
         const db = await this.getDbInstance();
 
-        this.directoryHandle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
+        try {
+            this.directoryHandle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
+        } catch (error) {
+            this.readinessWatcher.notify(false);
+
+            throw error;
+        }
 
         const stateOfHandle = await this.verifyExistingHandle(this.directoryHandle);
 
