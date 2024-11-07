@@ -1,4 +1,4 @@
-import { Archive, ArchivedColumn, ArchivedRow, Column, Row, Task } from "../types";
+import { Archive, ArchivedColumn, ArchivedRow, Column, Id, Row, Task } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
@@ -51,6 +51,38 @@ class ArchiveStorage {
         };
 
         return result;
+    }
+
+    async removeFromArchive(rowId: Id): Promise<void> {
+
+        const existingContent = await this.storageHandler.getContent('archive.jsonl');
+
+        const rows = existingContent.split('\n').filter(line => line.trim() !== '');
+
+        const updatedRows = rows.filter(line => {
+            try {
+                const row: ArchivedRow = JSON.parse(line);
+                return row.row.id !== rowId;
+            } catch (e) {
+                console.error('Error parsing JSON line:', e);
+                return true;
+            }
+        });
+
+        const newContent = updatedRows.join('\n') + '\n';
+
+        this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
+    }
+
+    unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] } {
+        const row = archivedRow.row;
+        const tasks: Task[] = [];
+
+        for (const column of archivedRow.columns) {
+            tasks.push(...column.tasks);
+        }
+
+        return { row, tasks };
     }
 }
 

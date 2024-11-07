@@ -56,7 +56,7 @@ function ArchiveView() {
 
         await kanbanBoardStorage.saveKanbanState(boardState);
 
-        await dataStorage?.fileSystemStorage.removeFromArchive(rowId);
+        await archiveStorage.removeFromArchive(rowId);
 
         loadArchive();
     }
