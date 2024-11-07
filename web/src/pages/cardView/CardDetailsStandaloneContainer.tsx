@@ -1,22 +1,21 @@
 import { useState } from 'react';
 import DataSavingContext from '../../context/DataSavingContext';
-import { DataStorageProvider } from '../../context/DataStorageProvider';
+import { RestoreAccessToStoragePopup } from '../../components/shared/RestoreAccessToStoragePopup';
 import CardDetailsStandalone from './CardDetailsStandalone';
+import { ModalProvider } from '../../context/ModalProvider';
 
-interface Props {
-}
-
-function CardDetailsStandaloneContainer({ }: Props) {
+function CardDetailsStandaloneContainer() {
 
     const [contextHasUnsavedChanges, setContextHasUnsavedChanges] = useState(false);
 
     return (
         <>
-            <DataStorageProvider>
+            <ModalProvider>
+                <RestoreAccessToStoragePopup></RestoreAccessToStoragePopup>
                 <DataSavingContext.Provider value={{ contextHasUnsavedChanges, setContextHasUnsavedChanges }}>
-                    <CardDetailsStandalone  />
+                    <CardDetailsStandalone />
                 </DataSavingContext.Provider>
-            </DataStorageProvider>
+            </ModalProvider>
         </>
     )
 }

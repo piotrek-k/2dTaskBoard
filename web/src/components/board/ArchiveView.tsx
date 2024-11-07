@@ -1,30 +1,28 @@
 import { useContext, useEffect, useState } from 'react'
-import DataStorageContext from '../../context/DataStorageContext';
 import { Archive, Id, Row, Task } from '../../types';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import TaskDetails from '../cardDetails/TaskDetails';
 import RowDetails from '../cardDetails/RowDetails';
+import kanbanBoardStorage from '../../services/KanbanBoardStorage';
+import archiveStorage from '../../services/ArchiveStorage';
+import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 
 function ArchiveView() {
-    const dataStorage = useContext(DataStorageContext);
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
+    const storageIsReady = useStorageHandlerStatus();
 
     const [archive, setArchive] = useState<Archive | null>(null);
 
     useEffect(() => {
         const startFetch = async () => {
-            await loadArchive();
+            if (storageIsReady) {
+                setArchive(await archiveStorage.getArchive());
+            }
         };
 
         startFetch();
-    }, [dataStorage?.fileSystemStorage, dataStorage?.storageReady]);
-
-    async function loadArchive() {
-        if (dataStorage?.storageReady) {
-            setArchive(await dataStorage.fileSystemStorage.getArchive());
-        }
-    }
+    }, [storageIsReady]);
 
     const handleClickOnTask = (task: Task) => {
         setModalContent(<TaskDetails task={task} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
@@ -43,7 +41,7 @@ function ArchiveView() {
             throw new Error("Row not found in archive");
         }
 
-        const boardState = await dataStorage?.fileSystemStorage.getKanbanState();
+        const boardState = await kanbanBoardStorage.getKanbanState();
 
         if (boardState == null) {
             throw new Error("Board state not found");
@@ -52,11 +50,11 @@ function ArchiveView() {
         boardState?.rows.unshift(archivedRow.row);
         boardState?.tasks.push(...archivedRow.columns.flatMap((column) => column.tasks));
 
-        await dataStorage?.fileSystemStorage.saveKanbanState(boardState);
+        await kanbanBoardStorage.saveKanbanState(boardState);
 
-        await dataStorage?.fileSystemStorage.removeFromArchive(rowId);
+        await archiveStorage.removeFromArchive(rowId);
 
-        loadArchive();
+        setArchive(await archiveStorage.getArchive());
     }
 
     return (

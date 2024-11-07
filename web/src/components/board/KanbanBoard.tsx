@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { Column, Id, KanbanDataContainer, Row, Task, WorkUnitType } from '../../types';
@@ -8,9 +8,13 @@ import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
-import DataStorageContext from '../../context/DataStorageContext';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import ArchiveView from './ArchiveView';
+import kanbanBoardStorage from '../../services/KanbanBoardStorage';
+import taskStorage from '../../services/TaskStorage';
+import archiveStorage from '../../services/ArchiveStorage';
+import fileSystemHandler from '../../services/FileSystemHandler';
+import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 
 function KanbanBoard() {
 
@@ -23,12 +27,12 @@ function KanbanBoard() {
     const boardState: KanbanDataContainer = useMemo(() => ({ tasks, rows, columns } as KanbanDataContainer), [tasks, rows, columns]);
     const [dataLoaded, setDataLoaded] = useState(false);
 
-    const dataStorage = useContext(DataStorageContext);
-
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
+
+    const storageIsReady = useStorageHandlerStatus();
 
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
     const sensors = useSensors(
@@ -41,23 +45,23 @@ function KanbanBoard() {
 
     useEffect(() => {
         const startFetch = async () => {
-            if (dataStorage?.storageReady) {
+            if (storageIsReady) {
                 await loadBoard();
             }
         };
 
         startFetch();
-    }, [dataStorage?.storageReady, showArchive]);
+    }, [storageIsReady]);
 
     async function loadBoard() {
-        const dataContainer = await dataStorage?.fileSystemStorage.getKanbanState();
+        const dataContainer = await kanbanBoardStorage.getKanbanState();
 
         if (dataContainer == undefined) {
             throw new Error("Data storage not set");
         }
         
         for (const taskIndex in dataContainer.tasks) {
-            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
+            const metadata = await taskStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
 
             if (metadata) {
                 Object.assign(dataContainer.tasks[taskIndex], metadata);
@@ -65,7 +69,7 @@ function KanbanBoard() {
         }
 
         for (const taskIndex in dataContainer.rows) {
-            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(dataContainer.rows[taskIndex].id);
+            const metadata = await taskStorage.getCardMetadata(dataContainer.rows[taskIndex].id);
 
             if (metadata) {
                 Object.assign(dataContainer.rows[taskIndex], metadata);
@@ -80,17 +84,13 @@ function KanbanBoard() {
     }
 
     async function loadFromDifferentSource() {
-        await dataStorage?.fileSystemStorage.chooseDifferentSource();
+        await fileSystemHandler.chooseDifferentSource();
 
         await loadBoard();
     }
 
     async function saveBoard() {
-        if (dataStorage == undefined) {
-            throw new Error("Data storage not set");
-        }
-
-        await dataStorage.fileSystemStorage.saveKanbanState(boardState);
+        await kanbanBoardStorage.saveKanbanState(boardState);
     }
 
     useEffect(() => {
@@ -245,7 +245,7 @@ function KanbanBoard() {
             type: WorkUnitType.Task
         };
 
-        dataStorage?.fileSystemStorage.saveCardMetadata(newTask);
+        taskStorage.saveCardMetadata(newTask);
 
         setTasks([...tasks, newTask]);
     }
@@ -287,8 +287,8 @@ function KanbanBoard() {
     }
 
     function archiveRow(rowId: Id) {
-        dataStorage?.fileSystemStorage.addToArchive(
-            dataStorage.fileSystemStorage.createArchiveRow(
+        archiveStorage.addToArchive(
+            archiveStorage.createArchiveRow(
                 rows.find(row => row.id === rowId) as Row,
                 tasks.filter(task => task.rowId === rowId),
                 columns
@@ -322,13 +322,13 @@ function KanbanBoard() {
             type: WorkUnitType.Row
         };
 
-        dataStorage?.fileSystemStorage.saveCardMetadata(rowToAdd);
+        taskStorage.saveCardMetadata(rowToAdd);
 
         setRows([...rows, rowToAdd]);
     }
 
     async function generateId(): Promise<number> {
-        const archive = await dataStorage?.fileSystemStorage.getArchive();
+        const archive = await archiveStorage.getArchive();
         const maxRowIdInArchive = archive?.rows.reduce((max, row) => row.row.id > max ? row.row.id : max, 0) ?? 0;
         const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, task) => task.id > max ? task.id : max, max), max), 0) ?? 0;
         const maxTaskIdOnBoard = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);

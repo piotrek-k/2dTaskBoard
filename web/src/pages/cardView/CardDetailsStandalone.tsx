@@ -1,9 +1,11 @@
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Id, Row, Task, WorkUnitType } from '../../types';
 import { useParams } from 'react-router-dom';
-import DataStorageContext from '../../context/DataStorageContext';
 import TaskDetails from '../../components/cardDetails/TaskDetails';
 import RowDetails from '../../components/cardDetails/RowDetails';
+import kanbanBoardStorage from '../../services/KanbanBoardStorage';
+import taskStorage from '../../services/TaskStorage';
+import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 
 
 function CardDetailsStandalone() {
@@ -11,14 +13,18 @@ function CardDetailsStandalone() {
     const { taskIdProp } = useParams();
     const [taskId] = useState<Id>(Number(taskIdProp));
 
-    const dataStorage = useContext(DataStorageContext);
-
     const [task, setTask] = useState<Task | undefined>(undefined);
     const [row, setRow] = useState<Row | undefined>(undefined);
 
-    async function fetchTask() {
+    const storageIsReady = useStorageHandlerStatus();
+
+    const fetchTask = useCallback(async () => {
         try {
-            const metadata = await dataStorage?.fileSystemStorage.getCardMetadata(taskId as Id);
+            if (!storageIsReady) {
+                return;
+            }
+
+            const metadata = await taskStorage.getCardMetadata(taskId as Id);
 
             if (metadata != undefined) {
                 if (metadata.type == WorkUnitType.Task) {
@@ -32,7 +38,7 @@ function CardDetailsStandalone() {
                 return;
             }
 
-            const dataContainer = await dataStorage?.fileSystemStorage.getKanbanState();
+            const dataContainer = await kanbanBoardStorage.getKanbanState();
 
             if (dataContainer == undefined) {
                 throw new Error("Data storage not set");
@@ -58,7 +64,7 @@ function CardDetailsStandalone() {
         } catch (error) {
             console.error("Error fetching task:", error);
         }
-    }
+    }, [taskId]);
 
     useEffect(() => {
         const startFetch = async () => {
@@ -66,7 +72,7 @@ function CardDetailsStandalone() {
         };
 
         startFetch();
-    }, [dataStorage?.storageReady]);
+    }, [storageIsReady, fetchTask]);
 
     async function requestSavingDataToStorage() {
         console.log("requestSavingDataToStorage");

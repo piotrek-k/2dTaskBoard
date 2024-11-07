@@ -1,12 +1,14 @@
 import MDEditor from '@uiw/react-md-editor';
 import { useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import DataStorageContext from '../../context/DataStorageContext';
 import DataSavingContext, { DataSavingContextProps } from '../../context/DataSavingContext';
 import { WorkUnit } from '../../types';
 import CustomImageRenderer from '../customMarkdownRenderers/CustomImageRenderer';
 import FileUploader from '../fileUploader/FileUploader';
 import LinkRenderer from '../customMarkdownRenderers/LinkRenderer';
 import { Link } from "react-router-dom";
+import taskStorage from '../../services/TaskStorage';
+import attachmentsStorage from '../../services/AttachmentsStorage';
+import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 
 interface Props {
     task: WorkUnit;
@@ -20,7 +22,6 @@ interface TaskFile {
 }
 
 function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, isReadOnly }: Props) {
-    const dataStorageContext = useContext(DataStorageContext);
     const { setContextHasUnsavedChanges } = useContext(DataSavingContext) as DataSavingContextProps;
     const [taskContent, setTaskContent] = useState<string | undefined>('');
     const [savedTaskContent, setSavedTaskContent] = useState(taskContent);
@@ -29,10 +30,11 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
     const [useTaskNameEditMode, setUseTaskNameEditMode] = useState(false);
     const [taskFiles, setTaskFiles] = useState<TaskFile[]>([]);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const storageIsReady = useStorageHandlerStatus();
 
     useEffect(() => {
-        if (dataStorageContext) {
-            dataStorageContext.fileSystemStorage.getTaskContent(task.id)
+        if (storageIsReady) {
+            taskStorage.getTaskContent(task.id)
                 .then(content => {
                     setTaskContent(content);
                     setSavedTaskContent(content);
@@ -42,7 +44,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
                     setTaskContent('Error loading content');
                 });
         }
-    }, [dataStorageContext?.storageReady]);
+    }, [storageIsReady, task.id]);
 
     useEffect(() => {
         (async function () {
@@ -50,11 +52,11 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
                 setHasUnsavedChanges(true);
             }
         })();
-    }, [taskName]);
+    }, [taskName, task.title]);
 
     useEffect(() => {
         setContextHasUnsavedChanges(hasUnsavedChanges);
-    }, [hasUnsavedChanges]);
+    }, [hasUnsavedChanges, setContextHasUnsavedChanges]);
 
     
     useEffect(() => {
@@ -64,7 +66,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
         }
 
         setHasUnsavedChanges(false);
-    }, [taskContent]);
+    }, [taskContent, savedTaskContent]);
 
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -81,16 +83,15 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
         };
     }, [hasUnsavedChanges]);
 
-    function refreshAttachments() {
-        if (dataStorageContext?.fileSystemStorage.storageIsReady()) {
+    const refreshAttachments = useCallback(() => {
+        if (storageIsReady) {
             const fetchTaskFiles = async () => {
                 try {
-                    const directory = await dataStorageContext.fileSystemStorage.getDirectoryHandleForTaskAttachments(task.id);
-                    const files = await dataStorageContext.fileSystemStorage.getFilesForTask(task.id);
+                    const files = await attachmentsStorage.getFileNamesForTask(task.id);
 
                     const mappedFiles = await Promise.all(files.map(async file => ({
-                        name: file.name,
-                        src: await dataStorageContext.fileSystemStorage.mapSrcToFileSystem(file.name, directory)
+                        name: file,
+                        src: await attachmentsStorage.getLinkForAttachment(task.id, file)
                     })));
 
                     setTaskFiles(mappedFiles);
@@ -101,11 +102,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
 
             fetchTaskFiles();
         }
-    }
-
-    useEffect(() => {
-        refreshAttachments();
-    }, [dataStorageContext, task.id]);
+    }, [storageIsReady, task.id]);
 
     function appendFile(fileName: string) {
         const fileExtension = fileName.split('.').pop()?.toLowerCase();
@@ -132,15 +129,15 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
     }, [setHasUnsavedChanges]);
 
     const handleSave = useCallback(async () => {
-        if (dataStorageContext && taskContent !== undefined) {
+        if (storageIsReady && taskContent !== undefined) {
             task.title = taskName;
-            await dataStorageContext.fileSystemStorage.saveTaskContent(task.id, taskContent);
-            await dataStorageContext.fileSystemStorage.saveCardMetadata(task);
+            await taskStorage.saveTaskContent(task.id, taskContent);
+            await taskStorage.saveCardMetadata(task);
             setSavedTaskContent(taskContent);
             await requestSavingDataToStorage();
             setHasUnsavedChanges(false);
         }
-    }, [task, taskContent, taskName, requestSavingDataToStorage]);
+    }, [storageIsReady, taskContent, task, taskName, requestSavingDataToStorage]);
 
     const memoizedMarkdown = useMemo(() => (
         <MDEditor.Markdown
@@ -254,9 +251,9 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
                                     +
                                 </button>
                                 <button
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (window.confirm(`Are you sure you want to delete ${taskFile.name}?`)) {
-                                            dataStorageContext?.fileSystemStorage.deleteFileForTask(task.id, taskFile.name);
+                                            await attachmentsStorage.deleteFileForTask(task.id, taskFile.name);
                                             refreshAttachments();
                                         }
                                     }}
@@ -277,13 +274,9 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
             {!isReadOnly ? <FileUploader
                 onFileUpload={async (file) => {
                     try {
-                        let fileHandle = (await dataStorageContext?.fileSystemStorage.uploadFileForTask(task.id, file))?.fileHandle;
+                        const newFileName = await attachmentsStorage.uploadFileForTask(task.id, file);
 
-                        if (fileHandle == undefined) {
-                            throw new Error("File handle not found");
-                        }
-
-                        appendFile(fileHandle.name);
+                        appendFile(newFileName);
 
                         refreshAttachments();
                     } catch (error) {
