@@ -1,14 +1,12 @@
 import { openDB } from "idb";
-import { ArchivedColumn, ArchivedRow, Column, Id, Row, Task } from "../types";
+import { ArchivedRow, Id, Row, Task } from "../types";
 
 export interface IAppStorageAccessor {
     storageIsReady(): boolean;
     restoreHandle(): Promise<FileSystemDirectoryHandle>;
 
-    addToArchive(archivedRow: ArchivedRow): Promise<void>;
     removeFromArchive(rowId: Id): Promise<void>;
 
-    createArchiveRow(row: Row, tasks: Task[], columns: Column[]): ArchivedRow;
     unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] };
 }
 
@@ -129,23 +127,6 @@ export class FileSystemStorage implements IAppStorageAccessor {
         return await this.directoryHandle.getFileHandle('archive.jsonl', { create: true });
     }
 
-    async addToArchive(archivedRow: ArchivedRow): Promise<void> {
-        const jsonl = JSON.stringify(archivedRow) + '\n';
-
-        const fileHandle = await this.getArchiveFileHandle();
-
-        const writable = await fileHandle.createWritable();
-        const file = await fileHandle.getFile();
-
-        let existingContent = await file.text();
-        existingContent = existingContent.endsWith('\n') ? existingContent + '\n' : existingContent;
-
-        const newContent = existingContent + jsonl;
-
-        await writable.write(newContent);
-        await writable.close();
-    }
-
     async removeFromArchive(rowId: Id): Promise<void> {
         const fileHandle = await this.getArchiveFileHandle();
 
@@ -171,23 +152,7 @@ export class FileSystemStorage implements IAppStorageAccessor {
         await writable.close();
     }
 
-    createArchiveRow(row: Row, tasks: Task[], columns: Column[]): ArchivedRow {
-        const archivedColumns: ArchivedColumn[] = [];
-
-        for (const column of columns) {
-            archivedColumns.push({
-                id: column.id,
-                tasks: tasks.filter(task => task.columnId === column.id)
-            });
-        }
-
-        const result: ArchivedRow = {
-            row: row,
-            columns: archivedColumns
-        };
-
-        return result;
-    }
+   
 
     unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] } {
         const row = archivedRow.row;

@@ -290,8 +290,8 @@ function KanbanBoard() {
     }
 
     function archiveRow(rowId: Id) {
-        dataStorage?.fileSystemStorage.addToArchive(
-            dataStorage.fileSystemStorage.createArchiveRow(
+        archiveStorage.addToArchive(
+            archiveStorage.createArchiveRow(
                 rows.find(row => row.id === rowId) as Row,
                 tasks.filter(task => task.rowId === rowId),
                 columns
