@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { Column, Id, KanbanDataContainer, Row, Task, WorkUnitType } from '../../types';
@@ -8,12 +8,13 @@ import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
-import DataStorageContext from '../../context/DataStorageContext';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import ArchiveView from './ArchiveView';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 import taskStorage from '../../services/TaskStorage';
 import archiveStorage from '../../services/ArchiveStorage';
+import fileSystemHandler from '../../services/FileSystemHandler';
+import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 
 function KanbanBoard() {
 
@@ -26,12 +27,12 @@ function KanbanBoard() {
     const boardState: KanbanDataContainer = useMemo(() => ({ tasks, rows, columns } as KanbanDataContainer), [tasks, rows, columns]);
     const [dataLoaded, setDataLoaded] = useState(false);
 
-    const dataStorage = useContext(DataStorageContext);
-
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
+
+    const storageIsReady = useStorageHandlerStatus();
 
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
     const sensors = useSensors(
@@ -44,13 +45,13 @@ function KanbanBoard() {
 
     useEffect(() => {
         const startFetch = async () => {
-            if (dataStorage?.storageReady) {
+            if (storageIsReady) {
                 await loadBoard();
             }
         };
 
         startFetch();
-    }, [dataStorage?.storageReady, showArchive]);
+    }, [storageIsReady]);
 
     async function loadBoard() {
         const dataContainer = await kanbanBoardStorage.getKanbanState();
@@ -83,16 +84,12 @@ function KanbanBoard() {
     }
 
     async function loadFromDifferentSource() {
-        await dataStorage?.fileSystemStorage.chooseDifferentSource();
+        await fileSystemHandler.chooseDifferentSource();
 
         await loadBoard();
     }
 
     async function saveBoard() {
-        if (dataStorage == undefined) {
-            throw new Error("Data storage not set");
-        }
-
         await kanbanBoardStorage.saveKanbanState(boardState);
     }
 

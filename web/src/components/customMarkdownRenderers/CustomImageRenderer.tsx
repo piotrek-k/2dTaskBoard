@@ -1,7 +1,7 @@
-import { useContext, useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Id } from '../../types';
-import DataStorageContext from '../../context/DataStorageContext';
 import attachmentsStorage from '../../services/AttachmentsStorage';
+import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 
 interface Props {
     taskId: Id;
@@ -12,9 +12,10 @@ const srcCache: Record<string, string> = {};
 
 function CustomImageRenderer({ taskId, props }: Props) {
     const [customSrc, setCustomSrc] = useState<string>(props.src || '');
-    const dataStorageContext = useContext(DataStorageContext);
 
     const cacheKey = useMemo(() => `${taskId}-${props.src}`, [taskId, props.src]);
+
+    const storageIsReady = useStorageHandlerStatus();
 
     useEffect(() => {
         const fetchCustomSrc = async () => {
@@ -30,7 +31,7 @@ function CustomImageRenderer({ taskId, props }: Props) {
         };
 
         fetchCustomSrc();
-    }, [cacheKey, dataStorageContext]);
+    }, [taskId, props.src, storageIsReady, cacheKey]);
 
     return (
         <img

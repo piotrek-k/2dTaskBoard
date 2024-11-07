@@ -1,6 +1,5 @@
 import MDEditor from '@uiw/react-md-editor';
 import { useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import DataStorageContext from '../../context/DataStorageContext';
 import DataSavingContext, { DataSavingContextProps } from '../../context/DataSavingContext';
 import { WorkUnit } from '../../types';
 import CustomImageRenderer from '../customMarkdownRenderers/CustomImageRenderer';
@@ -9,6 +8,7 @@ import LinkRenderer from '../customMarkdownRenderers/LinkRenderer';
 import { Link } from "react-router-dom";
 import taskStorage from '../../services/TaskStorage';
 import attachmentsStorage from '../../services/AttachmentsStorage';
+import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 
 interface Props {
     task: WorkUnit;
@@ -22,7 +22,6 @@ interface TaskFile {
 }
 
 function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, isReadOnly }: Props) {
-    const dataStorageContext = useContext(DataStorageContext);
     const { setContextHasUnsavedChanges } = useContext(DataSavingContext) as DataSavingContextProps;
     const [taskContent, setTaskContent] = useState<string | undefined>('');
     const [savedTaskContent, setSavedTaskContent] = useState(taskContent);
@@ -31,9 +30,10 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
     const [useTaskNameEditMode, setUseTaskNameEditMode] = useState(false);
     const [taskFiles, setTaskFiles] = useState<TaskFile[]>([]);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const storageIsReady = useStorageHandlerStatus();
 
     useEffect(() => {
-        if (dataStorageContext) {
+        if (storageIsReady) {
             taskStorage.getTaskContent(task.id)
                 .then(content => {
                     setTaskContent(content);
@@ -44,7 +44,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
                     setTaskContent('Error loading content');
                 });
         }
-    }, [dataStorageContext?.storageReady]);
+    }, [storageIsReady, task.id]);
 
     useEffect(() => {
         (async function () {
@@ -52,11 +52,11 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
                 setHasUnsavedChanges(true);
             }
         })();
-    }, [taskName]);
+    }, [taskName, task.title]);
 
     useEffect(() => {
         setContextHasUnsavedChanges(hasUnsavedChanges);
-    }, [hasUnsavedChanges]);
+    }, [hasUnsavedChanges, setContextHasUnsavedChanges]);
 
     
     useEffect(() => {
@@ -66,7 +66,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
         }
 
         setHasUnsavedChanges(false);
-    }, [taskContent]);
+    }, [taskContent, savedTaskContent]);
 
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -83,8 +83,8 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
         };
     }, [hasUnsavedChanges]);
 
-    function refreshAttachments() {
-        if (dataStorageContext?.fileSystemStorage.storageIsReady()) {
+    const refreshAttachments = useCallback(() => {
+        if (storageIsReady) {
             const fetchTaskFiles = async () => {
                 try {
                     const files = await attachmentsStorage.getFileNamesForTask(task.id);
@@ -102,11 +102,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
 
             fetchTaskFiles();
         }
-    }
-
-    useEffect(() => {
-        refreshAttachments();
-    }, [dataStorageContext, task.id]);
+    }, [storageIsReady, task.id]);
 
     function appendFile(fileName: string) {
         const fileExtension = fileName.split('.').pop()?.toLowerCase();
@@ -133,7 +129,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
     }, [setHasUnsavedChanges]);
 
     const handleSave = useCallback(async () => {
-        if (dataStorageContext && taskContent !== undefined) {
+        if (storageIsReady && taskContent !== undefined) {
             task.title = taskName;
             await taskStorage.saveTaskContent(task.id, taskContent);
             await taskStorage.saveCardMetadata(task);
@@ -141,7 +137,7 @@ function SharedCardDetailsEditorComponent({ task, requestSavingDataToStorage, is
             await requestSavingDataToStorage();
             setHasUnsavedChanges(false);
         }
-    }, [task, taskContent, taskName, requestSavingDataToStorage]);
+    }, [storageIsReady, taskContent, task, taskName, requestSavingDataToStorage]);
 
     const memoizedMarkdown = useMemo(() => (
         <MDEditor.Markdown

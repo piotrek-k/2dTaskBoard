@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import DataSavingContext from '../../context/DataSavingContext';
-import { DataStorageProvider } from '../../context/DataStorageProvider';
+import { RestoreAccessToStoragePopup } from '../../components/shared/RestoreAccessToStoragePopup';
 import CardDetailsStandalone from './CardDetailsStandalone';
 
 interface Props {
@@ -12,11 +12,11 @@ function CardDetailsStandaloneContainer({ }: Props) {
 
     return (
         <>
-            <DataStorageProvider>
+            <RestoreAccessToStoragePopup>
                 <DataSavingContext.Provider value={{ contextHasUnsavedChanges, setContextHasUnsavedChanges }}>
                     <CardDetailsStandalone  />
                 </DataSavingContext.Provider>
-            </DataStorageProvider>
+            </RestoreAccessToStoragePopup>
         </>
     )
 }
