@@ -14,10 +14,12 @@ interface Props {
     tasks: Task[];
 
     requestSavingDataToStorage: () => Promise<void>;
+    handleTaskFocusChange: (taskId?: Id) => void;
+    shouldHightlightTask: (taskId?: Id) => boolean;
 }
 
 function ColumnContainer(props: Props) {
-    const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn } = props;
+    const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn, handleTaskFocusChange, shouldHightlightTask } = props;
 
     const tasksIds = useMemo(() => {
         return tasks.map(task => task.id);
@@ -56,7 +58,13 @@ function ColumnContainer(props: Props) {
             <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
                 <SortableContext items={tasksIds}>
                     {tasks.map((task) => (
-                        <TaskCard key={task.id} task={task} requestSavingDataToStorage={requestSavingDataToStorage} />
+                        <TaskCard 
+                            key={task.id} 
+                            task={task} 
+                            requestSavingDataToStorage={requestSavingDataToStorage} 
+                            handleTaskFocusChange={handleTaskFocusChange} 
+                            shouldHightlightTask={shouldHightlightTask}
+                            />
                     ))}
                 </SortableContext>
             </div>

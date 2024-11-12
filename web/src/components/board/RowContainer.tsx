@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useEffect, useMemo, useRef } from 'react';
 import { Column, Id, Row, Task } from '../../types';
 import ColumnContainer from './ColumnContainer';
 import { SortableContext } from '@dnd-kit/sortable';
@@ -19,13 +19,19 @@ interface Props {
     getTasks: (columnId: Id, rowId: Id) => Task[];
     requestSavingDataToStorage: () => Promise<void>;
     rowNavigation: RowNavigation;
+    handleRowFocusChange: (rowId?: Id) => void;
+    handleTaskFocusChange: (taskId?: Id) => void;
+    shouldHightlightTask: (taskId?: Id) => boolean;
+    rowIdToFocusOn: Id | undefined;
 }
 
 const keyMap = {
     OPEN: 'enter'
 };
 
-function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage, rowNavigation }: Props) {
+function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, handleTaskFocusChange, shouldHightlightTask, rowIdToFocusOn }: Props) {
+
+    const elementRef = useRef<HTMLDivElement>(null);
 
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
@@ -40,6 +46,15 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
         setModalOpen(true);
     };
 
+    useEffect(() => {
+        // console.log("row with focus changed", row.id, rowWithFocus);
+        if (rowIdToFocusOn === row.id && elementRef.current != null) {
+            // console.log("im here!!!")
+
+            elementRef.current.focus();
+        }
+    }, [rowIdToFocusOn, row.id]);
+
     const handlers = {
         OPEN: () => handleClickOnRowDetails()
     };
@@ -53,13 +68,18 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
             items-center
             overflow-x-auto
             overflow-y-hidden
-            " >
+            focus:text-red-500	
+            "
+            onFocus={() => handleRowFocusChange(row.id)}
+            onBlur={() => handleRowFocusChange(undefined)} 
+            
+            >
             <div className='flex w-full'>
                 <div className='w-[200px] flex-none bg-rowTitleBackgroundColor
                 flex justify-center
                 '>
                     <div className="flex flex-col">
-                        <HotKeys keyMap={keyMap} handlers={handlers}>
+                        {/* <HotKeys keyMap={keyMap} handlers={handlers}> */}
                             <div className="
                                 bg-mainBackgroundColor
                                 w-[150px] 
@@ -67,13 +87,14 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
                                 m-[12px]
                                 h-[100px]
                                 "
+                                ref={elementRef}
                                 onClick={() => {
                                     handleClickOnRowDetails();
                                 }}
                                 tabIndex={0}>
                                 {row.title}
                             </div>
-                        </HotKeys>
+                        {/* </HotKeys> */}
 
                         <div className='flex flex-grow'></div>
 
@@ -98,6 +119,8 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
                                 tasks={getTasks(col.id, row.id)}
                                 requestSavingDataToStorage={requestSavingDataToStorage}
                                 isFirstColumn={col.id === columns[0].id}
+                                handleTaskFocusChange={handleTaskFocusChange}
+                                shouldHightlightTask={shouldHightlightTask}
                             />
                         ))}
                     </div>

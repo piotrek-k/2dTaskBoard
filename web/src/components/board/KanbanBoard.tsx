@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { Column, Id, KanbanDataContainer, Row, Task, WorkUnitType } from '../../types';
@@ -15,6 +15,14 @@ import taskStorage from '../../services/TaskStorage';
 import archiveStorage from '../../services/ArchiveStorage';
 import fileSystemHandler from '../../services/FileSystemHandler';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
+import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
+import { HotKeys } from 'react-hotkeys';
+
+const keyMap = {
+    MOVE_DOWN: 's',
+    MOVE_UP: 'w'
+};
+
 
 function KanbanBoard() {
 
@@ -33,6 +41,19 @@ function KanbanBoard() {
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
     const storageIsReady = useStorageHandlerStatus();
+
+    const [handleRowFocusChange, handleTaskFocusChange, shouldHighlightRow, shouldHighlightTask, currentyActiveRowId, focusNextRow, focusPreviousRow, rowIdToFocusOn] = useBoardFocusManager(rows);
+
+
+    const handlers = {
+        MOVE_DOWN: focusNextRow,
+        MOVE_UP: focusPreviousRow
+    };
+
+    useEffect(() => {
+        console.log("currentyActiveRowId (KB): ", currentyActiveRowId);
+    }, [currentyActiveRowId]);
+    
 
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
     const sensors = useSensors(
@@ -59,7 +80,7 @@ function KanbanBoard() {
         if (dataContainer == undefined) {
             throw new Error("Data storage not set");
         }
-        
+
         for (const taskIndex in dataContainer.tasks) {
             const metadata = await taskStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
 
@@ -100,87 +121,101 @@ function KanbanBoard() {
     }, [tasks, rows, columns]);
 
     return (
-        <div className="flex flex-col h-screen">
-            <nav className="bg-gray-800 py-2 px-4">
-                <div className="container mx-auto flex justify-between items-center">
-                    <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
-                    <div className="flex space-x-3">
-                        <button
-                            onClick={() => { setShowArchive(!showArchive) }}
-                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
-                        >
-                            <ArchiveIcon />
-                            Show archive
-                        </button>
-                        <button
-                            onClick={() => createNewRow()}
-                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
-                        >
-                            <PlusIcon />
-                            Add Row
-                        </button>
-                        <button
-                            onClick={() => loadFromDifferentSource()}
-                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
-                        >
-                            <FolderIcon />
-                            Load Different Directory
-                        </button>
-                    </div>
-                </div>
-            </nav>
+        <HotKeys keyMap={keyMap} handlers={handlers} allowChanges >
+            <div className="flex flex-col h-screen">
 
-            <div className="flex-grow overflow-auto scrollbar-thin">
-                {!showArchive ? <DndContext
-                    sensors={sensors}
-                    onDragStart={onDragStart}
-                    onDragEnd={onDragEnd}
-                    onDragOver={onDragOver}>
-                    <div className="m-auto flex gap-2 flex-col w-full">
-                        <div className='flex flex-col'>
-                            <ColumnHeaderContainer
-                                headerNames={headerNames}
-                            />
-                            <SortableContext items={rowsId}>
-                                {rows.map((row) => (
-                                    row.isVisible &&
-                                    <RowContainer
-                                        key={row.id}
-                                        row={row}
-                                        columns={columns}
-                                        createTask={createTask}
-                                        getTasks={getTasks}
-                                        requestSavingDataToStorage={saveBoard}
-                                        rowNavigation={{
-                                            moveUp: moveRowUp,
-                                            moveDown: moveRowDown,
-                                            moveTop: moveRowTop,
-                                            moveBottom: moveRowBottom,
-                                            archive: archiveRow
-                                        }}
-                                    />
-                                ))}
-                            </SortableContext>
-
-                            {createPortal(
-                                <DragOverlay>
-                                    {
-                                        activeTask && <TaskCard
-                                            task={activeTask}
-                                            requestSavingDataToStorage={saveBoard}
-                                        />
-                                    }
-                                </DragOverlay>,
-                                document.body
-                            )}
+                <nav className="bg-gray-800 py-2 px-4">
+                    <div className="container mx-auto flex justify-between items-center">
+                        <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={() => { setShowArchive(!showArchive) }}
+                                className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                            >
+                                <ArchiveIcon />
+                                Show archive
+                            </button>
+                            <button
+                                onClick={() => createNewRow()}
+                                className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                            >
+                                <PlusIcon />
+                                Add Row
+                            </button>
+                            <button
+                                onClick={() => loadFromDifferentSource()}
+                                className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                            >
+                                <FolderIcon />
+                                Load Different Directory
+                            </button>
                         </div>
                     </div>
-                </DndContext> :
-                    <ArchiveView />
-                }
+                </nav>
 
-            </div>
-        </div>
+                <div className="flex-grow overflow-auto scrollbar-thin">
+                    {!showArchive ? <DndContext
+                        sensors={sensors}
+                        onDragStart={onDragStart}
+                        onDragEnd={onDragEnd}
+                        onDragOver={onDragOver}>
+                        <div className="m-auto flex gap-2 flex-col w-full">
+                            <div className='flex flex-col'>
+
+
+                                <ColumnHeaderContainer
+                                    headerNames={headerNames}
+                                />
+                                <SortableContext items={rowsId}>
+                                    {rows.map((row) => (
+                                        row.isVisible &&
+                                        <div
+                                            key={row.id}
+                                            className={`${shouldHighlightRow(row.id) ? "border border-white-500" : ""}`}
+                                        >
+                                            <RowContainer
+                                                row={row}
+                                                columns={columns}
+                                                createTask={createTask}
+                                                getTasks={getTasks}
+                                                requestSavingDataToStorage={saveBoard}
+                                                rowNavigation={{
+                                                    moveUp: moveRowUp,
+                                                    moveDown: moveRowDown,
+                                                    moveTop: moveRowTop,
+                                                    moveBottom: moveRowBottom,
+                                                    archive: archiveRow
+                                                }}
+                                                handleRowFocusChange={handleRowFocusChange}
+                                                handleTaskFocusChange={handleTaskFocusChange}
+                                                shouldHightlightTask={shouldHighlightTask}
+                                                rowIdToFocusOn={rowIdToFocusOn}
+                                            />
+                                        </div>
+                                    ))}
+                                </SortableContext>
+                                {createPortal(
+                                    <DragOverlay>
+                                        {
+                                            activeTask && <TaskCard
+                                                task={activeTask}
+                                                requestSavingDataToStorage={saveBoard}
+                                            />
+                                        }
+                                    </DragOverlay>,
+                                    document.body
+                                )}
+                            </div>
+                        </div>
+                    </DndContext> :
+                        <ArchiveView />
+                    }
+
+                </div>
+
+            </div >
+        </HotKeys>
+
     )
 
     function onDragStart(event: DragStartEvent) {
@@ -336,6 +371,7 @@ function KanbanBoard() {
 
         return Math.max(maxRowIdInArchive, maxTaskIdInArchive, maxTaskIdOnBoard, maxRowIdOnBoard) + 1;
     }
+
 }
 
 export default KanbanBoard
