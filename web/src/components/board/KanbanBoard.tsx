@@ -16,15 +16,7 @@ import archiveStorage from '../../services/ArchiveStorage';
 import fileSystemHandler from '../../services/FileSystemHandler';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
-import { HotKeys } from 'react-hotkeys';
-
-const keyMap = {
-    MOVE_DOWN: 's',
-    MOVE_UP: 'w',
-    MOVE_LEFT: 'a',
-    MOVE_RIGHT: 'd',
-};
-
+import { useHotkeys } from 'react-hotkeys-hook';
 
 function KanbanBoard() {
 
@@ -56,13 +48,10 @@ function KanbanBoard() {
         focusRequest
     ] = useBoardFocusManager(rows, columns, tasks);
 
-
-    const handlers = {
-        MOVE_DOWN: focusNextRow,
-        MOVE_UP: focusPreviousRow,
-        MOVE_LEFT: focusPreviousColumn,
-        MOVE_RIGHT: focusNextColumn
-    };
+    useHotkeys('w', focusPreviousRow);
+    useHotkeys('s', focusNextRow);
+    useHotkeys('a', focusPreviousColumn);
+    useHotkeys('d', focusNextColumn);
 
     useEffect(() => {
         console.log("currentyActiveRowId (KB): ", currentyActiveRowId);
@@ -139,100 +128,98 @@ function KanbanBoard() {
     }, [tasks, rows, columns]);
 
     return (
-        <HotKeys keyMap={keyMap} handlers={handlers} allowChanges >
-            <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-screen">
 
-                <nav className="bg-gray-800 py-2 px-4">
-                    <div className="container mx-auto flex justify-between items-center">
-                        <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
-                        <div className="flex space-x-3">
-                            <button
-                                onClick={() => { setShowArchive(!showArchive) }}
-                                className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
-                            >
-                                <ArchiveIcon />
-                                Show archive
-                            </button>
-                            <button
-                                onClick={() => createNewRow()}
-                                className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
-                            >
-                                <PlusIcon />
-                                Add Row
-                            </button>
-                            <button
-                                onClick={() => loadFromDifferentSource()}
-                                className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
-                            >
-                                <FolderIcon />
-                                Load Different Directory
-                            </button>
+            <nav className="bg-gray-800 py-2 px-4">
+                <div className="container mx-auto flex justify-between items-center">
+                    <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
+                    <div className="flex space-x-3">
+                        <button
+                            onClick={() => { setShowArchive(!showArchive) }}
+                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                            <ArchiveIcon />
+                            Show archive
+                        </button>
+                        <button
+                            onClick={() => createNewRow()}
+                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                            <PlusIcon />
+                            Add Row
+                        </button>
+                        <button
+                            onClick={() => loadFromDifferentSource()}
+                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                            <FolderIcon />
+                            Load Different Directory
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <div className="flex-grow overflow-auto scrollbar-thin">
+                {!showArchive ? <DndContext
+                    sensors={sensors}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                    onDragOver={onDragOver}>
+                    <div className="m-auto flex gap-2 flex-col w-full">
+                        <div className='flex flex-col'>
+
+
+                            <ColumnHeaderContainer
+                                headerNames={headerNames}
+                            />
+                            <SortableContext items={rowsId}>
+                                {rows.map((row) => (
+                                    row.isVisible &&
+                                    <div
+                                        key={row.id}
+                                        className={`${shouldHighlightRow(row.id) ? "border border-white-500" : ""}`}
+                                    >
+                                        <RowContainer
+                                            row={row}
+                                            columns={columns}
+                                            createTask={createTask}
+                                            getTasks={getTasks}
+                                            requestSavingDataToStorage={saveBoard}
+                                            rowNavigation={{
+                                                moveUp: moveRowUp,
+                                                moveDown: moveRowDown,
+                                                moveTop: moveRowTop,
+                                                moveBottom: moveRowBottom,
+                                                archive: archiveRow
+                                            }}
+                                            handleRowFocusChange={handleRowFocusChange}
+                                            focusRequest={focusRequest}
+                                        />
+                                    </div>
+                                ))}
+                            </SortableContext>
+                            {createPortal(
+                                <DragOverlay>
+                                    {
+                                        activeTask && <TaskCard
+                                            task={activeTask}
+                                            requestSavingDataToStorage={saveBoard}
+                                            shouldBeFocused={false}
+                                            removeFocusRequest={() => { }}
+                                        />
+                                    }
+                                </DragOverlay>,
+                                document.body
+                            )}
                         </div>
                     </div>
-                </nav>
+                </DndContext> :
+                    <ArchiveView />
+                }
 
-                <div className="flex-grow overflow-auto scrollbar-thin">
-                    {!showArchive ? <DndContext
-                        sensors={sensors}
-                        onDragStart={onDragStart}
-                        onDragEnd={onDragEnd}
-                        onDragOver={onDragOver}>
-                        <div className="m-auto flex gap-2 flex-col w-full">
-                            <div className='flex flex-col'>
+            </div>
 
-
-                                <ColumnHeaderContainer
-                                    headerNames={headerNames}
-                                />
-                                <SortableContext items={rowsId}>
-                                    {rows.map((row) => (
-                                        row.isVisible &&
-                                        <div
-                                            key={row.id}
-                                            className={`${shouldHighlightRow(row.id) ? "border border-white-500" : ""}`}
-                                        >
-                                            <RowContainer
-                                                row={row}
-                                                columns={columns}
-                                                createTask={createTask}
-                                                getTasks={getTasks}
-                                                requestSavingDataToStorage={saveBoard}
-                                                rowNavigation={{
-                                                    moveUp: moveRowUp,
-                                                    moveDown: moveRowDown,
-                                                    moveTop: moveRowTop,
-                                                    moveBottom: moveRowBottom,
-                                                    archive: archiveRow
-                                                }}
-                                                handleRowFocusChange={handleRowFocusChange}
-                                                focusRequest={focusRequest}
-                                            />
-                                        </div>
-                                    ))}
-                                </SortableContext>
-                                {createPortal(
-                                    <DragOverlay>
-                                        {
-                                            activeTask && <TaskCard
-                                                task={activeTask}
-                                                requestSavingDataToStorage={saveBoard}
-                                                shouldBeFocused={false}
-                                                removeFocusRequest={() => { }}
-                                            />
-                                        }
-                                    </DragOverlay>,
-                                    document.body
-                                )}
-                            </div>
-                        </div>
-                    </DndContext> :
-                        <ArchiveView />
-                    }
-
-                </div>
-
-            </div >
-        </HotKeys>
+        </div >
 
     )
 

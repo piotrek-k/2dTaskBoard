@@ -10,8 +10,8 @@ import ArchiveIcon from '../../icons/ArchiveIcon';
 import { RowNavigation } from '../../interfaces/RowNavigation';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import RowDetails from '../cardDetails/RowDetails';
-import { HotKeys } from 'react-hotkeys';
 import { FocusRequest } from '../../hooks/useBoardFocusManager';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 interface Props {
     row: Row;
@@ -24,10 +24,6 @@ interface Props {
     focusRequest: FocusRequest;
 }
 
-const keyMap = {
-    OPEN: 'enter'
-};
-
 function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest }: Props) {
 
     const elementRef = useRef<HTMLDivElement>(null);
@@ -35,7 +31,6 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
-
     const handleClickOnRowDetails = () => {
         setModalContent(<RowDetails
             requestSavingDataToStorage={requestSavingDataToStorage}
@@ -54,9 +49,7 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
         }
     }, [row.id, row.title, focusRequest.columnId, focusRequest.rowId]);
 
-    const handlers = {
-        OPEN: () => handleClickOnRowDetails()
-    };
+    const ref = useHotkeys('enter', () => handleClickOnRowDetails());
 
     return (
         <div
@@ -69,29 +62,28 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
             overflow-y-hidden
             focus:text-red-500	
             "
+            ref={ref}
             onFocus={() => handleRowFocusChange(row.id)}
-            >
+        >
             <div className='flex w-full'>
                 <div className='w-[200px] flex-none bg-rowTitleBackgroundColor
                 flex justify-center
                 '>
                     <div className="flex flex-col">
-                        {/* <HotKeys keyMap={keyMap} handlers={handlers}> */}
-                            <div className="
+                        <div className="
                                 bg-mainBackgroundColor
                                 w-[150px] 
                                 p-2.5
                                 m-[12px]
                                 h-[100px]
                                 "
-                                ref={elementRef}
-                                onClick={() => {
-                                    handleClickOnRowDetails();
-                                }}
-                                tabIndex={0}>
-                                {row.title}
-                            </div>
-                        {/* </HotKeys> */}
+                            ref={elementRef}
+                            onClick={() => {
+                                handleClickOnRowDetails();
+                            }}
+                            tabIndex={0}>
+                            {row.title}
+                        </div>
 
                         <div className='flex flex-grow'></div>
 
