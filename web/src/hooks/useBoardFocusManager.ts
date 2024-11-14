@@ -126,6 +126,14 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
 
         console.log("Moving focus to ", nextRow?.id);
 
+        if(nextRow?.id === currentyActiveColumnId){
+            setFocusRequest({
+                rowId: currentyActiveRowId
+            });
+
+            return;
+        }
+
         setCurrentlyActiveColumnId(nextRow?.id);
         
         setFocusRequest({
