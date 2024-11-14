@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { Column, Id, KanbanDataContainer, Row, Task, WorkUnitType } from '../../types';
@@ -17,6 +17,7 @@ import fileSystemHandler from '../../services/FileSystemHandler';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
+import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 
 function KanbanBoard() {
 
@@ -34,6 +35,8 @@ function KanbanBoard() {
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
+    const { modalOpen } = useContext(ModalContext) as ModalContextProps;
+
     const storageIsReady = useStorageHandlerStatus();
 
     const [
@@ -48,10 +51,10 @@ function KanbanBoard() {
         focusRequest
     ] = useBoardFocusManager(rows, columns, tasks);
 
-    useHotkeys('w', focusPreviousRow);
-    useHotkeys('s', focusNextRow);
-    useHotkeys('a', focusPreviousColumn);
-    useHotkeys('d', focusNextColumn);
+    useHotkeys('w', focusPreviousRow, { enabled: !modalOpen });
+    useHotkeys('s', focusNextRow, { enabled: !modalOpen });
+    useHotkeys('a', focusPreviousColumn, { enabled: !modalOpen });
+    useHotkeys('d', focusNextColumn, { enabled: !modalOpen });
 
     useEffect(() => {
         console.log("currentyActiveRowId (KB): ", currentyActiveRowId);
