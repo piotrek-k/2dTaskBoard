@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 import { Task } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -11,13 +11,15 @@ interface Props {
     requestSavingDataToStorage: () => Promise<void>;
     shouldBeFocused: boolean;
     removeFocusRequest: () => void;
+    moveTaskToNextColumn: (task: Task) => void;
 }
 
-function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest }: Props) {
+function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn }: Props) {
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
     const setHotkeyRef = useHotkeys('enter', () => handleClickOnTask(task));
+    const setHotkeyMoveRef = useHotkeys('m', () => moveTaskToNextColumn(task));
 
     const handleClickOnTask = useCallback((task: Task) => {
         setModalContent(<TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={false} />);
@@ -49,8 +51,9 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
         (node: HTMLDivElement) => {
             setNodeRef(node);
             setHotkeyRef(node);
+            setHotkeyMoveRef(node);
         },
-        [setNodeRef, setHotkeyRef]
+        [setNodeRef, setHotkeyRef, setHotkeyMoveRef]
     );
 
     if (isDragging) {

@@ -183,7 +183,7 @@ function KanbanBoard() {
                                             row={row}
                                             columns={columns}
                                             createTask={createTask}
-                                            getTasks={getTasks}
+                                            tasks={tasks.filter((task) => task.rowId === row.id)}
                                             requestSavingDataToStorage={saveBoard}
                                             rowNavigation={{
                                                 moveUp: moveRowUp,
@@ -206,6 +206,7 @@ function KanbanBoard() {
                                             requestSavingDataToStorage={saveBoard}
                                             shouldBeFocused={false}
                                             removeFocusRequest={() => { }}
+                                            moveTaskToNextColumn={() => { }}
                                         />
                                     }
                                 </DragOverlay>,
@@ -270,10 +271,6 @@ function KanbanBoard() {
                 return arrayMove(tasks, activeIndex, activeIndex);
             });
         }
-    }
-
-    function getTasks(columnId: Id, rowId: Id) {
-        return tasks.filter((task) => task.columnId === columnId && task.rowId === rowId);
     }
 
     async function createTask(columnId: Id, rowId: Id) {

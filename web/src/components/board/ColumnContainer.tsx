@@ -16,10 +16,11 @@ interface Props {
 
     requestSavingDataToStorage: () => Promise<void>;
     focusRequest: FocusRequest;
+    moveTaskToNextColumn: (task: Task) => void;
 }
 
 function ColumnContainer(props: Props) {
-    const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn, focusRequest } = props;
+    const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn, focusRequest, moveTaskToNextColumn } = props;
 
     const tasksIds = useMemo(() => {
         return tasks.map(task => task.id);
@@ -78,6 +79,7 @@ function ColumnContainer(props: Props) {
                             requestSavingDataToStorage={requestSavingDataToStorage}
                             shouldBeFocused = {taskToFocus?.id === task.id}
                             removeFocusRequest = {removeFocusRequest}
+                            moveTaskToNextColumn={moveTaskToNextColumn}
                             />
                     ))}
                 </SortableContext>

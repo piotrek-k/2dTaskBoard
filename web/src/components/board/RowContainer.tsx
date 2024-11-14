@@ -17,14 +17,14 @@ interface Props {
     row: Row;
     columns: Column[];
     createTask: (columnId: Id, rowId: Id) => void;
-    getTasks: (columnId: Id, rowId: Id) => Task[];
     requestSavingDataToStorage: () => Promise<void>;
     rowNavigation: RowNavigation;
     handleRowFocusChange: (rowId?: Id) => void;
     focusRequest: FocusRequest;
+    tasks: Task[];
 }
 
-function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest }: Props) {
+function RowContainer({ row, columns, createTask, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, tasks }: Props) {
 
     const elementRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +50,15 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
     }, [row.id, row.title, focusRequest.columnId, focusRequest.rowId]);
 
     const ref = useHotkeys('enter', () => handleClickOnRowDetails());
+
+    function moveTaskToNextColumn(task: Task): void {
+        const currentColumnIndex = columns.findIndex((col) => col.id === task.columnId);
+        const nextColumnIndex = currentColumnIndex + 1;
+
+        if (nextColumnIndex < columns.length) {
+            tasks.find((t) => t.id === task.id)!.columnId = columns[nextColumnIndex].id;
+        }
+    }
 
     return (
         <div
@@ -105,10 +114,11 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
                                 column={col}
                                 row={row}
                                 createTask={createTask}
-                                tasks={getTasks(col.id, row.id)}
+                                tasks={tasks.filter((task) => task.columnId === col.id && task.rowId === row.id)}
                                 requestSavingDataToStorage={requestSavingDataToStorage}
                                 isFirstColumn={col.id === columns[0].id}
                                 focusRequest={focusRequest}
+                                moveTaskToNextColumn={moveTaskToNextColumn}
                             />
                         ))}
                     </div>
