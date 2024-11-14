@@ -1,71 +1,152 @@
-import { useCallback, useEffect, useState } from "react";
-import { Id, Row } from "../types";
+import { useCallback, useState } from "react";
+import { Column, Id, Row, Task } from "../types";
 
 export enum FocusDirection {
     DOWN = "DOWN",
 }
 
-export function useBoardFocusManager(rows: Row[]) {
+export interface FocusRequest {
+    rowId?: Id;
+    columnId?: Id;
+}
+
+export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task[]) {
     const [currentyActiveRowId, setCurrentlyActiveRowId] = useState<Id | undefined>(undefined);
-    const [previousRowIdWithFocus, setPreviousRowIdWithFocus] = useState<Id | undefined>(undefined);
-    const [rowIdToFocusOn, setRowIdToFocusOn] = useState<Id | undefined>(undefined);
+    const [currentyActiveColumnId, setCurrentlyActiveColumnId] = useState<Id | undefined>(undefined);
 
-    const [taskWithFocus, setTaskWithFocus] = useState<Id | undefined>(undefined);
-
-    const [focusIndicatorActive, setFocusIndicatorActive] = useState(true);
+    const [focusRequest, setFocusRequest] = useState<FocusRequest>({} as FocusRequest);
 
     const handleRowFocusChange = useCallback((rowId?: Id) => {
-        if(rowId !== currentyActiveRowId && rowId !== previousRowIdWithFocus) {
+        if (rowId !== currentyActiveRowId) {
             setCurrentlyActiveRowId(rowId);
         }
-    }, [currentyActiveRowId, previousRowIdWithFocus]);
-
-    const handleTaskFocusChange = useCallback((taskId?: Id) => {
-        setTaskWithFocus(taskId);
-    }, []);
-
-    useEffect(() => {
-        console.log("Row with focus: ", currentyActiveRowId, " Task with focus: ", taskWithFocus);
-    }, [currentyActiveRowId, taskWithFocus]);
+    }, [currentyActiveRowId]);
 
     function shouldHighlightRow(rowId?: Id) {
-        const result = focusIndicatorActive && currentyActiveRowId === rowId && taskWithFocus === undefined;
+        const result = currentyActiveRowId === rowId;// && taskWithFocus === undefined;
 
         return result;
     }
 
-    function shouldHighlightTask(taskId?: Id) {
-        const result = focusIndicatorActive && taskWithFocus === taskId;
+    const moveToNextElement = useCallback(function <T extends HasId>(
+        arrayToNavigateOn: T[],
+        activeId: Id | undefined,
+        modifierNumber: number,
+        stopMethod?: (element: T) => boolean
+    ): T | undefined {
+        const currentRowId = activeId;
+
+        if (currentRowId === undefined) {
+            let nextRow: T | null = null;
+            let index = 0;
+            do {
+                nextRow = arrayToNavigateOn[index];
+                index++;
+            } while (stopMethod && !stopMethod(nextRow));
+
+            return nextRow;
+        }
+
+        const indexOfRow = currentRowId ? arrayToNavigateOn.findIndex((element) => element.id === currentRowId) : 0;
+        const checkedLimit = modifierNumber > 0 ? indexOfRow < arrayToNavigateOn.length - 1 : indexOfRow > 0;
+
+        let nextRow = null;
+
+        if (indexOfRow !== -1 && checkedLimit) {
+            nextRow = arrayToNavigateOn[indexOfRow + modifierNumber];
+        }
+        else {
+            nextRow = arrayToNavigateOn[indexOfRow];
+        }
+
+        if (stopMethod && !stopMethod(nextRow)) {
+            return arrayToNavigateOn[indexOfRow];
+        }
+
+        return nextRow;
+    }, []);
+
+    const checkIfColumnHasTasks = useCallback((element: Column) => {
+        let result = false;
+
+        if (currentyActiveRowId !== undefined) {
+            result = tasks.some((task) => task.columnId === element.id && task.rowId === currentyActiveRowId);
+        }
+
+        console.log("Check if column has tasks: ", result, " column id: ", element.id);
 
         return result;
-    }
+    }, [tasks, currentyActiveRowId]);
 
     const focusNextRow = useCallback(() => {
+        // console.log("focusNextRow", currentyActiveRowId, currentyActiveColumnId);
 
-        const currentRowId = currentyActiveRowId ? currentyActiveRowId : previousRowIdWithFocus;
-        const indexOfRow = currentRowId ? rows.findIndex((element) => element.id === currentRowId) : 0;
-        const nextRow = indexOfRow !== -1 && indexOfRow < rows.length - 1 ? rows[indexOfRow + 1] : rows[indexOfRow];
+        const nextRow = moveToNextElement(rows, currentyActiveRowId, 1);
 
-        console.log('nextRow', nextRow);
-
+        setCurrentlyActiveColumnId(undefined);
         setCurrentlyActiveRowId(nextRow?.id);
-        setPreviousRowIdWithFocus(nextRow?.id);
-        setRowIdToFocusOn(nextRow?.id);
-    }, [currentyActiveRowId, rows, previousRowIdWithFocus]);
+
+        setFocusRequest({
+            rowId: nextRow?.id
+        });  
+    }, [currentyActiveRowId, rows, moveToNextElement]);
 
     const focusPreviousRow = useCallback(() => {
+        // console.log("focusPreviousRow", currentyActiveRowId, currentyActiveColumnId);
 
-        const currentRowId = currentyActiveRowId ? currentyActiveRowId : previousRowIdWithFocus;
-        const indexOfRow = currentRowId ? rows.findIndex((element) => element.id === currentRowId) : 0;
-        const nextRow = indexOfRow !== -1 && indexOfRow > 0 ? rows[indexOfRow - 1] : rows[indexOfRow];
+        const nextRow = moveToNextElement(rows, currentyActiveRowId, -1);
 
-        console.log('nextRow', nextRow);
-        
+        setCurrentlyActiveColumnId(undefined);
         setCurrentlyActiveRowId(nextRow?.id);
-        setPreviousRowIdWithFocus(nextRow?.id);
-        setRowIdToFocusOn(nextRow?.id);
-    }, [currentyActiveRowId, rows, previousRowIdWithFocus]);
 
+        setFocusRequest({
+            rowId: nextRow?.id
+        });
+    }, [currentyActiveRowId, rows, moveToNextElement]);
 
-    return [handleRowFocusChange, handleTaskFocusChange, shouldHighlightRow, shouldHighlightTask, currentyActiveRowId, focusNextRow, focusPreviousRow, rowIdToFocusOn] as const;
+    const focusNextColumn = useCallback(() => {
+        // console.log("focusNextColumn", currentyActiveRowId, currentyActiveColumnId);
+
+        const nextRow = moveToNextElement(columns, currentyActiveColumnId, 1, (element) => checkIfColumnHasTasks(element));
+
+        console.log("Moving focus to ", nextRow?.id);
+        
+        setCurrentlyActiveColumnId(nextRow?.id);
+        
+        setFocusRequest({
+            rowId: currentyActiveRowId,
+            columnId: nextRow?.id
+        });
+    }, [currentyActiveColumnId, columns, moveToNextElement, checkIfColumnHasTasks, currentyActiveRowId]);
+
+    const focusPreviousColumn = useCallback(() => {
+        // console.log("focusPreviousColumn", currentyActiveRowId, currentyActiveColumnId);
+
+        const nextRow = moveToNextElement(columns, currentyActiveColumnId, -1, (element) => checkIfColumnHasTasks(element));
+
+        console.log("Moving focus to ", nextRow?.id);
+
+        setCurrentlyActiveColumnId(nextRow?.id);
+        
+        setFocusRequest({
+            rowId: currentyActiveRowId,
+            columnId: nextRow?.id
+        });
+    }, [currentyActiveColumnId, columns, moveToNextElement, checkIfColumnHasTasks, currentyActiveRowId]);
+
+    interface HasId {
+        id: number | string;
+    }
+
+    return [
+        handleRowFocusChange,
+        shouldHighlightRow,
+        currentyActiveRowId,
+        focusNextRow,
+        focusPreviousRow,
+        focusNextColumn,
+        focusPreviousColumn,
+        currentyActiveColumnId,
+        focusRequest
+    ] as const;
 }

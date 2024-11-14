@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { Column, Id, KanbanDataContainer, Row, Task, WorkUnitType } from '../../types';
@@ -20,7 +20,9 @@ import { HotKeys } from 'react-hotkeys';
 
 const keyMap = {
     MOVE_DOWN: 's',
-    MOVE_UP: 'w'
+    MOVE_UP: 'w',
+    MOVE_LEFT: 'a',
+    MOVE_RIGHT: 'd',
 };
 
 
@@ -42,18 +44,34 @@ function KanbanBoard() {
 
     const storageIsReady = useStorageHandlerStatus();
 
-    const [handleRowFocusChange, handleTaskFocusChange, shouldHighlightRow, shouldHighlightTask, currentyActiveRowId, focusNextRow, focusPreviousRow, rowIdToFocusOn] = useBoardFocusManager(rows);
+    const [
+        handleRowFocusChange,
+        shouldHighlightRow,
+        currentyActiveRowId,
+        focusNextRow,
+        focusPreviousRow,
+        focusNextColumn,
+        focusPreviousColumn,
+        currentyActiveColumnId,
+        focusRequest
+    ] = useBoardFocusManager(rows, columns, tasks);
 
 
     const handlers = {
         MOVE_DOWN: focusNextRow,
-        MOVE_UP: focusPreviousRow
+        MOVE_UP: focusPreviousRow,
+        MOVE_LEFT: focusPreviousColumn,
+        MOVE_RIGHT: focusNextColumn
     };
 
     useEffect(() => {
         console.log("currentyActiveRowId (KB): ", currentyActiveRowId);
     }, [currentyActiveRowId]);
-    
+
+    useEffect(() => {
+        console.log("currentyActiveColumnId (KB): ", currentyActiveColumnId);
+    }, [currentyActiveColumnId]);
+
 
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
     const sensors = useSensors(
@@ -187,9 +205,7 @@ function KanbanBoard() {
                                                     archive: archiveRow
                                                 }}
                                                 handleRowFocusChange={handleRowFocusChange}
-                                                handleTaskFocusChange={handleTaskFocusChange}
-                                                shouldHightlightTask={shouldHighlightTask}
-                                                rowIdToFocusOn={rowIdToFocusOn}
+                                                focusRequest={focusRequest}
                                             />
                                         </div>
                                     ))}
@@ -200,6 +216,8 @@ function KanbanBoard() {
                                             activeTask && <TaskCard
                                                 task={activeTask}
                                                 requestSavingDataToStorage={saveBoard}
+                                                shouldBeFocused={false}
+                                                removeFocusRequest={() => { }}
                                             />
                                         }
                                     </DragOverlay>,

@@ -11,6 +11,7 @@ import { RowNavigation } from '../../interfaces/RowNavigation';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import RowDetails from '../cardDetails/RowDetails';
 import { HotKeys } from 'react-hotkeys';
+import { FocusRequest } from '../../hooks/useBoardFocusManager';
 
 interface Props {
     row: Row;
@@ -20,16 +21,14 @@ interface Props {
     requestSavingDataToStorage: () => Promise<void>;
     rowNavigation: RowNavigation;
     handleRowFocusChange: (rowId?: Id) => void;
-    handleTaskFocusChange: (taskId?: Id) => void;
-    shouldHightlightTask: (taskId?: Id) => boolean;
-    rowIdToFocusOn: Id | undefined;
+    focusRequest: FocusRequest;
 }
 
 const keyMap = {
     OPEN: 'enter'
 };
 
-function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, handleTaskFocusChange, shouldHightlightTask, rowIdToFocusOn }: Props) {
+function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest }: Props) {
 
     const elementRef = useRef<HTMLDivElement>(null);
 
@@ -48,12 +47,12 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
 
     useEffect(() => {
         // console.log("row with focus changed", row.id, rowWithFocus);
-        if (rowIdToFocusOn === row.id && elementRef.current != null) {
-            // console.log("im here!!!")
+        if (focusRequest.rowId === row.id && elementRef.current != null && focusRequest.columnId === undefined) {
+            console.log("Focusing on row ", row.title);
 
             elementRef.current.focus();
         }
-    }, [rowIdToFocusOn, row.id]);
+    }, [row.id, row.title, focusRequest.columnId, focusRequest.rowId]);
 
     const handlers = {
         OPEN: () => handleClickOnRowDetails()
@@ -71,8 +70,6 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
             focus:text-red-500	
             "
             onFocus={() => handleRowFocusChange(row.id)}
-            onBlur={() => handleRowFocusChange(undefined)} 
-            
             >
             <div className='flex w-full'>
                 <div className='w-[200px] flex-none bg-rowTitleBackgroundColor
@@ -119,8 +116,7 @@ function RowContainer({ row, columns, createTask, getTasks, requestSavingDataToS
                                 tasks={getTasks(col.id, row.id)}
                                 requestSavingDataToStorage={requestSavingDataToStorage}
                                 isFirstColumn={col.id === columns[0].id}
-                                handleTaskFocusChange={handleTaskFocusChange}
-                                shouldHightlightTask={shouldHightlightTask}
+                                focusRequest={focusRequest}
                             />
                         ))}
                     </div>

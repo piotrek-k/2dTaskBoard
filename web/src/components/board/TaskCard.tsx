@@ -1,5 +1,5 @@
-import { useContext } from 'react';
-import { Id, Task } from '../../types';
+import { useContext, useEffect, useRef } from 'react';
+import { Task } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
@@ -9,15 +9,15 @@ import { HotKeys } from 'react-hotkeys';
 interface Props {
     task: Task;
     requestSavingDataToStorage: () => Promise<void>;
-    handleTaskFocusChange: (taskId?: Id) => void;
-    shouldHightlightTask: (taskId?: Id) => boolean;
+    shouldBeFocused: boolean;
+    removeFocusRequest: () => void;
 }
 
 const keyMap = {
     OPEN: 'enter'
 };
 
-function TaskCard({ task, requestSavingDataToStorage, handleTaskFocusChange, shouldHightlightTask }: Props) {
+function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest }: Props) {
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
@@ -30,13 +30,21 @@ function TaskCard({ task, requestSavingDataToStorage, handleTaskFocusChange, sho
         setModalOpen(true);
     };
 
-    const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+    const { setNodeRef, node, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: task.id,
         data: {
             type: "Task",
             task
         }
     });
+
+    useEffect(() => {
+        if (shouldBeFocused && node != null) {
+            console.log("Focusing on task ", task.title);
+            node.current?.focus();
+            removeFocusRequest();
+        }
+    }, [shouldBeFocused]);
 
     const style = {
         transition,
@@ -63,10 +71,8 @@ function TaskCard({ task, requestSavingDataToStorage, handleTaskFocusChange, sho
                 onClick={() => handleClickOnTask(task)}
                 className={`bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
         items-center flex text-left hover-ring-2 hover:ring-inset
-        hover:ring-rose-500 relative task m-1 w-[150px] ${shouldHightlightTask(task.id) ? "border-2 border-rose-500" : ""}`}
+        hover:ring-rose-500 relative task m-1 w-[150px]`}
                 tabIndex={0}
-                onFocus={() => handleTaskFocusChange(task.id)}
-                onBlur={() => handleTaskFocusChange(undefined)}
             >
                 <p
                     className='my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap'

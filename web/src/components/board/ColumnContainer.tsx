@@ -1,9 +1,10 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { Column, Id, Row, Task } from "../../types"
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PlusIcon from "../../icons/PlusIcon";
 import TaskCard from "./TaskCard";
 import { CSS } from "@dnd-kit/utilities";
+import { FocusRequest } from "../../hooks/useBoardFocusManager";
 
 interface Props {
     column: Column;
@@ -14,12 +15,11 @@ interface Props {
     tasks: Task[];
 
     requestSavingDataToStorage: () => Promise<void>;
-    handleTaskFocusChange: (taskId?: Id) => void;
-    shouldHightlightTask: (taskId?: Id) => boolean;
+    focusRequest: FocusRequest;
 }
 
 function ColumnContainer(props: Props) {
-    const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn, handleTaskFocusChange, shouldHightlightTask } = props;
+    const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn, focusRequest } = props;
 
     const tasksIds = useMemo(() => {
         return tasks.map(task => task.id);
@@ -39,6 +39,19 @@ function ColumnContainer(props: Props) {
         transform: CSS.Transform.toString(transform)
     };
 
+    const [taskToFocus, setTaskToFocus] = useState<Task>();
+    
+    useEffect(() => {
+        if(focusRequest.columnId === column.id && focusRequest.rowId === row.id) {
+            console.log("Focusing on task (column): ", tasks.length ? tasks[0].title : "No tasks");
+            setTaskToFocus(tasks.length > 0 ? tasks[0] : undefined);
+        }
+    }, [tasks, column.id, row.id, focusRequest.columnId, focusRequest.rowId]);
+
+    const removeFocusRequest = () => {
+        setTaskToFocus(undefined);
+    };
+
     return (
         <div
             ref={setNodeRef}
@@ -53,6 +66,7 @@ function ColumnContainer(props: Props) {
             min-w-0
             "
             >
+                {column.id}
 
             {/* Tasks container */}
             <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
@@ -61,9 +75,9 @@ function ColumnContainer(props: Props) {
                         <TaskCard 
                             key={task.id} 
                             task={task} 
-                            requestSavingDataToStorage={requestSavingDataToStorage} 
-                            handleTaskFocusChange={handleTaskFocusChange} 
-                            shouldHightlightTask={shouldHightlightTask}
+                            requestSavingDataToStorage={requestSavingDataToStorage}
+                            shouldBeFocused = {taskToFocus?.id === task.id}
+                            removeFocusRequest = {removeFocusRequest}
                             />
                     ))}
                 </SortableContext>
