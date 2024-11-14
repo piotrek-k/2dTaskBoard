@@ -23,7 +23,7 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
     }, [currentyActiveRowId]);
 
     function shouldHighlightRow(rowId?: Id) {
-        const result = currentyActiveRowId === rowId;// && taskWithFocus === undefined;
+        const result = currentyActiveRowId === rowId;
 
         return result;
     }
@@ -36,31 +36,26 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
     ): T | undefined {
         const currentRowId = activeId;
 
-        if (currentRowId === undefined) {
-            let nextRow: T | null = null;
-            let index = 0;
-            do {
-                nextRow = arrayToNavigateOn[index];
-                index++;
-            } while (stopMethod && !stopMethod(nextRow));
+        let indexOfRow = currentRowId ? arrayToNavigateOn.findIndex((element) => element.id === currentRowId) : -1;
+        let nextRow: T = arrayToNavigateOn[indexOfRow];
+        const initialIndexOfRow = indexOfRow;
+        let canMoveOn = false;
 
-            return nextRow;
-        }
+        do {
+            canMoveOn = modifierNumber > 0 ? indexOfRow < arrayToNavigateOn.length - 1 : indexOfRow > 0;
 
-        const indexOfRow = currentRowId ? arrayToNavigateOn.findIndex((element) => element.id === currentRowId) : 0;
-        const checkedLimit = modifierNumber > 0 ? indexOfRow < arrayToNavigateOn.length - 1 : indexOfRow > 0;
+            if (canMoveOn) {
+                nextRow = arrayToNavigateOn[indexOfRow + modifierNumber];
+            }
+            else {
+                break;
+            }
 
-        let nextRow = null;
-
-        if (indexOfRow !== -1 && checkedLimit) {
-            nextRow = arrayToNavigateOn[indexOfRow + modifierNumber];
-        }
-        else {
-            nextRow = arrayToNavigateOn[indexOfRow];
-        }
+            indexOfRow += modifierNumber;
+        } while (stopMethod && !stopMethod(nextRow));
 
         if (stopMethod && !stopMethod(nextRow)) {
-            return arrayToNavigateOn[indexOfRow];
+            return arrayToNavigateOn[initialIndexOfRow];
         }
 
         return nextRow;
@@ -79,8 +74,6 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
     }, [tasks, currentyActiveRowId]);
 
     const focusNextRow = useCallback(() => {
-        // console.log("focusNextRow", currentyActiveRowId, currentyActiveColumnId);
-
         const nextRow = moveToNextElement(rows, currentyActiveRowId, 1);
 
         setCurrentlyActiveColumnId(undefined);
@@ -88,12 +81,10 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
 
         setFocusRequest({
             rowId: nextRow?.id
-        });  
+        });
     }, [currentyActiveRowId, rows, moveToNextElement]);
 
     const focusPreviousRow = useCallback(() => {
-        // console.log("focusPreviousRow", currentyActiveRowId, currentyActiveColumnId);
-
         const nextRow = moveToNextElement(rows, currentyActiveRowId, -1);
 
         setCurrentlyActiveColumnId(undefined);
@@ -105,14 +96,12 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
     }, [currentyActiveRowId, rows, moveToNextElement]);
 
     const focusNextColumn = useCallback(() => {
-        // console.log("focusNextColumn", currentyActiveRowId, currentyActiveColumnId);
-
         const nextRow = moveToNextElement(columns, currentyActiveColumnId, 1, (element) => checkIfColumnHasTasks(element));
 
         console.log("Moving focus to ", nextRow?.id);
-        
+
         setCurrentlyActiveColumnId(nextRow?.id);
-        
+
         setFocusRequest({
             rowId: currentyActiveRowId,
             columnId: nextRow?.id
@@ -120,22 +109,22 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
     }, [currentyActiveColumnId, columns, moveToNextElement, checkIfColumnHasTasks, currentyActiveRowId]);
 
     const focusPreviousColumn = useCallback(() => {
-        // console.log("focusPreviousColumn", currentyActiveRowId, currentyActiveColumnId);
-
         const nextRow = moveToNextElement(columns, currentyActiveColumnId, -1, (element) => checkIfColumnHasTasks(element));
 
         console.log("Moving focus to ", nextRow?.id);
 
-        if(nextRow?.id === currentyActiveColumnId){
+        if (nextRow?.id === currentyActiveColumnId) {
             setFocusRequest({
                 rowId: currentyActiveRowId
             });
+
+            setCurrentlyActiveColumnId(undefined);
 
             return;
         }
 
         setCurrentlyActiveColumnId(nextRow?.id);
-        
+
         setFocusRequest({
             rowId: currentyActiveRowId,
             columnId: nextRow?.id
@@ -143,7 +132,7 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
     }, [currentyActiveColumnId, columns, moveToNextElement, checkIfColumnHasTasks, currentyActiveRowId]);
 
     interface HasId {
-        id: number | string;
+        id: Id;
     }
 
     return [
