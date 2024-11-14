@@ -88,21 +88,23 @@ function KanbanBoard() {
             throw new Error("Data storage not set");
         }
 
-        for (const taskIndex in dataContainer.tasks) {
-            const metadata = await taskStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
+        // TODO: fix! This replaces board state with old data
 
-            if (metadata) {
-                Object.assign(dataContainer.tasks[taskIndex], metadata);
-            }
-        }
+        // for (const taskIndex in dataContainer.tasks) {
+        //     const metadata = await taskStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
 
-        for (const taskIndex in dataContainer.rows) {
-            const metadata = await taskStorage.getCardMetadata(dataContainer.rows[taskIndex].id);
+        //     if (metadata) {
+        //         Object.assign(dataContainer.tasks[taskIndex], metadata);
+        //     }
+        // }
 
-            if (metadata) {
-                Object.assign(dataContainer.rows[taskIndex], metadata);
-            }
-        }
+        // for (const taskIndex in dataContainer.rows) {
+        //     const metadata = await taskStorage.getCardMetadata(dataContainer.rows[taskIndex].id);
+
+        //     if (metadata) {
+        //         Object.assign(dataContainer.rows[taskIndex], metadata);
+        //     }
+        // }
 
         setTasks(dataContainer.tasks ?? []);
         setRows(dataContainer.rows ?? []);
@@ -125,7 +127,7 @@ function KanbanBoard() {
         if (dataLoaded) {
             saveBoard();
         }
-    }, [tasks, rows, columns]);
+    }, [boardState]);
 
     return (
         <div className="flex flex-col h-screen">
