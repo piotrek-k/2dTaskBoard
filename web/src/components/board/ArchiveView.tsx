@@ -89,6 +89,7 @@ function ArchiveView() {
                                                 h-[100px]
                                                 "
                                                 onClick={() => handleClickOnRow(archivedRow.row)}
+                                                tabIndex={0}
                                             >
                                                 {archivedRow.row.title}
                                             </div>
@@ -121,6 +122,7 @@ function ArchiveView() {
                                                             className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
                                                         items-center flex text-left hover-ring-2 hover:ring-inset
                                                         hover:ring-rose-500 relative task m-1 w-[150px]'
+                                                            tabIndex={0}
                                                         >
                                                             <p
                                                                 className='my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap'
