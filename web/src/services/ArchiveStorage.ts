@@ -32,7 +32,7 @@ class ArchiveStorage {
 
         const newContent = existingContent + jsonl;
 
-        this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
+        await this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
     }
 
     createArchiveRow(row: Row, tasks: Task[], columns: Column[]): ArchivedRow {
@@ -71,7 +71,7 @@ class ArchiveStorage {
 
         const newContent = updatedRows.join('\n') + '\n';
 
-        this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
+        await this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
     }
 
     unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] } {

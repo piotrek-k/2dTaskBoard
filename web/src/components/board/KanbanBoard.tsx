@@ -2,7 +2,7 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { Column, Id, KanbanDataContainer, Row, Task, WorkUnitType } from '../../types';
-import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
@@ -127,6 +127,12 @@ function KanbanBoard() {
         await kanbanBoardStorage.saveKanbanState(boardState);
     }
 
+    async function switchArchiveView() {
+        await loadBoard();
+
+        setShowArchive(!showArchive);
+    }
+
     useEffect(() => {
         if (dataLoaded) {
             saveBoard();
@@ -141,7 +147,7 @@ function KanbanBoard() {
                     <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
                     <div className="flex space-x-3">
                         <button
-                            onClick={() => { setShowArchive(!showArchive) }}
+                            onClick={() => { switchArchiveView() }}
                             className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
                         >
                             <ArchiveIcon />
@@ -238,7 +244,7 @@ function KanbanBoard() {
         }
     }
 
-    function onDragEnd(_event: DragEndEvent) {
+    function onDragEnd() {
         setActiveTask(null);
     }
 

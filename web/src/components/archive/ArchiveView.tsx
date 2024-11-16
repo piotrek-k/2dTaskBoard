@@ -40,7 +40,9 @@ function ArchiveView() {
 
         await archiveStorage.removeFromArchive(rowId);
 
-        setArchive(await archiveStorage.getArchive());
+        const newArchive = await archiveStorage.getArchive();
+
+        setArchive(newArchive);
     }
 
     return (
