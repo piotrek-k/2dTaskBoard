@@ -50,6 +50,10 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
         }
     }, [row.id, row.title, focusRequest.columnId, focusRequest.rowId]);
 
+    useEffect(() => {
+        enterHotKeyRef(elementRef.current);
+    }, [enterHotKeyRef]);
+
     function moveTaskToNextColumn(task: Task, direction: number): void {
         const currentColumnIndex = columns.findIndex((col) => col.id === task.columnId);
         const nextColumnIndex = currentColumnIndex + direction;
@@ -76,7 +80,6 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
             overflow-x-auto
             overflow-y-hidden
             "
-            ref={enterHotKeyRef}
             onFocus={() => handleRowFocusChange(row.id)}
         >
             <div className='flex w-full'>
