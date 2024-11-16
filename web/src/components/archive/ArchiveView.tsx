@@ -2,11 +2,11 @@ import { useContext, useEffect, useState } from 'react'
 import { Archive, Id, Row, Task } from '../../types';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
-import TaskDetails from '../cardDetails/TaskDetails';
 import RowDetails from '../cardDetails/RowDetails';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 import archiveStorage from '../../services/ArchiveStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
+import TaskArchiveCard from './TaskArchiveCard';
 
 function ArchiveView() {
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
@@ -24,10 +24,7 @@ function ArchiveView() {
         startFetch();
     }, [storageIsReady]);
 
-    const handleClickOnTask = (task: Task) => {
-        setModalContent(<TaskDetails task={task} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
-        setModalOpen(true);
-    };
+
 
     const handleClickOnRow = (row: Row) => {
         setModalContent(<RowDetails row={row} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
@@ -117,19 +114,7 @@ function ArchiveView() {
                                                 {/* <b>{archivedColumn.id}</b> */}
                                                 <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
                                                     {archivedColumn.tasks.map((task) => (
-                                                        <div
-                                                            onClick={() => handleClickOnTask(task)}
-                                                            className='bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
-                                                        items-center flex text-left hover-ring-2 hover:ring-inset
-                                                        hover:ring-rose-500 relative task m-1 w-[150px]'
-                                                            tabIndex={0}
-                                                        >
-                                                            <p
-                                                                className='my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap'
-                                                            >
-                                                                {task.title}
-                                                            </p>
-                                                        </div>
+                                                        <TaskArchiveCard task={task} key={task.id} />
                                                     ))}
                                                 </div>
                                             </div>

@@ -9,7 +9,7 @@ import ColumnHeaderContainer from './ColumnHeaderContainer';
 import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
 import ArchiveIcon from '../../icons/ArchiveIcon';
-import ArchiveView from './ArchiveView';
+import ArchiveView from '../archive/ArchiveView';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 import taskStorage from '../../services/TaskStorage';
 import archiveStorage from '../../services/ArchiveStorage';
