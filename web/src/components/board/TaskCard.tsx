@@ -11,7 +11,7 @@ interface Props {
     requestSavingDataToStorage: () => Promise<void>;
     shouldBeFocused: boolean;
     removeFocusRequest: () => void;
-    moveTaskToNextColumn: (task: Task) => void;
+    moveTaskToNextColumn: (task: Task, direction: number) => void;
 }
 
 function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn }: Props) {
@@ -19,7 +19,8 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
     const setHotkeyRef = useHotkeys('enter', () => handleClickOnTask(task));
-    const setHotkeyMoveRef = useHotkeys('m', () => moveTaskToNextColumn(task));
+    const setHotkeyMoveRightRef = useHotkeys('m', () => moveTaskToNextColumn(task, 1));
+    const setHotkeyMoveLeftRef = useHotkeys('n', () => moveTaskToNextColumn(task, -1));
 
     const handleClickOnTask = useCallback((task: Task) => {
         setModalContent(<TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={false} />);
@@ -51,9 +52,10 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
         (node: HTMLDivElement) => {
             setNodeRef(node);
             setHotkeyRef(node);
-            setHotkeyMoveRef(node);
+            setHotkeyMoveRightRef(node);
+            setHotkeyMoveLeftRef(node);
         },
-        [setNodeRef, setHotkeyRef, setHotkeyMoveRef]
+        [setNodeRef, setHotkeyRef, setHotkeyMoveRightRef, setHotkeyMoveLeftRef]
     );
 
     if (isDragging) {

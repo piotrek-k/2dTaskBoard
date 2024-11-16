@@ -48,7 +48,8 @@ function KanbanBoard() {
         focusNextColumn,
         focusPreviousColumn,
         currentyActiveColumnId,
-        focusRequest
+        focusRequest,
+        setFocusRequest
     ] = useBoardFocusManager(rows, columns, tasks);
 
     useHotkeys('w', focusPreviousRow, { enabled: !modalOpen });
@@ -199,6 +200,8 @@ function KanbanBoard() {
                                             }}
                                             handleRowFocusChange={handleRowFocusChange}
                                             focusRequest={focusRequest}
+                                            setFocusRequest={setFocusRequest}
+                                            modifyTask={modifyTask}
                                         />
                                     </div>
                                 ))}
@@ -287,9 +290,15 @@ function KanbanBoard() {
             type: WorkUnitType.Task
         };
 
-        taskStorage.saveCardMetadata(newTask);
+        await taskStorage.saveCardMetadata(newTask);
 
         setTasks([...tasks, newTask]);
+    }
+
+    async function modifyTask(task: Task) {
+        await taskStorage.saveCardMetadata(task);
+
+        setTasks([task, ...tasks.filter(x=>x.id != task.id)]);
     }
 
     function moveRowUp(rowId: Id) {

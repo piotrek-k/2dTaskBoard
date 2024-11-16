@@ -21,10 +21,12 @@ interface Props {
     rowNavigation: RowNavigation;
     handleRowFocusChange: (rowId?: Id) => void;
     focusRequest: FocusRequest;
+    setFocusRequest: (focusRequest: FocusRequest) => void;
     tasks: Task[];
+    modifyTask: (task: Task) => void;
 }
 
-function RowContainer({ row, columns, createTask, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, tasks }: Props) {
+function RowContainer({ row, columns, createTask, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, setFocusRequest, tasks, modifyTask }: Props) {
 
     const elementRef = useRef<HTMLDivElement>(null);
 
@@ -41,22 +43,26 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
     };
 
     useEffect(() => {
-        // console.log("row with focus changed", row.id, rowWithFocus);
         if (focusRequest.rowId === row.id && elementRef.current != null && focusRequest.columnId === undefined) {
-            console.log("Focusing on row ", row.title);
-
             elementRef.current.focus();
         }
     }, [row.id, row.title, focusRequest.columnId, focusRequest.rowId]);
 
     const ref = useHotkeys('enter', () => handleClickOnRowDetails());
 
-    function moveTaskToNextColumn(task: Task): void {
+    function moveTaskToNextColumn(task: Task, direction: number): void {
         const currentColumnIndex = columns.findIndex((col) => col.id === task.columnId);
-        const nextColumnIndex = currentColumnIndex + 1;
+        const nextColumnIndex = currentColumnIndex + direction;
 
-        if (nextColumnIndex < columns.length) {
-            tasks.find((t) => t.id === task.id)!.columnId = columns[nextColumnIndex].id;
+        if (nextColumnIndex < columns.length && nextColumnIndex >= 0) {
+            task.columnId = columns[nextColumnIndex].id;
+
+            modifyTask(task);
+
+            setFocusRequest({
+                rowId: task.rowId,
+                columnId: task.columnId
+            });
         }
     }
 

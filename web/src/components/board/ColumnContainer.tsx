@@ -16,7 +16,7 @@ interface Props {
 
     requestSavingDataToStorage: () => Promise<void>;
     focusRequest: FocusRequest;
-    moveTaskToNextColumn: (task: Task) => void;
+    moveTaskToNextColumn: (task: Task, direction: number) => void;
 }
 
 function ColumnContainer(props: Props) {

@@ -54,7 +54,7 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
             indexOfRow += modifierNumber;
         } while (stopMethod && !stopMethod(nextRow));
 
-        if (stopMethod && !stopMethod(nextRow)) {
+        if (nextRow == undefined || (stopMethod && !stopMethod(nextRow))) {
             return arrayToNavigateOn[initialIndexOfRow];
         }
 
@@ -144,6 +144,7 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
         focusNextColumn,
         focusPreviousColumn,
         currentyActiveColumnId,
-        focusRequest
+        focusRequest,
+        setFocusRequest
     ] as const;
 }
