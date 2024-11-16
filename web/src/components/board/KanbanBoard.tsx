@@ -183,7 +183,6 @@ function KanbanBoard() {
                                     row.isVisible &&
                                     <div
                                         key={row.id}
-                                        className={`${shouldHighlightRow(row.id) ? "border border-white-500" : ""}`}
                                     >
                                         <RowContainer
                                             row={row}

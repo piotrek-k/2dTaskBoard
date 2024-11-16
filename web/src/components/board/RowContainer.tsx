@@ -75,7 +75,6 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
             items-center
             overflow-x-auto
             overflow-y-hidden
-            focus:text-red-500	
             "
             ref={enterHotKeyRef}
             onFocus={() => handleRowFocusChange(row.id)}
