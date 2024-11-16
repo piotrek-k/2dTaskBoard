@@ -41,7 +41,6 @@ function KanbanBoard() {
 
     const [
         handleRowFocusChange,
-        shouldHighlightRow,
         currentyActiveRowId,
         focusNextRow,
         focusPreviousRow,

@@ -22,12 +22,6 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
         }
     }, [currentyActiveRowId]);
 
-    function shouldHighlightRow(rowId?: Id) {
-        const result = currentyActiveRowId === rowId;
-
-        return result;
-    }
-
     const moveToNextElement = useCallback(function <T extends HasId>(
         arrayToNavigateOn: T[],
         activeId: Id | undefined,
@@ -137,7 +131,6 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
 
     return [
         handleRowFocusChange,
-        shouldHighlightRow,
         currentyActiveRowId,
         focusNextRow,
         focusPreviousRow,

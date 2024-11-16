@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { Task } from '../../types';
 import TaskDetails from '../cardDetails/TaskDetails';
