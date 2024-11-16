@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - release
+      - 'release-*'
   pull_request:
     branches:
       - '*'
@@ -57,7 +57,7 @@ jobs:
           npm run build
 
   build_and_deploy_job:
-    if: github.ref == 'refs/heads/release'
+    if: startsWith(github.ref, 'refs/heads/release')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
 
