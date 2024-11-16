@@ -291,7 +291,7 @@ function KanbanBoard() {
 
         await taskStorage.saveCardMetadata(newTask);
 
-        setTasks([...tasks, newTask]);
+        setTasks([newTask, ...tasks]);
     }
 
     async function modifyTask(task: Task) {

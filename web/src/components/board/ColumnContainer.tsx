@@ -67,8 +67,6 @@ function ColumnContainer(props: Props) {
             min-w-0
             "
             >
-                {column.id}
-
             {/* Tasks container */}
             <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
                 <SortableContext items={tasksIds}>
