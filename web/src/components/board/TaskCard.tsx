@@ -23,7 +23,10 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
     const setHotkeyMoveLeftRef = useHotkeys('n', () => moveTaskToNextColumn(task, -1));
 
     const handleClickOnTask = useCallback((task: Task) => {
-        setModalContent(<TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={false} />);
+        setModalContent(<TaskDetails
+            task={task}
+            requestSavingDataToStorage={requestSavingDataToStorage}
+            isReadOnly={false} />);
         setModalOpen(true);
     }, [requestSavingDataToStorage, setModalContent, setModalOpen]);
 

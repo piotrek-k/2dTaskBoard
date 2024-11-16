@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { Column, Id, Row, Task } from '../../types';
 import ColumnContainer from './ColumnContainer';
 import { SortableContext } from '@dnd-kit/sortable';
@@ -33,22 +33,22 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
-    const handleClickOnRowDetails = () => {
+    const handleClickOnRowDetails = useCallback((row: Row) => {
         setModalContent(<RowDetails
             requestSavingDataToStorage={requestSavingDataToStorage}
             row={row}
             isReadOnly={false}
         />);
-        setModalOpen(true);
-    };
+        setTimeout(() => setModalOpen(true), 0);
+    }, [requestSavingDataToStorage, setModalContent, setModalOpen]);
+
+    const enterHotKeyRef = useHotkeys('enter', () => handleClickOnRowDetails(row));
 
     useEffect(() => {
         if (focusRequest.rowId === row.id && elementRef.current != null && focusRequest.columnId === undefined) {
             elementRef.current.focus();
         }
     }, [row.id, row.title, focusRequest.columnId, focusRequest.rowId]);
-
-    const ref = useHotkeys('enter', () => handleClickOnRowDetails());
 
     function moveTaskToNextColumn(task: Task, direction: number): void {
         const currentColumnIndex = columns.findIndex((col) => col.id === task.columnId);
@@ -77,7 +77,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
             overflow-y-hidden
             focus:text-red-500	
             "
-            ref={ref}
+            ref={enterHotKeyRef}
             onFocus={() => handleRowFocusChange(row.id)}
         >
             <div className='flex w-full'>
@@ -94,7 +94,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
                                 "
                             ref={elementRef}
                             onClick={() => {
-                                handleClickOnRowDetails();
+                                handleClickOnRowDetails(row);
                             }}
                             tabIndex={0}>
                             {row.title}
