@@ -5,7 +5,7 @@ import CustomImageRenderer from '../customMarkdownRenderers/CustomImageRenderer'
 import FileUploader from '../fileUploader/FileUploader';
 import LinkRenderer from '../customMarkdownRenderers/LinkRenderer';
 import { Link } from "react-router-dom";
-import taskStorage from '../../services/TaskStorage';
+import taskStorage from '../../services/CardMetadataStorage';
 import attachmentsStorage from '../../services/AttachmentsStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { CardStoredMetadata } from '../../dataTypes/CardMetadata';

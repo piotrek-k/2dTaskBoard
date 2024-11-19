@@ -12,8 +12,8 @@ import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import RowDetails from '../cardDetails/RowDetails';
 import { FocusRequest } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { RowStoredMetadata, RowMetadataViewModel } from '../../dataTypes/CardMetadata';
-import taskStorage from '../../services/TaskStorage';
+import { RowMetadataViewModel } from '../../dataTypes/CardMetadata';
+import taskStorage from '../../services/CardMetadataStorage';
 
 interface Props {
     row: Row;
@@ -36,8 +36,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
     const handleClickOnRowDetails = useCallback(async (rowId : Id) => {
-        const metadata = await taskStorage.getCardMetadata<RowStoredMetadata>(rowId);
-        const metadataRow = await taskStorage.addBoardContextToCard(metadata!) as RowMetadataViewModel;
+        const metadataRow = await taskStorage.getRowMetadataViewModel(rowId) as RowMetadataViewModel;
 
         setModalContent(<RowDetails
             requestSavingDataToStorage={requestSavingDataToStorage}

@@ -11,7 +11,7 @@ import TaskCard from './TaskCard';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import ArchiveView from '../archive/ArchiveView';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
-import taskStorage from '../../services/TaskStorage';
+import taskStorage from '../../services/CardMetadataStorage';
 import archiveStorage from '../../services/ArchiveStorage';
 import fileSystemHandler from '../../services/FileSystemHandler';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';

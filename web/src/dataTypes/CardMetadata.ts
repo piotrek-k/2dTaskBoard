@@ -13,8 +13,8 @@ export enum MetadataType {
 export type TaskStoredMetadata = CardStoredMetadata;
 
 export type TaskMetadataViewModel = TaskStoredMetadata & {
-    columnId: number;
-    rowId: number;
+    columnId: number | undefined;
+    rowId: number | undefined;
 }
 
 export type RowStoredMetadata = CardStoredMetadata;

@@ -5,8 +5,8 @@ import { CSS } from '@dnd-kit/utilities';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import TaskDetails from '../cardDetails/TaskDetails';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { TaskStoredMetadata, TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
-import taskStorage from '../../services/TaskStorage';
+import { TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
+import taskStorage from '../../services/CardMetadataStorage';
 
 interface Props {
     task: Task;
@@ -25,8 +25,7 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
     const setHotkeyMoveLeftRef = useHotkeys('n', () => moveTaskToNextColumn(task, -1));
 
     const handleClickOnTask = useCallback(async (taskId: Id) => {
-        const metadata = await taskStorage.getCardMetadata<TaskStoredMetadata>(taskId);
-        const taskMetadata = await taskStorage.addBoardContextToCard(metadata!) as TaskMetadataViewModel;
+        const taskMetadata = await taskStorage.getTaskMetadataViewModel(taskId) as TaskMetadataViewModel;
 
         setModalContent(<TaskDetails
             task={taskMetadata}

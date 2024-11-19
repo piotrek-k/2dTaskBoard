@@ -5,8 +5,8 @@ import { useContext } from 'react';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import RowDetails from '../cardDetails/RowDetails';
 import { useHotkeys } from 'react-hotkeys-hook';
-import taskStorage from '../../services/TaskStorage';
-import { RowMetadataViewModel, RowStoredMetadata } from '../../dataTypes/CardMetadata';
+import taskStorage from '../../services/CardMetadataStorage';
+import { RowMetadataViewModel } from '../../dataTypes/CardMetadata';
 
 interface Props {
     archivedRow: ArchivedRow;
@@ -18,8 +18,7 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
     const handleClickOnRow = async (rowId: Id) => {
-        const metadata = await taskStorage.getCardMetadata<RowStoredMetadata>(rowId);
-        const row = await taskStorage.addBoardContextToCard(metadata!) as RowMetadataViewModel;
+        const row = await taskStorage.getRowMetadataViewModel(rowId) as RowMetadataViewModel;
 
         setModalContent(<RowDetails row={row} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
         setTimeout(() => setModalOpen(true), 0);
