@@ -1,8 +1,8 @@
-import { Task } from '../../types';
+import { TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
 import SharedCardDetailsEditorComponent from './SharedCardDetailsEditorComponent';
 
 interface Props {
-  task: Task;
+  task: TaskMetadataViewModel;
   requestSavingDataToStorage: () => Promise<void>;
   isReadOnly: boolean;
 }
@@ -11,7 +11,11 @@ function TaskDetails({ task, requestSavingDataToStorage, isReadOnly }: Props) {
 
   return (
     <>
-      <SharedCardDetailsEditorComponent task={task} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={isReadOnly} />
+      <SharedCardDetailsEditorComponent
+        card={task}
+        requestSavingDataToStorage={requestSavingDataToStorage}
+        isReadOnly={isReadOnly}
+      />
     </>
   )
 }

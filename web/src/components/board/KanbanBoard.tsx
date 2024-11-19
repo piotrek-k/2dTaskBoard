@@ -18,6 +18,7 @@ import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
+import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 
 function KanbanBoard() {
 
@@ -294,13 +295,23 @@ function KanbanBoard() {
             type: WorkUnitType.Task
         };
 
-        await taskStorage.saveCardMetadata(newTask);
+        const newTaskMetadata: TaskStoredMetadata = {
+            id: newTask.id,
+            title: newTask.title,
+            type: MetadataType.Task
+        }
+
+        await taskStorage.saveCardMetadata(newTaskMetadata);
 
         setTasks([newTask, ...tasks]);
     }
 
     async function modifyTask(task: Task) {
-        await taskStorage.saveCardMetadata(task);
+        await taskStorage.saveCardMetadata({
+            id: task.id,
+            title: task.title,
+            type: MetadataType.Task
+        });
 
         setTasks([task, ...tasks.filter(x=>x.id != task.id)]);
     }
@@ -377,7 +388,13 @@ function KanbanBoard() {
             type: WorkUnitType.Row
         };
 
-        taskStorage.saveCardMetadata(rowToAdd);
+        const rowMetadata: RowStoredMetadata = {
+            id: rowToAdd.id,
+            title: rowToAdd.title,
+            type: MetadataType.Row
+        }
+
+        taskStorage.saveCardMetadata(rowMetadata);
 
         setRows([...rows, rowToAdd]);
     }
@@ -385,7 +402,7 @@ function KanbanBoard() {
     async function generateId(): Promise<number> {
         const archive = await archiveStorage.getArchive();
         const maxRowIdInArchive = archive?.rows.reduce((max, row) => row.row.id > max ? row.row.id : max, 0) ?? 0;
-        const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, task) => task.id > max ? task.id : max, max), max), 0) ?? 0;
+        const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, taskId) => taskId > max ? taskId : max, max), max), 0) ?? 0;
         const maxTaskIdOnBoard = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
         const maxRowIdOnBoard = rows.reduce((max, row) => row.id > max ? row.id : max, 0);
 

@@ -12,6 +12,8 @@ import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import RowDetails from '../cardDetails/RowDetails';
 import { FocusRequest } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { RowStoredMetadata, RowMetadataViewModel } from '../../dataTypes/CardMetadata';
+import taskStorage from '../../services/TaskStorage';
 
 interface Props {
     row: Row;
@@ -33,16 +35,19 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
-    const handleClickOnRowDetails = useCallback((row: Row) => {
+    const handleClickOnRowDetails = useCallback(async (rowId : Id) => {
+        const metadata = await taskStorage.getCardMetadata<RowStoredMetadata>(rowId);
+        const metadataRow = await taskStorage.addBoardContextToCard(metadata!) as RowMetadataViewModel;
+
         setModalContent(<RowDetails
             requestSavingDataToStorage={requestSavingDataToStorage}
-            row={row}
+            row={metadataRow}
             isReadOnly={false}
         />);
         setTimeout(() => setModalOpen(true), 0);
     }, [requestSavingDataToStorage, setModalContent, setModalOpen]);
 
-    const enterHotKeyRef = useHotkeys('enter', () => handleClickOnRowDetails(row));
+    const enterHotKeyRef = useHotkeys('enter', () => handleClickOnRowDetails(row.id));
 
     useEffect(() => {
         if (focusRequest.rowId === row.id && elementRef.current != null && focusRequest.columnId === undefined) {
@@ -96,7 +101,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
                                 "
                             ref={elementRef}
                             onClick={() => {
-                                handleClickOnRowDetails(row);
+                                handleClickOnRowDetails(row.id);
                             }}
                             tabIndex={0}>
                             {row.title}

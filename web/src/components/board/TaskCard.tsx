@@ -1,10 +1,12 @@
 import { useCallback, useContext, useEffect } from 'react';
-import { Task } from '../../types';
+import { Id, Task } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import TaskDetails from '../cardDetails/TaskDetails';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { TaskStoredMetadata, TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
+import taskStorage from '../../services/TaskStorage';
 
 interface Props {
     task: Task;
@@ -18,13 +20,16 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
-    const setHotkeyRef = useHotkeys('enter', () => handleClickOnTask(task));
+    const setHotkeyRef = useHotkeys('enter', () => handleClickOnTask(task.id));
     const setHotkeyMoveRightRef = useHotkeys('m', () => moveTaskToNextColumn(task, 1));
     const setHotkeyMoveLeftRef = useHotkeys('n', () => moveTaskToNextColumn(task, -1));
 
-    const handleClickOnTask = useCallback((task: Task) => {
+    const handleClickOnTask = useCallback(async (taskId: Id) => {
+        const metadata = await taskStorage.getCardMetadata<TaskStoredMetadata>(taskId);
+        const taskMetadata = await taskStorage.addBoardContextToCard(metadata!) as TaskMetadataViewModel;
+
         setModalContent(<TaskDetails
-            task={task}
+            task={taskMetadata}
             requestSavingDataToStorage={requestSavingDataToStorage}
             isReadOnly={false} />);
         setModalOpen(true);
@@ -77,7 +82,7 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
             style={style}
             {...attributes}
             {...listeners}
-            onClick={() => handleClickOnTask(task)}
+            onClick={() => handleClickOnTask(task.id)}
             className={`bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
         items-center flex text-left hover-ring-2 hover:ring-inset
         hover:ring-rose-500 relative task m-1 w-[150px]`}

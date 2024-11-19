@@ -1,10 +1,12 @@
 import TaskArchiveCard from './TaskArchiveCard'
-import { ArchivedRow, Id, Row } from '../../types'
+import { ArchivedRow, Id } from '../../types'
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import { useContext } from 'react';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import RowDetails from '../cardDetails/RowDetails';
 import { useHotkeys } from 'react-hotkeys-hook';
+import taskStorage from '../../services/TaskStorage';
+import { RowMetadataViewModel, RowStoredMetadata } from '../../dataTypes/CardMetadata';
 
 interface Props {
     archivedRow: ArchivedRow;
@@ -15,12 +17,15 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
-    const handleClickOnRow = (row: Row) => {
+    const handleClickOnRow = async (rowId: Id) => {
+        const metadata = await taskStorage.getCardMetadata<RowStoredMetadata>(rowId);
+        const row = await taskStorage.addBoardContextToCard(metadata!) as RowMetadataViewModel;
+
         setModalContent(<RowDetails row={row} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
         setTimeout(() => setModalOpen(true), 0);
     };
 
-    const ref = useHotkeys('enter', () => handleClickOnRow(archivedRow.row));
+    const ref = useHotkeys('enter', () => handleClickOnRow(archivedRow.rowId));
 
     return (
         <>
@@ -45,11 +50,12 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
                                                 m-[12px]
                                                 h-[100px]
                                                 "
-                                onClick={() => handleClickOnRow(archivedRow.row)}
+                                onClick={() => handleClickOnRow(archivedRow.rowId)}
                                 ref={ref}
                                 tabIndex={0}
                             >
-                                {archivedRow.row.title}
+                                {/* {archivedRow.row.title} */}
+                                Todo row title
                             </div>
 
                             <div className='flex flex-grow'></div>
@@ -75,8 +81,8 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
                             >
                                 {/* <b>{archivedColumn.id}</b> */}
                                 <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
-                                    {archivedColumn.tasks.map((task) => (
-                                        <TaskArchiveCard task={task} key={task.id} />
+                                    {archivedColumn.tasks.map((taskId) => (
+                                        <TaskArchiveCard taskId={taskId} key={taskId} />
                                     ))}
                                 </div>
                             </div>

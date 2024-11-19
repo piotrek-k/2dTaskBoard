@@ -1,8 +1,8 @@
-import { Row } from "../../types";
+import { RowMetadataViewModel } from "../../dataTypes/CardMetadata";
 import SharedCardDetailsEditorComponent from "./SharedCardDetailsEditorComponent";
 
 interface Props {
-  row: Row;
+  row: RowMetadataViewModel;
   requestSavingDataToStorage: () => Promise<void>;
   isReadOnly: boolean;
 }
@@ -11,7 +11,11 @@ function RowDetails({ row, requestSavingDataToStorage, isReadOnly }: Props) {
 
   return (
     <>
-      <SharedCardDetailsEditorComponent task={row} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={isReadOnly} />
+      <SharedCardDetailsEditorComponent
+        card={row}
+        requestSavingDataToStorage={requestSavingDataToStorage}
+        isReadOnly={isReadOnly}
+      />
     </>
   )
 }

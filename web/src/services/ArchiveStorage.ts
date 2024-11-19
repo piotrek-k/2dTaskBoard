@@ -41,12 +41,13 @@ class ArchiveStorage {
         for (const column of columns) {
             archivedColumns.push({
                 id: column.id,
-                tasks: tasks.filter(task => task.columnId === column.id)
+                tasks: tasks.filter(task => task.columnId === column.id).map(task => task.id)
             });
         }
 
         const result: ArchivedRow = {
             row: row,
+            rowId: row.id,
             columns: archivedColumns
         };
 
@@ -74,16 +75,16 @@ class ArchiveStorage {
         await this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
     }
 
-    unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] } {
-        const row = archivedRow.row;
-        const tasks: Task[] = [];
+    // unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] } {
+    //     const row = archivedRow.row;
+    //     const tasks: Task[] = [];
 
-        for (const column of archivedRow.columns) {
-            tasks.push(...column.tasks);
-        }
+    //     for (const column of archivedRow.columns) {
+    //         tasks.push(...column.tasks);
+    //     }
 
-        return { row, tasks };
-    }
+    //     return { row, tasks };
+    // }
 }
 
 const archiveStorage = new ArchiveStorage(fileSystemHandler);

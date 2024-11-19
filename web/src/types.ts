@@ -37,10 +37,11 @@ export interface Archive {
 
 export interface ArchivedRow {
     row: Row;
+    rowId: Id;
     columns: ArchivedColumn[];
 }
 
 export interface ArchivedColumn {
     id: Id;
-    tasks: Task[];
+    tasks: Id[];
 }

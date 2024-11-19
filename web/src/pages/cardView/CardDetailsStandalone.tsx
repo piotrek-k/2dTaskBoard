@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Id, Row, Task, WorkUnitType } from '../../types';
+import { Id } from '../../types';
 import { useParams } from 'react-router-dom';
 import TaskDetails from '../../components/cardDetails/TaskDetails';
 import RowDetails from '../../components/cardDetails/RowDetails';
-import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 import taskStorage from '../../services/TaskStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
+import { CardStoredMetadata, MetadataType, RowMetadataViewModel, TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
 
 
 function CardDetailsStandalone() {
 
-    const { taskIdProp } = useParams();
-    const [taskId] = useState<Id>(Number(taskIdProp));
+    const { cardIdProp } = useParams();
+    const [cardId] = useState<Id>(Number(cardIdProp));
 
-    const [task, setTask] = useState<Task | undefined>(undefined);
-    const [row, setRow] = useState<Row | undefined>(undefined);
+    const [task, setTask] = useState<TaskMetadataViewModel | undefined>(undefined);
+    const [row, setRow] = useState<RowMetadataViewModel | undefined>(undefined);
 
     const storageIsReady = useStorageHandlerStatus();
 
@@ -24,47 +24,31 @@ function CardDetailsStandalone() {
                 return;
             }
 
-            const metadata = await taskStorage.getCardMetadata(taskId as Id);
+            const metadata = await taskStorage.getCardMetadata(cardId as Id) ?? {
+                id: cardId
+            } as CardStoredMetadata;
 
-            if (metadata != undefined) {
-                if (metadata.type == WorkUnitType.Task) {
-                    setTask(metadata as Task);
+            const metadataViewModel = await taskStorage.addBoardContextToCard(metadata);
 
-                    return;
-                }
+            if(metadataViewModel?.type == MetadataType.Task) {
+                const taskViewModel = metadataViewModel as TaskMetadataViewModel;
 
-                setRow(metadata as Row);
-
-                return;
-            }
-
-            const dataContainer = await kanbanBoardStorage.getKanbanState();
-
-            if (dataContainer == undefined) {
-                throw new Error("Data storage not set");
-            }
-
-            const typedTaskId: Id = taskId as Id;
-
-            const task = dataContainer.tasks.find(t => t.id == typedTaskId);
-
-            if (task) {
-                setTask(task);
+                setTask(taskViewModel);
 
                 return;
             }
 
-            const row = dataContainer.rows.find(t => t.id == typedTaskId);
+            if(metadataViewModel?.type == MetadataType.Row) {
+                const rowViewModel = metadataViewModel as RowMetadataViewModel;
 
-            if (!row) {
-                throw new Error(`Task or row with ID ${taskId} not found`);
+                setRow(rowViewModel);
+
+                return;
             }
-
-            setRow(row);
         } catch (error) {
             console.error("Error fetching task:", error);
         }
-    }, [taskId]);
+    }, [cardId, storageIsReady]);
 
     useEffect(() => {
         const startFetch = async () => {

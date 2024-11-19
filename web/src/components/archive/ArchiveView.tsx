@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Archive, Id } from '../../types';
-import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 import archiveStorage from '../../services/ArchiveStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import RowArchiveView from './RowArchiveView';
@@ -27,18 +26,20 @@ function ArchiveView() {
             throw new Error("Row not found in archive");
         }
 
-        const boardState = await kanbanBoardStorage.getKanbanState();
+        // TODO: Move logic to service
 
-        if (boardState == null) {
-            throw new Error("Board state not found");
-        }
+        // const boardState = await kanbanBoardStorage.getKanbanState();
 
-        boardState?.rows.unshift(archivedRow.row);
-        boardState?.tasks.push(...archivedRow.columns.flatMap((column) => column.tasks));
+        // if (boardState == null) {
+        //     throw new Error("Board state not found");
+        // }
 
-        await kanbanBoardStorage.saveKanbanState(boardState);
+        // boardState?.rows.unshift(archivedRow.row);
+        // boardState?.tasks.push(...archivedRow.columns.flatMap((column) => column.tasks));
 
-        await archiveStorage.removeFromArchive(rowId);
+        // await kanbanBoardStorage.saveKanbanState(boardState);
+
+        // await archiveStorage.removeFromArchive(rowId);
 
         const newArchive = await archiveStorage.getArchive();
 
