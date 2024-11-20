@@ -1,5 +1,5 @@
 import TaskArchiveCard from './TaskArchiveCard'
-import { ArchivedRow, Id } from '../../types'
+import { ArchivedRowViewModel, Id } from '../../types'
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import { useContext } from 'react';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
@@ -9,7 +9,7 @@ import taskStorage from '../../services/CardMetadataStorage';
 import { RowMetadataViewModel } from '../../dataTypes/CardMetadata';
 
 interface Props {
-    archivedRow: ArchivedRow;
+    archivedRow: ArchivedRowViewModel;
     restoreFromArchive(rowId: Id): Promise<void>;
 }
 
@@ -60,7 +60,7 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
                             <div className='flex flex-grow'></div>
 
                             <div className='flex flex-row flex-none p-2.5 text-gray-500'>
-                                <button onClick={() => restoreFromArchive(archivedRow.row.id)}><ArchiveIcon />Restore from archive</button>
+                                <button onClick={() => restoreFromArchive(archivedRow.rowId)}><ArchiveIcon />Restore from archive</button>
                             </div>
                         </div>
                     </div>
@@ -80,8 +80,8 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
                             >
                                 {/* <b>{archivedColumn.id}</b> */}
                                 <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
-                                    {archivedColumn.tasks.map((taskId) => (
-                                        <TaskArchiveCard taskId={taskId} key={taskId} />
+                                    {archivedColumn.tasks.map((task) => (
+                                        <TaskArchiveCard taskId={task.id} key={task.id} />
                                     ))}
                                 </div>
                             </div>

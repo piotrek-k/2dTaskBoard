@@ -1,6 +1,11 @@
-import { Archive, ArchivedColumn, ArchivedRow, Column, Id, Row, Task } from "../types";
+import { Archive, ArchivedColumn, ArchivedRow, ArchivedRowViewModel, ArchivedStoredRow, ArchiveStored, Column, Id, Row, Task } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
+
+export interface RowWithTasks {
+    row: Row;
+    tasks: Task[];
+}
 
 class ArchiveStorage {
     constructor(private storageHandler: IStorageHandler) {
@@ -22,6 +27,22 @@ class ArchiveStorage {
         }
 
         return archive;
+    }
+
+    convertArchivedRowToBoardRow(archivedRow: ArchivedRowViewModel): RowWithTasks {
+        const newRow = {
+            id: archivedRow.rowId
+        } as Row;
+
+        const newTasks = archivedRow.columns.flatMap(column => column.tasks.map(task => {
+            return {
+                id: task.id,
+                rowId: archivedRow.rowId,
+                columnId: column.id
+            } as Task;
+        }));
+
+        return { row: newRow, tasks: newTasks };
     }
 
     async addToArchive(archivedRow: ArchivedRow): Promise<void> {

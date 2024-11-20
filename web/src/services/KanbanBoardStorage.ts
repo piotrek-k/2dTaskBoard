@@ -1,4 +1,4 @@
-import { KanbanDataContainer } from "../types";
+import { KanbanDataContainer, Row, Task } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
@@ -42,6 +42,15 @@ export class KanbanBoardStorage {
         }
 
         await this.storageHandler.saveJsonContentToDirectory<KanbanDataContainer>(this.fileName, dataContainer, []);
+    }
+
+    public async addRowToBoard(row: Row, tasks: Task[]) {
+        const currentBoardState = await this.getKanbanState();
+
+        currentBoardState?.rows.unshift(row);
+        currentBoardState?.tasks.push(...tasks);
+
+        await kanbanBoardStorage.saveKanbanState(currentBoardState);
     }
 }
 

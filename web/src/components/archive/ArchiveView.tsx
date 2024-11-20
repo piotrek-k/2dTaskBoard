@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Archive, Id } from '../../types';
-import archiveStorage from '../../services/ArchiveStorage';
+import { ArchiveViewModel, Id } from '../../types';
+import archiveStorage, { RowWithTasks } from '../../services/ArchiveStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import RowArchiveView from './RowArchiveView';
+import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 
 function ArchiveView() {
    
     const storageIsReady = useStorageHandlerStatus();
-    const [archive, setArchive] = useState<Archive | null>(null);
+    const [archive, setArchive] = useState<ArchiveViewModel | null>(null);
 
     useEffect(() => {
         const startFetch = async () => {
@@ -20,26 +21,17 @@ function ArchiveView() {
     }, [storageIsReady]);
 
     async function restoreFromArchive(rowId: Id): Promise<void> {
-        const archivedRow = archive?.rows.find((row) => row.row.id === rowId);
+        const archivedRow = archive?.rows.find((row) => row.rowId === rowId);
 
         if (archivedRow == null) {
             throw new Error("Row not found in archive");
         }
 
-        // TODO: Move logic to service
+        const convertedData : RowWithTasks = archiveStorage.convertArchivedRowToBoardRow(archivedRow);
 
-        // const boardState = await kanbanBoardStorage.getKanbanState();
+        kanbanBoardStorage.addRowToBoard(convertedData.row, convertedData.tasks);
 
-        // if (boardState == null) {
-        //     throw new Error("Board state not found");
-        // }
-
-        // boardState?.rows.unshift(archivedRow.row);
-        // boardState?.tasks.push(...archivedRow.columns.flatMap((column) => column.tasks));
-
-        // await kanbanBoardStorage.saveKanbanState(boardState);
-
-        // await archiveStorage.removeFromArchive(rowId);
+        await archiveStorage.removeFromArchive(rowId);
 
         const newArchive = await archiveStorage.getArchive();
 

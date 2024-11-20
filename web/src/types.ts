@@ -31,17 +31,50 @@ export interface KanbanDataContainer {
     columns: Column[];
 }
 
-export interface Archive {
+export interface Archive { //Remove
     rows: ArchivedRow[];
 }
 
-export interface ArchivedRow {
-    row: Row;
+export interface ArchivedRow { //Remove
+    // row: Row;
     rowId: Id;
     columns: ArchivedColumn[];
 }
 
-export interface ArchivedColumn {
+export interface ArchivedColumn { //Remove
     id: Id;
     tasks: Id[];
+}
+
+export interface ArchiveStored {
+    rows: ArchivedStoredRow[];
+}
+
+export interface ArchivedStoredRow {
+    rowId: Id;
+    columns: ArchivedStoredColumn[];
+}
+
+export interface ArchivedStoredColumn {
+    id: Id;
+    tasks: Id[];
+}
+
+export interface ArchiveViewModel {
+    rows: ArchivedRowViewModel[];
+}
+
+export interface ArchivedRowViewModel {
+    rowId: Id;
+    columns: ArchivedColumnViewModel[];
+}
+
+export interface ArchivedColumnViewModel {
+    id: Id;
+    tasks: ArchivedTaskViewModel[];
+}
+
+export interface ArchivedTaskViewModel {
+    id: Id;
+    title: string;
 }
