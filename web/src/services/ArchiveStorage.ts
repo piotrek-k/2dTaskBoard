@@ -1,11 +1,11 @@
 import { ArchiveStored, ArchivedStoredRow, ArchivedStoredColumn } from "../dataTypes/ArchiveStructures";
-import { Column, Id, Row, Task } from "../types";
+import { ColumnInStorage, Id, RowInStorage, TaskInStorage } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
 export interface RowWithTasks {
-    row: Row;
-    tasks: Task[];
+    row: RowInStorage;
+    tasks: TaskInStorage[];
 }
 
 class ArchiveStorage {
@@ -33,14 +33,14 @@ class ArchiveStorage {
     convertArchivedRowToBoardRow(archivedRow: ArchivedStoredRow): RowWithTasks {
         const newRow = {
             id: archivedRow.id
-        } as Row;
+        } as RowInStorage;
 
         const newTasks = archivedRow.columns.flatMap(column => column.tasks.map(id => {
             return {
                 id: id,
                 rowId: archivedRow.id,
                 columnId: column.id
-            } as Task;
+            } as TaskInStorage;
         }));
 
         return { row: newRow, tasks: newTasks };
@@ -57,7 +57,7 @@ class ArchiveStorage {
         await this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
     }
 
-    createArchiveRow(row: Row, tasks: Task[], columns: Column[]): ArchivedStoredRow {
+    createArchiveRow(row: RowInStorage, tasks: TaskInStorage[], columns: ColumnInStorage[]): ArchivedStoredRow {
         const archivedColumns: ArchivedStoredColumn[] = [];
 
         for (const column of columns) {

@@ -1,5 +1,5 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
-import { Column, Id, Row, Task } from "../../types"
+import { ColumnInStorage, Id, RowInStorage, TaskInStorage } from "../../types"
 import { useEffect, useMemo, useState } from "react";
 import PlusIcon from "../../icons/PlusIcon";
 import TaskCard from "./TaskCard";
@@ -7,16 +7,16 @@ import { CSS } from "@dnd-kit/utilities";
 import { FocusRequest } from "../../hooks/useBoardFocusManager";
 
 interface Props {
-    column: Column;
-    row: Row;
+    column: ColumnInStorage;
+    row: RowInStorage;
     isFirstColumn: boolean;
 
     createTask: (columnId: Id, rowId: Id) => void;
-    tasks: Task[];
+    tasks: TaskInStorage[];
 
     requestSavingDataToStorage: () => Promise<void>;
     focusRequest: FocusRequest;
-    moveTaskToNextColumn: (task: Task, direction: number) => void;
+    moveTaskToNextColumn: (task: TaskInStorage, direction: number) => void;
 }
 
 function ColumnContainer(props: Props) {
@@ -40,7 +40,7 @@ function ColumnContainer(props: Props) {
         transform: CSS.Transform.toString(transform)
     };
 
-    const [taskToFocus, setTaskToFocus] = useState<Task>();
+    const [taskToFocus, setTaskToFocus] = useState<TaskInStorage>();
     
     useEffect(() => {
         if(focusRequest.columnId === column.id && focusRequest.rowId === row.id) {

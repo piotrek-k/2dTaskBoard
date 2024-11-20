@@ -1,33 +1,24 @@
 export type Id = number;
 
-export enum WorkUnitType {
-    Task = 0,
-    Row = 1,
-}
-
-export type WorkUnit = {
+export type RowInStorage = {
     id: Id;
-    type: WorkUnitType;
-}
-
-export type Row = {
-    isVisible: boolean;
-} & WorkUnit;
+};
 
 export type RowViewModel = {
     id: Id;
     title: string;
 }
 
-export type Column = {
+export type ColumnInStorage = {
     id: Id;
     title: string;
 }
 
-export type Task = {
+export type TaskInStorage = {
+    id: Id;
     columnId: Id;
     rowId: Id;
-} & WorkUnit;
+};
 
 export type TaskViewModel = {
     id: Id;
@@ -35,8 +26,8 @@ export type TaskViewModel = {
 };
 
 export interface KanbanDataContainer {
-    tasks: Task[];
-    rows: Row[];
-    columns: Column[];
+    tasks: TaskInStorage[];
+    rows: RowInStorage[];
+    columns: ColumnInStorage[];
 }
 

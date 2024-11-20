@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { Id, Task } from '../../types';
+import { Id, TaskInStorage } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
@@ -9,11 +9,11 @@ import { TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
 import taskStorage from '../../services/CardMetadataStorage';
 
 interface Props {
-    task: Task;
+    task: TaskInStorage;
     requestSavingDataToStorage: () => Promise<void>;
     shouldBeFocused: boolean;
     removeFocusRequest: () => void;
-    moveTaskToNextColumn: (task: Task, direction: number) => void;
+    moveTaskToNextColumn: (task: TaskInStorage, direction: number) => void;
 }
 
 function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn }: Props) {

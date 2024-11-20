@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Column, Id, Row, RowViewModel, Task } from '../../types';
+import { ColumnInStorage, Id, RowInStorage, RowViewModel, TaskInStorage } from '../../types';
 import ColumnContainer from './ColumnContainer';
 import { SortableContext } from '@dnd-kit/sortable';
 import MoveUpIcon from '../../icons/MoveUpIcon';
@@ -16,16 +16,16 @@ import { RowMetadataViewModel } from '../../dataTypes/CardMetadata';
 import taskStorage from '../../services/CardMetadataStorage';
 
 interface Props {
-    row: Row;
-    columns: Column[];
+    row: RowInStorage;
+    columns: ColumnInStorage[];
     createTask: (columnId: Id, rowId: Id) => void;
     requestSavingDataToStorage: () => Promise<void>;
     rowNavigation: RowNavigation;
     handleRowFocusChange: (rowId?: Id) => void;
     focusRequest: FocusRequest;
     setFocusRequest: (focusRequest: FocusRequest) => void;
-    tasks: Task[];
-    modifyTask: (task: Task) => void;
+    tasks: TaskInStorage[];
+    modifyTask: (task: TaskInStorage) => void;
 }
 
 function RowContainer({ row, columns, createTask, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, setFocusRequest, tasks, modifyTask }: Props) {
@@ -73,7 +73,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
         enterHotKeyRef(elementRef.current);
     }, [enterHotKeyRef]);
 
-    function moveTaskToNextColumn(task: Task, direction: number): void {
+    function moveTaskToNextColumn(task: TaskInStorage, direction: number): void {
         const currentColumnIndex = columns.findIndex((col) => col.id === task.columnId);
         const nextColumnIndex = currentColumnIndex + direction;
 

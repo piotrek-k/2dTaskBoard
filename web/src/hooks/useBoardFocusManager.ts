@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Column, Id, Row, Task } from "../types";
+import { ColumnInStorage, Id, RowInStorage, TaskInStorage } from "../types";
 
 export enum FocusDirection {
     DOWN = "DOWN",
@@ -10,7 +10,7 @@ export interface FocusRequest {
     columnId?: Id;
 }
 
-export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task[]) {
+export function useBoardFocusManager(rows: RowInStorage[], columns: ColumnInStorage[], tasks: TaskInStorage[]) {
     const [currentyActiveRowId, setCurrentlyActiveRowId] = useState<Id | undefined>(undefined);
     const [currentyActiveColumnId, setCurrentlyActiveColumnId] = useState<Id | undefined>(undefined);
 
@@ -55,7 +55,7 @@ export function useBoardFocusManager(rows: Row[], columns: Column[], tasks: Task
         return nextRow;
     }, []);
 
-    const checkIfColumnHasTasks = useCallback((element: Column) => {
+    const checkIfColumnHasTasks = useCallback((element: ColumnInStorage) => {
         let result = false;
 
         if (currentyActiveRowId !== undefined) {

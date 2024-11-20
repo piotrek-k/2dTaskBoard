@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
-import { Column, Id, KanbanDataContainer, Row, Task, WorkUnitType } from '../../types';
+import { ColumnInStorage, Id, KanbanDataContainer, RowInStorage, TaskInStorage } from '../../types';
 import { DndContext, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
@@ -22,16 +22,16 @@ import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../dataT
 
 function KanbanBoard() {
 
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [rows, setRows] = useState<Row[]>([]);
-    const [columns, setColumns] = useState<Column[]>([]);
+    const [tasks, setTasks] = useState<TaskInStorage[]>([]);
+    const [rows, setRows] = useState<RowInStorage[]>([]);
+    const [columns, setColumns] = useState<ColumnInStorage[]>([]);
 
     const [showArchive, setShowArchive] = useState(false);
 
     const boardState: KanbanDataContainer = useMemo(() => ({ tasks, rows, columns } as KanbanDataContainer), [tasks, rows, columns]);
     const [dataLoaded, setDataLoaded] = useState(false);
 
-    const [activeTask, setActiveTask] = useState<Task | null>(null);
+    const [activeTask, setActiveTask] = useState<TaskInStorage | null>(null);
 
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
@@ -287,11 +287,10 @@ function KanbanBoard() {
     }
 
     async function createTask(columnId: Id, rowId: Id) {
-        const newTask: Task = {
+        const newTask: TaskInStorage = {
             id: await generateId(),
             columnId,
-            rowId,
-            type: WorkUnitType.Task
+            rowId
         };
 
         const newTaskMetadata: TaskStoredMetadata = {
@@ -305,7 +304,7 @@ function KanbanBoard() {
         setTasks([newTask, ...tasks]);
     }
 
-    async function modifyTask(task: Task) {
+    async function modifyTask(task: TaskInStorage) {
         setTasks([task, ...tasks.filter(x=>x.id != task.id)]);
     }
 
@@ -348,7 +347,7 @@ function KanbanBoard() {
     function archiveRow(rowId: Id) {
         archiveStorage.addToArchive(
             archiveStorage.createArchiveRow(
-                rows.find(row => row.id === rowId) as Row,
+                rows.find(row => row.id === rowId) as RowInStorage,
                 tasks.filter(task => task.rowId === rowId),
                 columns
             )
@@ -374,10 +373,8 @@ function KanbanBoard() {
     }
 
     async function createNewRow() {
-        const rowToAdd: Row = {
-            id: await generateId(),
-            isVisible: true,
-            type: WorkUnitType.Row
+        const rowToAdd: RowInStorage = {
+            id: await generateId()
         };
 
         const rowMetadata: RowStoredMetadata = {
