@@ -80,8 +80,7 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
                                     ref={ref}
                                     tabIndex={0}
                                 >
-                                    {/* {archivedRow.row.title} */}
-                                    Todo row title
+                                    {row.title}
                                 </div>
 
                                 <div className='flex flex-grow'></div>
