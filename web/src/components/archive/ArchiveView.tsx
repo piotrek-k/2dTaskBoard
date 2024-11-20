@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
-import { ArchiveViewModel, Id } from '../../types';
+import { Id } from '../../types';
 import archiveStorage, { RowWithTasks } from '../../services/ArchiveStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import RowArchiveView from './RowArchiveView';
 import kanbanBoardStorage from '../../services/KanbanBoardStorage';
+import { ArchiveStored } from '../../dataTypes/ArchiveStructures';
 
 function ArchiveView() {
    
     const storageIsReady = useStorageHandlerStatus();
-    const [archive, setArchive] = useState<ArchiveViewModel | null>(null);
+    const [archive, setArchive] = useState<ArchiveStored | null>(null);
 
     useEffect(() => {
         const startFetch = async () => {
@@ -21,7 +22,7 @@ function ArchiveView() {
     }, [storageIsReady]);
 
     async function restoreFromArchive(rowId: Id): Promise<void> {
-        const archivedRow = archive?.rows.find((row) => row.rowId === rowId);
+        const archivedRow = archive?.rows.find((row) => row.id === rowId);
 
         if (archivedRow == null) {
             throw new Error("Row not found in archive");
@@ -43,7 +44,7 @@ function ArchiveView() {
             <div className="m-auto flex gap-2 flex-col w-full">
                 <div className='flex flex-col'>
                     {archive?.rows.map((archivedRow) => (
-                        <RowArchiveView archivedRow={archivedRow} key={archivedRow.row.id} restoreFromArchive={restoreFromArchive} />
+                        <RowArchiveView archivedRow={archivedRow} key={archivedRow.id} restoreFromArchive={restoreFromArchive} />
                     ))}
                 </div>
             </div>

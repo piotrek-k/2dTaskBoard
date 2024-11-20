@@ -1,4 +1,5 @@
-import { Archive, ArchivedColumn, ArchivedRow, ArchivedRowViewModel, ArchivedStoredRow, ArchiveStored, Column, Id, Row, Task } from "../types";
+import { ArchiveStored, ArchivedStoredRow, ArchivedStoredColumn } from "../dataTypes/ArchiveStructures";
+import { Column, Id, Row, Task } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
@@ -11,33 +12,33 @@ class ArchiveStorage {
     constructor(private storageHandler: IStorageHandler) {
     }
 
-    async getArchive(): Promise<Archive> {
+    async getArchive(): Promise<ArchiveStored> {
         const fileContents = await this.storageHandler.getContent('archive.jsonl');
 
         const lines = fileContents.trim().split('\n').reverse();
-        const archive: Archive = { rows: [] };
+        const archive: ArchiveStored = { rows: [] as ArchivedStoredRow[] };
 
         for (const line of lines) {
             if (line.trim() === '') {
                 continue;
             }
 
-            const data: ArchivedRow = JSON.parse(line);
+            const data: ArchivedStoredRow = JSON.parse(line);
             archive.rows.push(data);
         }
 
         return archive;
     }
 
-    convertArchivedRowToBoardRow(archivedRow: ArchivedRowViewModel): RowWithTasks {
+    convertArchivedRowToBoardRow(archivedRow: ArchivedStoredRow): RowWithTasks {
         const newRow = {
-            id: archivedRow.rowId
+            id: archivedRow.id
         } as Row;
 
-        const newTasks = archivedRow.columns.flatMap(column => column.tasks.map(task => {
+        const newTasks = archivedRow.columns.flatMap(column => column.tasks.map(id => {
             return {
-                id: task.id,
-                rowId: archivedRow.rowId,
+                id: id,
+                rowId: archivedRow.id,
                 columnId: column.id
             } as Task;
         }));
@@ -45,7 +46,7 @@ class ArchiveStorage {
         return { row: newRow, tasks: newTasks };
     }
 
-    async addToArchive(archivedRow: ArchivedRow): Promise<void> {
+    async addToArchive(archivedRow: ArchivedStoredRow): Promise<void> {
         const jsonl = JSON.stringify(archivedRow) + '\n';
 
         let existingContent = await this.storageHandler.getContent('archive.jsonl');
@@ -56,8 +57,8 @@ class ArchiveStorage {
         await this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
     }
 
-    createArchiveRow(row: Row, tasks: Task[], columns: Column[]): ArchivedRow {
-        const archivedColumns: ArchivedColumn[] = [];
+    createArchiveRow(row: Row, tasks: Task[], columns: Column[]): ArchivedStoredRow {
+        const archivedColumns: ArchivedStoredColumn[] = [];
 
         for (const column of columns) {
             archivedColumns.push({
@@ -66,9 +67,8 @@ class ArchiveStorage {
             });
         }
 
-        const result: ArchivedRow = {
-            row: row,
-            rowId: row.id,
+        const result: ArchivedStoredRow = {
+            id: row.id,
             columns: archivedColumns
         };
 
@@ -83,8 +83,8 @@ class ArchiveStorage {
 
         const updatedRows = rows.filter(line => {
             try {
-                const row: ArchivedRow = JSON.parse(line);
-                return row.row.id !== rowId;
+                const row: ArchivedStoredRow = JSON.parse(line);
+                return row.id !== rowId;
             } catch (e) {
                 console.error('Error parsing JSON line:', e);
                 return true;
@@ -95,17 +95,6 @@ class ArchiveStorage {
 
         await this.storageHandler.saveTextContentToDirectory('archive.jsonl', newContent, []);
     }
-
-    // unpackFromArchiveRow(archivedRow: ArchivedRow): { row: Row, tasks: Task[] } {
-    //     const row = archivedRow.row;
-    //     const tasks: Task[] = [];
-
-    //     for (const column of archivedRow.columns) {
-    //         tasks.push(...column.tasks);
-    //     }
-
-    //     return { row, tasks };
-    // }
 }
 
 const archiveStorage = new ArchiveStorage(fileSystemHandler);

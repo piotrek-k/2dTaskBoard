@@ -37,12 +37,12 @@ class CardMetadataStorage {
         return extendedRow;
     }
 
+    public getRowMetadata(rowId: Id): Promise<RowStoredMetadata | undefined> {
+        return this.getCardMetadata<RowStoredMetadata>(rowId);
+    }
+
     public async getRowMetadataViewModel(rowId: Id): Promise<RowMetadataViewModel | undefined> {
         const metadata = await this.getCardMetadata<RowMetadataViewModel>(rowId);
-
-        if (metadata?.type != MetadataType.Row) {
-            throw new Error('Wrong type');
-        }
 
         if (!metadata) {
             return {
@@ -50,6 +50,10 @@ class CardMetadataStorage {
                 title: 'Row ' + rowId,
                 type: MetadataType.Row
             };
+        }
+
+        if (metadata?.type != MetadataType.Row) {
+            throw new Error('Wrong type');
         }
 
         const boardState = await kanbanBoardStorage.getKanbanState();
@@ -71,6 +75,10 @@ class CardMetadataStorage {
         extendedTask.type = MetadataType.Task;
 
         return extendedTask;
+    }
+
+    public async getTaskMetadata(taskId: Id): Promise<TaskStoredMetadata | undefined> {
+        return await this.getCardMetadata<TaskStoredMetadata>(taskId);
     }
 
     public async getTaskMetadataViewModel(taskId: Id): Promise<TaskMetadataViewModel | undefined> {
