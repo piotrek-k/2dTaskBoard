@@ -156,6 +156,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             autoFocus={true}
             value={taskContent}
             onChange={handleContentChange}
+            defaultTabEnable={true}
             previewOptions={{
                 components: {
                     img: (props: any) => <CustomImageRenderer props={props} taskId={card.id} />,
