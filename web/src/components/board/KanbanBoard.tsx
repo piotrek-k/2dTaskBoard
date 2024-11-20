@@ -291,13 +291,12 @@ function KanbanBoard() {
             id: await generateId(),
             columnId,
             rowId,
-            title: `Task ${tasks.length + 1}`,
             type: WorkUnitType.Task
         };
 
         const newTaskMetadata: TaskStoredMetadata = {
             id: newTask.id,
-            title: newTask.title,
+            title: `Task ${tasks.length + 1}`,
             type: MetadataType.Task
         }
 
@@ -307,12 +306,6 @@ function KanbanBoard() {
     }
 
     async function modifyTask(task: Task) {
-        await taskStorage.saveCardMetadata({
-            id: task.id,
-            title: task.title,
-            type: MetadataType.Task
-        });
-
         setTasks([task, ...tasks.filter(x=>x.id != task.id)]);
     }
 
@@ -383,14 +376,13 @@ function KanbanBoard() {
     async function createNewRow() {
         const rowToAdd: Row = {
             id: await generateId(),
-            title: `Row ${rows.length + 1}`,
             isVisible: true,
             type: WorkUnitType.Row
         };
 
         const rowMetadata: RowStoredMetadata = {
             id: rowToAdd.id,
-            title: rowToAdd.title,
+            title: `Row ${rows.length + 1}`,
             type: MetadataType.Row
         }
 

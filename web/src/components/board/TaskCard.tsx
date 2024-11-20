@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { Id, Task } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -19,6 +19,18 @@ interface Props {
 function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn }: Props) {
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
+
+    const [taskViewModel, setTaskViewModel] = useState<TaskMetadataViewModel | null>(null);
+
+    useEffect(() => {
+        const fetchTaskMetadata = async () => {
+            const taskMetadata = await taskStorage.getTaskMetadataViewModel(task.id) as TaskMetadataViewModel;
+
+            setTaskViewModel(taskMetadata);
+        };
+
+        fetchTaskMetadata();
+    }, [task]);
 
     const setHotkeyRef = useHotkeys('enter', () => handleClickOnTask(task.id));
     const setHotkeyMoveRightRef = useHotkeys('m', () => moveTaskToNextColumn(task, 1));
@@ -44,7 +56,6 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
 
     useEffect(() => {
         if (shouldBeFocused && node != null) {
-            console.log("Focusing on task ", task.title);
             node.current?.focus();
             removeFocusRequest();
         }
@@ -91,7 +102,7 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
                 className='my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap'
                 tabIndex={-1}
             >
-                {task.title}
+                {taskViewModel?.title}
             </p>
         </div>
     )

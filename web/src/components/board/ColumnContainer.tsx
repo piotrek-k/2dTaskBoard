@@ -44,7 +44,6 @@ function ColumnContainer(props: Props) {
     
     useEffect(() => {
         if(focusRequest.columnId === column.id && focusRequest.rowId === row.id) {
-            console.log("Focusing on task (column): ", tasks.length ? tasks[0].title : "No tasks");
             setTaskToFocus(tasks.length > 0 ? tasks[0] : undefined);
         }
     }, [tasks, column.id, row.id, focusRequest.columnId, focusRequest.rowId]);

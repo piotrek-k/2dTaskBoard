@@ -1,5 +1,5 @@
-import { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
-import { Column, Id, Row, Task } from '../../types';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Column, Id, Row, RowViewModel, Task } from '../../types';
 import ColumnContainer from './ColumnContainer';
 import { SortableContext } from '@dnd-kit/sortable';
 import MoveUpIcon from '../../icons/MoveUpIcon';
@@ -32,6 +32,21 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
 
     const elementRef = useRef<HTMLDivElement>(null);
 
+    const [rowViewModel, setRowViewModel] = useState<RowViewModel | null>(null);
+
+    useEffect(() => {
+        const fetchRowMetadata = async () => {
+            const rowMetadata = await taskStorage.getRowMetadataViewModel(row.id) as RowMetadataViewModel;
+            
+            setRowViewModel({
+                id: row.id,
+                title: rowMetadata.title
+            });
+        };
+    
+        fetchRowMetadata();
+    }, [row]);
+
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
@@ -52,7 +67,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
         if (focusRequest.rowId === row.id && elementRef.current != null && focusRequest.columnId === undefined) {
             elementRef.current.focus();
         }
-    }, [row.id, row.title, focusRequest.columnId, focusRequest.rowId]);
+    }, [row.id, focusRequest.columnId, focusRequest.rowId]);
 
     useEffect(() => {
         enterHotKeyRef(elementRef.current);
@@ -103,7 +118,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
                                 handleClickOnRowDetails(row.id);
                             }}
                             tabIndex={0}>
-                            {row.title}
+                            {rowViewModel?.title}
                         </div>
 
                         <div className='flex flex-grow'></div>

@@ -7,13 +7,17 @@ export enum WorkUnitType {
 
 export type WorkUnit = {
     id: Id;
-    title: string;
     type: WorkUnitType;
 }
 
 export type Row = {
     isVisible: boolean;
 } & WorkUnit;
+
+export type RowViewModel = {
+    id: Id;
+    title: string;
+}
 
 export type Column = {
     id: Id;
@@ -24,6 +28,11 @@ export type Task = {
     columnId: Id;
     rowId: Id;
 } & WorkUnit;
+
+export type TaskViewModel = {
+    id: Id;
+    title: string;
+};
 
 export interface KanbanDataContainer {
     tasks: Task[];
