@@ -145,10 +145,10 @@ class FileSystemHandler implements IStorageHandler {
         return await file.text();
     }
 
-    public async saveJsonContentToDirectory<Type>(dataContainerName: string, dataContainer: Type, folderNames: string[]) {
+    public async saveJsonContentToDirectory<Type>(dataContainerName: string, dataContainer: Type, folderNames: string[]): Promise<void> {
         const dataToSave = JSON.stringify(dataContainer);
 
-        this.saveTextContentToDirectory(dataContainerName, dataToSave, folderNames);
+        await this.saveTextContentToDirectory(dataContainerName, dataToSave, folderNames);
     }
 
     public async saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]) {

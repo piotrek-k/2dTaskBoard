@@ -123,11 +123,11 @@ class CardMetadataStorage {
     }
 
     public async saveCardContent(cardId: Id, content: string) {
-        this.storageHandler.saveTextContentToDirectory('content.md', content, ['tasks', `${cardId}`]);
+        await this.storageHandler.saveTextContentToDirectory('content.md', content, ['tasks', `${cardId}`]);
     }
 
     public async saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void> {
-        this.storageHandler.saveJsonContentToDirectory<T>('metadata.md', card, ['tasks', `${card.id}`]);
+        await this.storageHandler.saveJsonContentToDirectory<T>('metadata.md', card, ['tasks', `${card.id}`]);
     }
 }
 
