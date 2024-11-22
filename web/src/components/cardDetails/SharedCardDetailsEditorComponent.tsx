@@ -104,6 +104,10 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
         }
     }, [storageIsReady, card.id]);
 
+    useEffect(() => {
+        refreshAttachments();
+    }, [refreshAttachments]);
+
     function appendFile(fileName: string) {
         const fileExtension = fileName.split('.').pop()?.toLowerCase();
         const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
