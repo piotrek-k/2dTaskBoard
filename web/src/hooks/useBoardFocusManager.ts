@@ -90,7 +90,8 @@ export function useBoardFocusManager(rows: RowInStorage[], columns: ColumnInStor
     }, [currentyActiveRowId, rows, moveToNextElement]);
 
     const focusNextColumn = useCallback(() => {
-        const nextRow = moveToNextElement(columns, currentyActiveColumnId, 1, (element) => checkIfColumnHasTasks(element));
+        const columnWithAddTaskButton = columns[0];
+        const nextRow = moveToNextElement(columns, currentyActiveColumnId, 1, (element) => checkIfColumnHasTasks(element) || element.id === columnWithAddTaskButton.id);
 
         console.log("Moving focus to ", nextRow?.id);
 
@@ -103,7 +104,8 @@ export function useBoardFocusManager(rows: RowInStorage[], columns: ColumnInStor
     }, [currentyActiveColumnId, columns, moveToNextElement, checkIfColumnHasTasks, currentyActiveRowId]);
 
     const focusPreviousColumn = useCallback(() => {
-        const nextRow = moveToNextElement(columns, currentyActiveColumnId, -1, (element) => checkIfColumnHasTasks(element));
+        const columnWithAddTaskButton = columns[0];
+        const nextRow = moveToNextElement(columns, currentyActiveColumnId, -1, (element) => checkIfColumnHasTasks(element) || element.id === columnWithAddTaskButton.id);
 
         console.log("Moving focus to ", nextRow?.id);
 

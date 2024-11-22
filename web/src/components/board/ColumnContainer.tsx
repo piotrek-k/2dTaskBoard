@@ -1,6 +1,6 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { ColumnInStorage, Id, RowInStorage, TaskInStorage } from "../../types"
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PlusIcon from "../../icons/PlusIcon";
 import TaskCard from "./TaskCard";
 import { CSS } from "@dnd-kit/utilities";
@@ -21,6 +21,8 @@ interface Props {
 
 function ColumnContainer(props: Props) {
     const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn, focusRequest, moveTaskToNextColumn } = props;
+
+    const addTaskButtonRef = useRef<HTMLButtonElement>(null);
 
     const tasksIds = useMemo(() => {
         return tasks.map(task => task.id);
@@ -44,7 +46,12 @@ function ColumnContainer(props: Props) {
     
     useEffect(() => {
         if(focusRequest.columnId === column.id && focusRequest.rowId === row.id) {
-            setTaskToFocus(tasks.length > 0 ? tasks[0] : undefined);
+            if(tasks.length > 0){
+                setTaskToFocus(tasks[0]);
+            }
+            else {
+                addTaskButtonRef.current?.focus();
+            }
         }
     }, [tasks, column.id, row.id, focusRequest.columnId, focusRequest.rowId]);
 
@@ -88,6 +95,7 @@ function ColumnContainer(props: Props) {
             border-x-columnBackgroundColor
             hover:bg-mainBackgroundColor hover:text-rose-500
             active:bg-black text-gray-500`}
+                ref={addTaskButtonRef}
                 onClick={() => {
                     createTask(column.id, row.id)
                 }}>
