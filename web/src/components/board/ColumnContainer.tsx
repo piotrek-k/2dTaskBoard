@@ -5,6 +5,7 @@ import PlusIcon from "../../icons/PlusIcon";
 import TaskCard from "./TaskCard";
 import { CSS } from "@dnd-kit/utilities";
 import { FocusRequest } from "../../hooks/useBoardFocusManager";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface Props {
     column: ColumnInStorage;
@@ -23,6 +24,12 @@ function ColumnContainer(props: Props) {
     const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn, focusRequest, moveTaskToNextColumn } = props;
 
     const addTaskButtonRef = useRef<HTMLButtonElement>(null);
+    const columnRef = useRef<HTMLDivElement>(null);
+
+    const hotKeyNewTaskRef = useHotkeys('n', () => { createTask(column.id, row.id) }, { enabled: true });
+    useEffect(() => {
+        hotKeyNewTaskRef(columnRef.current);
+    }, [hotKeyNewTaskRef]);
 
     const tasksIds = useMemo(() => {
         return tasks.map(task => task.id);
@@ -37,16 +44,20 @@ function ColumnContainer(props: Props) {
         }
     });
 
+    useEffect(() => {
+        setNodeRef(columnRef.current);
+    }, [setNodeRef]);
+
     const style = {
         transition,
         transform: CSS.Transform.toString(transform)
     };
 
     const [taskToFocus, setTaskToFocus] = useState<TaskInStorage>();
-    
+
     useEffect(() => {
-        if(focusRequest.columnId === column.id && focusRequest.rowId === row.id) {
-            if(tasks.length > 0){
+        if (focusRequest.columnId === column.id && focusRequest.rowId === row.id) {
+            if (tasks.length > 0) {
                 setTaskToFocus(tasks[0]);
             }
             else {
@@ -61,7 +72,7 @@ function ColumnContainer(props: Props) {
 
     return (
         <div
-            ref={setNodeRef}
+            ref={columnRef}
             style={style}
             className="
             bg-columnBackgroundColor
@@ -72,19 +83,19 @@ function ColumnContainer(props: Props) {
             basis-0
             min-w-0
             "
-            >
+        >
             {/* Tasks container */}
             <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
                 <SortableContext items={tasksIds}>
                     {tasks.map((task) => (
-                        <TaskCard 
-                            key={task.id} 
-                            task={task} 
+                        <TaskCard
+                            key={task.id}
+                            task={task}
                             requestSavingDataToStorage={requestSavingDataToStorage}
-                            shouldBeFocused = {taskToFocus?.id === task.id}
-                            removeFocusRequest = {removeFocusRequest}
+                            shouldBeFocused={taskToFocus?.id === task.id}
+                            removeFocusRequest={removeFocusRequest}
                             moveTaskToNextColumn={moveTaskToNextColumn}
-                            />
+                        />
                     ))}
                 </SortableContext>
             </div>
