@@ -58,7 +58,6 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
         setContextHasUnsavedChanges(hasUnsavedChanges);
     }, [hasUnsavedChanges, setContextHasUnsavedChanges]);
 
-    
     useEffect(() => {
         if (savedTaskContent !== taskContent) {
             setHasUnsavedChanges(true);
@@ -155,12 +154,26 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
         />
     ), [taskContent, card.id]);
 
+    useEffect(() => {
+        const handleKeydown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && useEditMode) {
+                setUseEditMode(false);
+            }
+        };
+
+        // it's workaround, because MDEditor prevents default on Escape keydown
+        window.addEventListener('keydown', handleKeydown, { capture: true });
+
+        return () => {
+            window.removeEventListener('keydown', handleKeydown, { capture: true });
+        };
+    }, [useEditMode]);
+
     const memoizedEditor = useMemo(() => (
         <MDEditor
             autoFocus={true}
             value={taskContent}
             onChange={handleContentChange}
-            defaultTabEnable={true}
             previewOptions={{
                 components: {
                     img: (props: any) => <CustomImageRenderer props={props} taskId={card.id} />,
