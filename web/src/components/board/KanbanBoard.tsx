@@ -125,6 +125,10 @@ function KanbanBoard() {
 
     async function saveBoard() {
         await kanbanBoardStorage.saveKanbanState(boardState);
+    }
+
+    async function saveBoardAndReload(){
+        await saveBoard();
 
         await loadBoard();
     }
@@ -197,7 +201,7 @@ function KanbanBoard() {
                                             columns={columns}
                                             createTask={createTask}
                                             tasks={tasks.filter((task) => task.rowId === row.id)}
-                                            requestSavingDataToStorage={saveBoard}
+                                            requestSavingDataToStorage={saveBoardAndReload}
                                             rowNavigation={{
                                                 moveUp: moveRowUp,
                                                 moveDown: moveRowDown,
