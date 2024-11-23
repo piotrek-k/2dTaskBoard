@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 interface FileUploaderProps {
   onFileUpload: (file: File) => Promise<void>;
@@ -29,15 +30,19 @@ function FileUploader({ onFileUpload }: FileUploaderProps) {
     handleFileUpload(e.dataTransfer.files);
   };
 
+  const fileUploaderContainerRef = useHotkeys("enter", () => fileInputRef.current?.click());
+
   return (
     <div
-      className={`mt-4 p-4 border-2 border-dashed rounded-lg text-center cursor-pointer ${
+      className={`mt-4 p-4 border-2 border-dashed rounded-lg text-center cursor-pointer focus:border-blue-500 focus:bg-slate-400 focus:text-black ${
         isDragging ? 'border-blue-500 bg-blue-100' : 'border-gray-300'
       }`}
       onClick={() => fileInputRef.current?.click()}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      tabIndex={0}
+      ref={fileUploaderContainerRef}
     >
       <p>Drag and drop a file here, or click to select a file</p>
       <input
