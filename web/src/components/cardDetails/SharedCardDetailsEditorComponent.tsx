@@ -1,5 +1,5 @@
 import MDEditor from '@uiw/react-md-editor';
-import { useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import DataSavingContext, { DataSavingContextProps } from '../../context/DataSavingContext';
 import CustomImageRenderer from '../customMarkdownRenderers/CustomImageRenderer';
 import FileUploader from '../fileUploader/FileUploader';
@@ -9,6 +9,7 @@ import taskStorage from '../../services/CardMetadataStorage';
 import attachmentsStorage from '../../services/AttachmentsStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { CardStoredMetadata } from '../../dataTypes/CardMetadata';
+import CustomMDEditor from '../customMarkdownRenderers/CustomMDEditor';
 
 interface Props {
     card: CardStoredMetadata;
@@ -31,6 +32,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
     const [taskFiles, setTaskFiles] = useState<TaskFile[]>([]);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const storageIsReady = useStorageHandlerStatus();
+    const cardTitleRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (storageIsReady) {
@@ -169,11 +171,18 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
         };
     }, [useEditMode]);
 
+    useEffect(() => {
+        if(useEditMode && cardTitleRef?.current != null){
+            cardTitleRef?.current.focus();
+        }
+    }, [useEditMode]);
+
     const memoizedEditor = useMemo(() => (
-        <MDEditor
-            autoFocus={true}
+        <CustomMDEditor
+            autoFocus={false}
             value={taskContent}
             onChange={handleContentChange}
+            defaultTabEnable={true}
             previewOptions={{
                 components: {
                     img: (props: any) => <CustomImageRenderer props={props} taskId={card.id} />,
@@ -219,7 +228,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
                 </div>
             </div>
 
-            {!useTaskNameEditMode ? (
+            {!useEditMode && !useTaskNameEditMode ? (
                 <h1
                     onClick={() => setUseTaskNameEditMode(true)}
                     className="text-2xl font-bold text-white cursor-pointer hover:text-gray-300 transition-colors duration-200 py-2 break-words"
@@ -230,6 +239,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
                 <input
                     type="text"
                     value={taskName}
+                    ref={cardTitleRef}
                     onChange={(e) => setTaskName(e.target.value)}
                     onBlur={() => setUseTaskNameEditMode(false)}
                     className="w-full px-3 py-2 text-2xl font-bold text-white bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
