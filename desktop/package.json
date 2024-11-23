@@ -7,7 +7,7 @@
     "start": "electron .",
     "build": "rm -rf dist && npm run build --prefix ../web && cp -r ../web/dist . && electron-builder"
   },
-  "author": "Piotr Kozerski",
+  "author": "Piotr Kozerski <piotr.kozerski@pm.me>",
   "license": "ISC",
   "devDependencies": {
     "electron": "^33.0.2",
@@ -17,6 +17,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.1"
   },
+  "homepage": "https://piotrek-k.pl",
   "build": {
     "appId": "pl.pk.2d-task-board",
     "productName": "TaskBoard2D",
@@ -34,7 +35,7 @@
       "target": "dmg"
     },
     "linux": {
-      "target": "AppImage"
+      "target": ["deb", "AppImage"]
     }
   }
 }
