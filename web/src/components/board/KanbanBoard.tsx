@@ -125,6 +125,8 @@ function KanbanBoard() {
 
     async function saveBoard() {
         await kanbanBoardStorage.saveKanbanState(boardState);
+
+        await loadBoard();
     }
 
     async function switchArchiveView() {
