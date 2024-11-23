@@ -17,7 +17,7 @@ const CustomMDEditor: React.FC<MDEditorProps> = (props) => {
             }
 
             if (buttons.length) {
-                buttons.forEach((button, index) => {
+                buttons.forEach((button) => {
                     button.tabIndex = -1;
                 });
             }
