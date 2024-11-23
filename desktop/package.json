@@ -1,11 +1,11 @@
 {
   "name": "task-board-desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "2d task board app",
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "rm -rf dist && cp -r ../web/dist . && electron-builder"
+    "build": "rm -rf dist && npm run build --prefix ../web && cp -r ../web/dist . && electron-builder"
   },
   "author": "Piotr Kozerski",
   "license": "ISC",
