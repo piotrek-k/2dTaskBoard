@@ -2,6 +2,7 @@ export type CardStoredMetadata = {
     id: number;
     title: string;
     type: MetadataType;
+    syncId: string;
 }
 
 export enum MetadataType {

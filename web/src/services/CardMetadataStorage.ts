@@ -21,7 +21,16 @@ class CardMetadataStorage {
             return undefined;
         }
 
-        return JSON.parse(content) as T;
+        const parsedContent = JSON.parse(content) as T;
+
+        if(parsedContent.syncId === undefined) {
+            const randomUUID = crypto.randomUUID();
+            parsedContent.syncId = randomUUID.substring(0, 5); 
+
+            this.saveCardMetadata(parsedContent);
+        }
+
+        return parsedContent;
     }
 
     private addBoardContextToRow(row: RowStoredMetadata, boardState: KanbanDataContainer): RowMetadataViewModel {
