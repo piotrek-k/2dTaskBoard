@@ -14,6 +14,11 @@ class CardMetadataStorage {
         return fileContents;
     }
 
+    private generateSyncId(): string {
+        const randomUUID = crypto.randomUUID();
+        return randomUUID.substring(0, 6); 
+    }
+
     private async getCardMetadata<T extends CardStoredMetadata>(cardId: Id): Promise<T | undefined> {
         const content = await this.storageHandler.getContentFromDirectory('metadata.md', ['tasks', `${cardId}`]);
 
@@ -24,8 +29,7 @@ class CardMetadataStorage {
         const parsedContent = JSON.parse(content) as T;
 
         if(parsedContent.syncId === undefined) {
-            const randomUUID = crypto.randomUUID();
-            parsedContent.syncId = randomUUID.substring(0, 5); 
+            parsedContent.syncId = this.generateSyncId();
 
             this.saveCardMetadata(parsedContent);
         }
@@ -57,7 +61,8 @@ class CardMetadataStorage {
             return {
                 id: rowId,
                 title: 'Row ' + rowId,
-                type: MetadataType.Row
+                type: MetadataType.Row,
+                syncId: this.generateSyncId()
             };
         }
 
@@ -103,7 +108,8 @@ class CardMetadataStorage {
                 title: 'Task ' + taskId,
                 columnId: undefined,
                 rowId: undefined,
-                type: MetadataType.Task
+                type: MetadataType.Task,
+                syncId: this.generateSyncId()
             };
         }
 
