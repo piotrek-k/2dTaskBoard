@@ -2,6 +2,7 @@ export type Id = number;
 
 export type RowInStorage = {
     id: Id;
+    position: number;
 };
 
 export type RowViewModel = {
@@ -18,6 +19,7 @@ export type TaskInStorage = {
     id: Id;
     columnId: Id;
     rowId: Id;
+    position: number;
 };
 
 export type TaskViewModel = {

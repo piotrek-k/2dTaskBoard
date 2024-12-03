@@ -1,4 +1,5 @@
 import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
+import taskStorage from "./CardMetadataStorage";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
@@ -68,6 +69,8 @@ export class KanbanBoardStorage {
             }
         }
 
+        const orderedExtractedTasksInfo = extractedTasksInfo.sort((a, b) => a.position - b.position);
+
         return {
             columns: [
                 { id: 1, title: 'To Do' },
@@ -75,7 +78,57 @@ export class KanbanBoardStorage {
                 { id: 3, title: 'Done' }
             ],
             rows: extractedRowsInfo,
-            tasks: extractedTasksInfo
+            tasks: orderedExtractedTasksInfo
+        }
+    }
+
+    public async saveNewKanbanState(boardStateContainer: KanbanDataContainer) {
+        await this.storageHandler.removeDirectory('board');
+
+        const groupedTasks: { [key: string]: TaskInStorage[] } = {};
+        for (const task of boardStateContainer.tasks) {
+            const key = `(${task.rowId}, ${task.columnId})`;
+
+            if (!groupedTasks[key]) {
+                groupedTasks[key] = [];
+            }
+
+            groupedTasks[key].push(task);
+        }
+
+        for (const taskGroup of Object.values(groupedTasks)) {
+            if (taskGroup.length === 0) {
+                console.warn('Empty task group found, skipping');
+                continue;
+            }
+
+            const rowMetadata = await taskStorage.getRowMetadata(taskGroup[0].rowId);
+
+            if(rowMetadata === undefined) {
+                console.warn('Row metadata not found, skipping');
+                continue;
+            }
+
+            const rowName = `${this.sanitizeFilename(rowMetadata.title)} (${taskGroup[0].rowId}, ${rowMetadata.syncId})`;
+            const columnName = this.convertColumnIdToName(taskGroup[0].columnId);
+            const fileNames = [];
+
+            const sortedTaskGroup = taskGroup.sort((a, b) => a.position - b.position);
+
+            let counter = 1;
+            for (const task of sortedTaskGroup) {
+                const taskMetadata = await taskStorage.getTaskMetadata(task.id);
+
+                if(taskMetadata === undefined) {
+                    console.warn('Task metadata not found, skipping');
+                    continue;
+                }
+
+                fileNames.push(`${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${counter})`);
+                counter += 1;
+            }
+
+            await this.storageHandler.createEmptyFiles(fileNames, ['board', rowName, columnName]);
         }
     }
 
@@ -92,23 +145,38 @@ export class KanbanBoardStorage {
         }
     }
 
+    private convertColumnIdToName(columnId: number): string {
+        switch (columnId) {
+            case 1:
+                return 'To Do';
+            case 2:
+                return 'In Progress';
+            case 3:
+                return 'Done';
+            default:
+                return '';
+        }
+    }
+
     private convertRowFileNameToRowElement(fileName: string): RowInStorage {
-        const regex = /\((\d+),\s*([^)]+)\)/;
+        const regex = /\((\d+),\s*(.+),\s*(\d+)\)/;
         const match = fileName.match(regex);
 
         return {
-            id: match ? parseInt(match[1]) : 0
+            id: match ? parseInt(match[1]) : 0,
+            position: match ? parseInt(match[3]) : 0
         };
     }
 
     private convertTaskFileNameToTaskElement(fileName: string, knownColumnId: number, knownRowId: number): TaskInStorage {
-        const regex = /\((\d+),\s*([^)]+)\)/;
+        const regex = /\((\d+),\s*(.+),\s*(\d+)\)/;
         const match = fileName.match(regex);
 
         return {
             id: match ? parseInt(match[1]) : 0,
             columnId: knownColumnId,
-            rowId: knownRowId
+            rowId: knownRowId,
+            position: match ? parseInt(match[3]) : 0
         };
     }
 
@@ -121,6 +189,8 @@ export class KanbanBoardStorage {
         }
 
         await this.storageHandler.saveJsonContentToDirectory<KanbanDataContainer>(this.fileName, dataContainer, []);
+
+        await this.saveNewKanbanState(boardStateContainer);
     }
 
     public async addRowToBoard(row: RowInStorage, tasks: TaskInStorage[]) {
@@ -132,6 +202,15 @@ export class KanbanBoardStorage {
         await kanbanBoardStorage.saveKanbanState(currentBoardState);
     }
 
+    private sanitizeFilename(input: string, replacement: string = "_"): string {
+        const matchAnythingNotBeingNumberOrLetter = /[^a-z0-9]/gi;
+        const trimmedInput = input.trim().replace(/^\.+|\.+$/g, "");
+
+        const sanitized = trimmedInput.replace(matchAnythingNotBeingNumberOrLetter, replacement);
+
+        const maxLength = 100;
+        return sanitized.slice(0, maxLength) || "untitled";
+    }
 }
 
 const kanbanBoardStorage = new KanbanBoardStorage(fileSystemHandler);

@@ -251,6 +251,18 @@ class FileSystemHandler implements IStorageHandler {
         return files;
     }
 
+    public async removeDirectory(directoryName: string) : Promise<void> {
+        await this.directoryHandle?.removeEntry(directoryName, { recursive: true });
+    }
+
+    public async createEmptyFiles(fileNames: string[], folderNames: string[]): Promise<void> {
+        const directory = await this.followDirectories(folderNames);
+
+        for (const fileName of fileNames) {
+            await directory.getFileHandle(fileName, { create: true });
+        }
+    }
+
     private async followDirectories(folderNames: string[]): Promise<FileSystemDirectoryHandle> {
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
@@ -280,16 +292,8 @@ class FileSystemHandler implements IStorageHandler {
         await directory.removeEntry(fileName);
     }
 
+
     
-    private sanitizeFilename(input: string, replacement: string = "_"): string {
-        const matchAnythingNotBeingNumberOrLetter = /[^a-z0-9]/gi;
-        const trimmedInput = input.trim().replace(/^\.+|\.+$/g, "");
-    
-        const sanitized = trimmedInput.replace(matchAnythingNotBeingNumberOrLetter, replacement);
-    
-        const maxLength = 100;
-        return sanitized.slice(0, maxLength) || "untitled";
-    }
 }
 
 const fileSystemHandler = new FileSystemHandler();
