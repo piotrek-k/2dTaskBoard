@@ -227,21 +227,28 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async listFilesInDirectory(folderNames: string[]): Promise<string[]> {
+        return this.listElementsFromDirectory(folderNames, 'file');
+    }
+
+    public async listDirectoriesInDirectory(folderNames: string[]): Promise<string[]> {
+        return this.listElementsFromDirectory(folderNames, 'directory');
+    }
+
+    private async listElementsFromDirectory(folderNames: string[], dataKind: string): Promise<string[]> {
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }
 
         const directory = await this.followDirectories(folderNames);
 
-        const files: File[] = [];
+        const files: string[] = [];
         for await (const entry of (directory as any).values()) {
-            if (entry.kind === 'file' && !this.reservedFileNames.includes(entry.name) && !entry.name.endsWith('.crswap')) {
-                const file = await entry.getFile();
-                files.push(file);
+            if (entry.kind === dataKind && !this.reservedFileNames.includes(entry.name) && !entry.name.endsWith('.crswap')) {
+                files.push(entry.name);
             }
         }
 
-        return files.map(f => f.name);
+        return files;
     }
 
     private async followDirectories(folderNames: string[]): Promise<FileSystemDirectoryHandle> {
@@ -273,6 +280,16 @@ class FileSystemHandler implements IStorageHandler {
         await directory.removeEntry(fileName);
     }
 
+    
+    private sanitizeFilename(input: string, replacement: string = "_"): string {
+        const matchAnythingNotBeingNumberOrLetter = /[^a-z0-9]/gi;
+        const trimmedInput = input.trim().replace(/^\.+|\.+$/g, "");
+    
+        const sanitized = trimmedInput.replace(matchAnythingNotBeingNumberOrLetter, replacement);
+    
+        const maxLength = 100;
+        return sanitized.slice(0, maxLength) || "untitled";
+    }
 }
 
 const fileSystemHandler = new FileSystemHandler();
