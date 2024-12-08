@@ -27,7 +27,9 @@ export class KanbanBoardStorage {
                         { id: 1, title: 'To Do' },
                         { id: 2, title: 'In Progress' },
                         { id: 3, title: 'Done' }
-                    ]
+                    ],
+                    tasks: [],
+                    rows: []
                 } as KanbanDataContainer;
 
                 await this.saveKanbanState(newKanbanState);

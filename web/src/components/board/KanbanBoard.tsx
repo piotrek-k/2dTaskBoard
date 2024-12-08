@@ -128,7 +128,7 @@ function KanbanBoard() {
         await kanbanBoardStorage.saveKanbanState(boardState);
     }
 
-    async function saveBoardAndReload(){
+    async function saveBoardAndReload() {
         await saveBoard();
 
         await loadBoard();
@@ -314,7 +314,7 @@ function KanbanBoard() {
     }
 
     async function modifyTask(task: TaskInStorage) {
-        setTasks([task, ...tasks.filter(x=>x.id != task.id)]);
+        setTasks([task, ...tasks.filter(x => x.id != task.id)]);
     }
 
     function moveRowUp(rowId: Id) {
@@ -409,7 +409,11 @@ function KanbanBoard() {
         return Math.max(maxRowIdInArchive, maxTaskIdInArchive, maxTaskIdOnBoard, maxRowIdOnBoard) + 1;
     }
 
-    function getLowestPositionForTask(){
+    function getLowestPositionForTask() {
+        if (tasks.length == 0) {
+            return 1;
+        }
+
         const taskWithLowestPosition = tasks.reduce((lowest, current) =>
             current.position < lowest.position ? current : lowest
         );
@@ -417,7 +421,11 @@ function KanbanBoard() {
         return taskWithLowestPosition.position - 1;
     }
 
-    function getHighestPositionForRow(){
+    function getHighestPositionForRow() {
+        if (rows.length == 0) {
+            return 1;
+        }
+
         const rowWithHighestPosition = rows.reduce((highest, current) =>
             current.position > highest.position ? current : highest
         );
