@@ -16,38 +16,43 @@ export class KanbanBoardStorage {
             return this.cache;
         }
 
-        const fileContents = await this.storageHandler.getContent(this.fileName);
+        let result = await this.getNewKanbanState();
 
-        //const test = 
-        await this.getNewKanbanState();
-        // console.dir(test);
+        if (result == undefined) {
+            const fileContents = await this.storageHandler.getContent(this.fileName);
 
-        let result: KanbanDataContainer;
+            if (fileContents.length === 0) {
+                const newKanbanState = {
+                    columns: [
+                        { id: 1, title: 'To Do' },
+                        { id: 2, title: 'In Progress' },
+                        { id: 3, title: 'Done' }
+                    ]
+                } as KanbanDataContainer;
 
-        if (fileContents.length === 0) {
-            const newKanbanState = {
-                columns: [
-                    { id: 1, title: 'To Do' },
-                    { id: 2, title: 'In Progress' },
-                    { id: 3, title: 'Done' }
-                ]
-            } as KanbanDataContainer;
+                await this.saveKanbanState(newKanbanState);
 
-            await this.saveKanbanState(newKanbanState);
-
-            result = newKanbanState;
-        }
-        else {
-            result = JSON.parse(fileContents) as KanbanDataContainer;
+                result = newKanbanState;
+            }
+            else {
+                result = JSON.parse(fileContents) as KanbanDataContainer;
+            }
         }
 
-        this.cache = result;
+        if (result !== undefined) {
+            this.cache = result;
+        }
 
         return result;
     }
 
-    public async getNewKanbanState(): Promise<KanbanDataContainer> {
+    public async getNewKanbanState(): Promise<KanbanDataContainer | undefined> {
         const rowsAsFileNames = await this.storageHandler.listDirectoriesInDirectory(['board']);
+        const directoryWasEmpty = rowsAsFileNames.length == 0;
+
+        if (directoryWasEmpty) {
+            return undefined;
+        }
 
         const extractedRowsInfo: RowInStorage[] = [];
         const extractedTasksInfo: TaskInStorage[] = [];
@@ -105,7 +110,7 @@ export class KanbanBoardStorage {
 
             const rowMetadata = await taskStorage.getRowMetadata(taskGroup[0].rowId);
 
-            if(rowMetadata === undefined) {
+            if (rowMetadata === undefined) {
                 console.warn('Row metadata not found, skipping');
                 continue;
             }
@@ -120,7 +125,7 @@ export class KanbanBoardStorage {
             for (const task of sortedTaskGroup) {
                 const taskMetadata = await taskStorage.getTaskMetadata(task.id);
 
-                if(taskMetadata === undefined) {
+                if (taskMetadata === undefined) {
                     console.warn('Task metadata not found, skipping');
                     continue;
                 }

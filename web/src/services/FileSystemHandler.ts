@@ -252,6 +252,10 @@ class FileSystemHandler implements IStorageHandler {
         }
 
         if (this.directoryHandle == null) {
+            this.directoryHandle = await this.restoreHandle();
+        }
+
+        if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }
 
