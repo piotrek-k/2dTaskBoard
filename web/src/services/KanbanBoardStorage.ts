@@ -89,7 +89,7 @@ export class KanbanBoardStorage {
     }
 
     public async saveNewKanbanState(boardStateContainer: KanbanDataContainer) {
-        await this.storageHandler.removeDirectory('board');
+        const deferredSaveOperations : (() => Promise<void>)[] = [];
 
         const groupedTasks: { [key: string]: TaskInStorage[] } = {};
         for (const task of boardStateContainer.tasks) {
@@ -104,20 +104,18 @@ export class KanbanBoardStorage {
 
         for (const taskGroup of Object.values(groupedTasks)) {
             if (taskGroup.length === 0) {
-                console.warn('Empty task group found, skipping');
-                continue;
+                throw new Error('Empty task group found');
             }
 
             const rowMetadata = await taskStorage.getRowMetadata(taskGroup[0].rowId);
 
             if (rowMetadata === undefined) {
-                console.warn('Row metadata not found, skipping');
-                continue;
+                throw new Error('Row metadata not found');
             }
 
             const rowName = `${this.sanitizeFilename(rowMetadata.title)} (${taskGroup[0].rowId}, ${rowMetadata.syncId})`;
             const columnName = this.convertColumnIdToName(taskGroup[0].columnId);
-            const fileNames = [];
+            const fileNames: string[] = [];
 
             let counter = 1;
             for (const task of taskGroup) {
@@ -132,8 +130,14 @@ export class KanbanBoardStorage {
                 counter += 1;
             }
 
-            await this.storageHandler.createEmptyFiles(fileNames, ['board', rowName, columnName]);
+            deferredSaveOperations.push(async () => {
+                await this.storageHandler.createEmptyFiles(fileNames, ['board', rowName, columnName]);
+            })
         }
+
+        await this.storageHandler.removeDirectory('board');
+        
+        await Promise.all(deferredSaveOperations.map(func => func()));
     }
 
     private covertColumnNameToId(columnName: string): number {
