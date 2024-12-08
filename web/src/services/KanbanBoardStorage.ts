@@ -18,8 +18,9 @@ export class KanbanBoardStorage {
 
         const fileContents = await this.storageHandler.getContent(this.fileName);
 
-        const test = await this.getNewKanbanState();
-        console.dir(test);
+        //const test = 
+        await this.getNewKanbanState();
+        // console.dir(test);
 
         let result: KanbanDataContainer;
 

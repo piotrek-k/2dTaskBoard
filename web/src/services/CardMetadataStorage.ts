@@ -3,9 +3,12 @@ import { Id, KanbanDataContainer } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 import kanbanBoardStorage from "./KanbanBoardStorage";
+import settingsProvider, { SettingsProvider } from "./SettingsProvider";
 
 class CardMetadataStorage {
-    constructor(private storageHandler: IStorageHandler) {
+    readonly cache: { [key: Id]: object } = {};
+
+    constructor(private storageHandler: IStorageHandler, private settingsProvider: SettingsProvider) {
     }
 
     public async getCardContent(cardId: Id): Promise<string> {
@@ -16,10 +19,19 @@ class CardMetadataStorage {
 
     private generateSyncId(): string {
         const randomUUID = crypto.randomUUID();
-        return randomUUID.substring(0, 6); 
+        return randomUUID.substring(0, 6);
     }
 
     private async getCardMetadata<T extends CardStoredMetadata>(cardId: Id): Promise<T | undefined> {
+
+        if (cardId in this.cache) {
+            if (this.settingsProvider.debugModeEnabled) {
+                console.log("Used cache when loading metadata for ", cardId);
+            }
+
+            return this.cache[cardId] as T;
+        }
+
         const content = await this.storageHandler.getContentFromDirectory('metadata.md', ['tasks', `${cardId}`]);
 
         if (content.length === 0) {
@@ -28,11 +40,13 @@ class CardMetadataStorage {
 
         const parsedContent = JSON.parse(content) as T;
 
-        if(parsedContent.syncId === undefined) {
+        if (parsedContent.syncId === undefined) {
             parsedContent.syncId = this.generateSyncId();
 
             this.saveCardMetadata(parsedContent);
         }
+
+        this.cache[cardId] = parsedContent;
 
         return parsedContent;
     }
@@ -142,10 +156,12 @@ class CardMetadataStorage {
     }
 
     public async saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void> {
+        delete this.cache[card.id];
+
         await this.storageHandler.saveJsonContentToDirectory<T>('metadata.md', card, ['tasks', `${card.id}`]);
     }
 }
 
-const taskStorage = new CardMetadataStorage(fileSystemHandler);
+const taskStorage = new CardMetadataStorage(fileSystemHandler, settingsProvider);
 
 export default taskStorage;

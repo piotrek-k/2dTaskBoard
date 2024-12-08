@@ -6,6 +6,10 @@ export function useStorageHandlerStatus() {
 
     useEffect(() => {
         const onStorageStatusChanged = (newStatus: boolean) => {
+            if(newStatus === isReady){
+                return;
+            }
+
             setIsReady(newStatus);
         };
 
@@ -14,7 +18,7 @@ export function useStorageHandlerStatus() {
         return () => {
             fileSystemHandler.getReadinessWatcher().unsubscribe(onStorageStatusChanged);
         };
-    }, []);
+    }, [isReady]);
 
     return isReady;
 }

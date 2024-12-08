@@ -1,11 +1,15 @@
 import { openDB } from "idb";
 import { IStorageHandler } from "./IStorageHandler";
 import { EventWatcher } from "./EventWatcher";
+import settingsProvider, { SettingsProvider } from "./SettingsProvider";
 
 class FileSystemHandler implements IStorageHandler {
     directoryHandle: FileSystemDirectoryHandle | undefined;
 
     readinessWatcher: EventWatcher<boolean> = new EventWatcher<boolean>();
+    
+    constructor(private settings: SettingsProvider) {
+    }
 
     private readonly reservedFileNames: string[] = ['content.md'];
 
@@ -129,6 +133,10 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string> {
+        if (this.settings.debugModeEnabled) {
+            console.log("Getting content from: ", dataContainerName, folderNames);
+        }
+
         if (this.directoryHandle == null) {
             this.directoryHandle = await this.restoreHandle();
         }
@@ -152,6 +160,10 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]) {
+        if (this.settings.debugModeEnabled) {
+            console.log("Saving content to ", dataContainerName, folderNames);
+        }
+
         if (this.directoryHandle == null) {
             this.directoryHandle = await this.restoreHandle();
         }
@@ -235,6 +247,10 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     private async listElementsFromDirectory(folderNames: string[], dataKind: string): Promise<string[]> {
+        if (this.settings.debugModeEnabled) {
+            console.log("Listing directory elements ", folderNames, dataKind);
+        }
+
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }
@@ -251,7 +267,7 @@ class FileSystemHandler implements IStorageHandler {
         return files;
     }
 
-    public async removeDirectory(directoryName: string) : Promise<void> {
+    public async removeDirectory(directoryName: string): Promise<void> {
         await this.directoryHandle?.removeEntry(directoryName, { recursive: true });
     }
 
@@ -293,9 +309,8 @@ class FileSystemHandler implements IStorageHandler {
     }
 
 
-    
 }
 
-const fileSystemHandler = new FileSystemHandler();
+const fileSystemHandler = new FileSystemHandler(settingsProvider);
 
 export default fileSystemHandler;
