@@ -119,10 +119,8 @@ export class KanbanBoardStorage {
             const columnName = this.convertColumnIdToName(taskGroup[0].columnId);
             const fileNames = [];
 
-            const sortedTaskGroup = taskGroup.sort((a, b) => a.position - b.position);
-
             let counter = 1;
-            for (const task of sortedTaskGroup) {
+            for (const task of taskGroup) {
                 const taskMetadata = await taskStorage.getTaskMetadata(task.id);
 
                 if (taskMetadata === undefined) {
