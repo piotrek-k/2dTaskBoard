@@ -19,6 +19,7 @@ import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
+import { generateSyncId } from '../../tools/syncTools';
 
 function KanbanBoard() {
 
@@ -296,13 +297,15 @@ function KanbanBoard() {
         const newTask: TaskInStorage = {
             id: await generateId(),
             columnId,
-            rowId
+            rowId,
+            position: getLowestPositionForTask()
         };
 
         const newTaskMetadata: TaskStoredMetadata = {
             id: newTask.id,
             title: `Task ${tasks.length + 1}`,
-            type: MetadataType.Task
+            type: MetadataType.Task,
+            syncId: generateSyncId()
         }
 
         await taskStorage.saveCardMetadata(newTaskMetadata);
@@ -380,13 +383,15 @@ function KanbanBoard() {
 
     async function createNewRow() {
         const rowToAdd: RowInStorage = {
-            id: await generateId()
+            id: await generateId(),
+            position: getHighestPositionForRow()
         };
 
         const rowMetadata: RowStoredMetadata = {
             id: rowToAdd.id,
             title: `Row ${rows.length + 1}`,
-            type: MetadataType.Row
+            type: MetadataType.Row,
+            syncId: generateSyncId()
         }
 
         taskStorage.saveCardMetadata(rowMetadata);
@@ -404,6 +409,21 @@ function KanbanBoard() {
         return Math.max(maxRowIdInArchive, maxTaskIdInArchive, maxTaskIdOnBoard, maxRowIdOnBoard) + 1;
     }
 
+    function getLowestPositionForTask(){
+        const taskWithLowestPosition = tasks.reduce((lowest, current) =>
+            current.position < lowest.position ? current : lowest
+        );
+
+        return taskWithLowestPosition.position - 1;
+    }
+
+    function getHighestPositionForRow(){
+        const rowWithHighestPosition = rows.reduce((highest, current) =>
+            current.position > highest.position ? current : highest
+        );
+
+        return rowWithHighestPosition.position + 1;
+    }
 }
 
 export default KanbanBoard

@@ -1,4 +1,5 @@
 import { CardStoredMetadata, TaskStoredMetadata, TaskMetadataViewModel, RowMetadataViewModel, MetadataType, RowStoredMetadata } from "../dataTypes/CardMetadata";
+import { generateSyncId } from "../tools/syncTools";
 import { Id, KanbanDataContainer } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
@@ -15,11 +16,6 @@ class CardMetadataStorage {
         const fileContents = await this.storageHandler.getContentFromDirectory('content.md', ['tasks', `${cardId}`]);
 
         return fileContents;
-    }
-
-    private generateSyncId(): string {
-        const randomUUID = crypto.randomUUID();
-        return randomUUID.substring(0, 6);
     }
 
     private async getCardMetadata<T extends CardStoredMetadata>(cardId: Id): Promise<T | undefined> {
@@ -41,7 +37,7 @@ class CardMetadataStorage {
         const parsedContent = JSON.parse(content) as T;
 
         if (parsedContent.syncId === undefined) {
-            parsedContent.syncId = this.generateSyncId();
+            parsedContent.syncId = generateSyncId();
 
             this.saveCardMetadata(parsedContent);
         }
@@ -76,7 +72,7 @@ class CardMetadataStorage {
                 id: rowId,
                 title: 'Row ' + rowId,
                 type: MetadataType.Row,
-                syncId: this.generateSyncId()
+                syncId: generateSyncId()
             };
         }
 
@@ -123,7 +119,7 @@ class CardMetadataStorage {
                 columnId: undefined,
                 rowId: undefined,
                 type: MetadataType.Task,
-                syncId: this.generateSyncId()
+                syncId: generateSyncId()
             };
         }
 
