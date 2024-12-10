@@ -1,24 +1,8 @@
-import { describe, it, expect, vi, Mock } from 'vitest';
+import { describe, it, expect, Mock } from 'vitest';
 import { KanbanBoardStorage } from '../../src/services/KanbanBoardStorage';
-import { IStorageHandler } from '../../src/services/IStorageHandler';
+import { mockFileSystemTree, mockStorageHandler } from '../mocks/FileSystemMock';
 
 describe('KanbanBoardStorage', () => {
-    const mockStorageHandler: IStorageHandler = {
-        storageReady: vi.fn(),
-        getReadinessWatcher: vi.fn(),
-        getContent: vi.fn(),
-        getContentFromDirectory: vi.fn(),
-        saveJsonContentToDirectory: vi.fn(),
-        saveTextContentToDirectory: vi.fn(),
-        uploadFile: vi.fn(),
-        deleteFile: vi.fn(),
-        listFilesInDirectory: vi.fn(),
-        listDirectoriesInDirectory: vi.fn(),
-        getLinkToFile: vi.fn(),
-        removeDirectory: vi.fn(),
-        createEmptyFiles: vi.fn(),
-    };
-
     const kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler);
 
     it('should return undefined when directory is empty', async () => {
@@ -33,16 +17,15 @@ describe('KanbanBoardStorage', () => {
         const expectedTaskId = 2;
         const expectedTaskPosition = 1;
 
-        (mockStorageHandler.listDirectoriesInDirectory as Mock).mockImplementation((folderNames) => {
-            if (folderNames.join() === 'board') {
-                return Promise.resolve([`row1 (${exprectedRowId}, abc123, ${expectedRowPosition})`]);
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`row1 (${exprectedRowId}, abc123, ${expectedRowPosition})`]: {
+                    'To Do': [
+                        `task1 (${expectedTaskId}, abc123, ${expectedTaskPosition})`
+                    ]
+                }
             }
-            else if(folderNames.join() === `board,row1 (${exprectedRowId}, abc123, ${expectedRowPosition})`){
-                return Promise.resolve(['To Do']);
-            }
-            return Promise.resolve([]);
         });
-        (mockStorageHandler.listFilesInDirectory as Mock).mockResolvedValue([`task1 (${expectedTaskId}, abc123, ${expectedTaskPosition})`]);
         
         const result = await kanbanBoardStorage.getNewKanbanState();
         
