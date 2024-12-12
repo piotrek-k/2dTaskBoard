@@ -11,6 +11,12 @@ export class KanbanBoardStorage {
     constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardMetadataStorage) {
     }
 
+    public readonly knownColumns = [
+        { id: 1, title: 'To Do' },
+        { id: 2, title: 'In Progress' },
+        { id: 3, title: 'Done' }
+    ];
+
     public async getKanbanState(): Promise<KanbanDataContainer> {
         if (this.cache !== null) {
             return this.cache;
@@ -77,21 +83,18 @@ export class KanbanBoardStorage {
             }
         }
 
+        const orderedRowsInfo = extractedRowsInfo.sort((a, b) => a.position - b.position);
         const orderedExtractedTasksInfo = extractedTasksInfo.sort((a, b) => a.position - b.position);
 
         return {
-            columns: [
-                { id: 1, title: 'To Do' },
-                { id: 2, title: 'In Progress' },
-                { id: 3, title: 'Done' }
-            ],
-            rows: extractedRowsInfo,
+            columns: this.knownColumns,
+            rows: orderedRowsInfo,
             tasks: orderedExtractedTasksInfo
         }
     }
 
     public async saveNewKanbanState(boardStateContainer: KanbanDataContainer) {
-        const deferredSaveOperations : (() => Promise<void>)[] = [];
+        const deferredSaveOperations: (() => Promise<void>)[] = [];
 
         const groupedTasks: { [key: string]: TaskInStorage[] } = {};
         for (const task of boardStateContainer.tasks) {
@@ -141,39 +144,33 @@ export class KanbanBoardStorage {
         }
 
         await this.storageHandler.removeDirectory('board');
-        
+
         await Promise.all(deferredSaveOperations.map(func => func()));
     }
 
     private covertColumnNameToId(columnName: string): number {
-        switch (columnName) {
-            case 'To Do':
-                return 1;
-            case 'In Progress':
-                return 2;
-            case 'Done':
-                return 3;
-            default:
-                return 0;
+        const column = this.knownColumns.find(col => col.title === columnName);
+        if (!column) {
+            throw new Error(`Unknown column name: ${columnName}`);
         }
+        return column.id;
     }
 
     private convertColumnIdToName(columnId: number): string {
-        switch (columnId) {
-            case 1:
-                return 'To Do';
-            case 2:
-                return 'In Progress';
-            case 3:
-                return 'Done';
-            default:
-                return '';
+        const column = this.knownColumns.find(col => col.id === columnId);
+        if (!column) {
+            throw new Error(`Unknown column id: ${columnId}`);
         }
+        return column.title;
     }
 
     private convertRowFileNameToRowElement(fileName: string): RowInStorage {
         const regex = /\((\d+),\s*(.+),\s*(\d+)\)/;
         const match = fileName.match(regex);
+        
+        if (match === null) {
+            throw new Error('Row file name does not match expected pattern');
+        }
 
         return {
             id: match ? parseInt(match[1]) : 0,
@@ -184,6 +181,10 @@ export class KanbanBoardStorage {
     private convertTaskFileNameToTaskElement(fileName: string, knownColumnId: number, knownRowId: number): TaskInStorage {
         const regex = /\((\d+),\s*(.+),\s*(\d+)\)/;
         const match = fileName.match(regex);
+
+        if (match === null) {
+            throw new Error('Task file name does not match expected pattern');
+        }
 
         return {
             id: match ? parseInt(match[1]) : 0,
