@@ -1,9 +1,10 @@
 import { describe, it, expect, Mock } from 'vitest';
-import { KanbanBoardStorage } from '../../src/services/KanbanBoardStorage';
-import { mockFileSystemTree, mockStorageHandler } from '../mocks/FileSystemMock';
+import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
+import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
+import taskStorage from '../../../src/services/CardMetadataStorage'; 
 
-describe('KanbanBoardStorage', () => {
-    const kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler);
+describe('KanbanBoardStorage getNewKanbanState', () => {
+    const kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage);
 
     it('should return undefined when directory is empty', async () => {
         (mockStorageHandler.listDirectoriesInDirectory as Mock).mockResolvedValue([]);
@@ -26,9 +27,9 @@ describe('KanbanBoardStorage', () => {
                 }
             }
         });
-        
+
         const result = await kanbanBoardStorage.getNewKanbanState();
-        
+
         expect(result).toEqual({
             columns: [
                 { id: 1, title: 'To Do' },
@@ -40,3 +41,4 @@ describe('KanbanBoardStorage', () => {
         });
     });
 });
+

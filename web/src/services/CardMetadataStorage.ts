@@ -6,7 +6,18 @@ import { IStorageHandler } from "./IStorageHandler";
 import kanbanBoardStorage from "./KanbanBoardStorage";
 import settingsProvider, { SettingsProvider } from "./SettingsProvider";
 
-class CardMetadataStorage {
+export interface ICardMetadataStorage {
+    getCardContent(cardId: Id): Promise<string>;
+    getRowMetadata(rowId: Id): Promise<RowStoredMetadata | undefined>;
+    getRowMetadataViewModel(rowId: Id): Promise<RowMetadataViewModel | undefined>;
+    getTaskMetadata(taskId: Id): Promise<TaskStoredMetadata | undefined>;
+    getTaskMetadataViewModel(taskId: Id): Promise<TaskMetadataViewModel | undefined>;
+    getMetadataOfUnknownType(cardId: Id): Promise<TaskMetadataViewModel | RowMetadataViewModel | undefined>;
+    saveCardContent(cardId: Id, content: string): Promise<void>;
+    saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void>;
+}
+
+export class CardMetadataStorage implements ICardMetadataStorage {
     readonly cache: { [key: Id]: object } = {};
 
     constructor(private storageHandler: IStorageHandler, private settingsProvider: SettingsProvider) {

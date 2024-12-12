@@ -20,9 +20,9 @@ export const mockStorageHandler: IStorageHandler = {
 // const exampleFileSystemTree = {
 //     'board': {
 //         'row1 (1, abc123, 1)': {
-//             'To Do': [
-//                 'task1 (2, abc123, 1)'
-//             ]
+//             'To Do': {
+//                 '[files]': 'task1 (2, abc123, 1)'
+//             }
 //         }
 //     }
 // };
@@ -53,5 +53,26 @@ export function mockFileSystemTree(mockStorageHandler: IStorageHandler, exampleF
         }
 
         return Promise.resolve(currentElement);
+    });
+
+    (mockStorageHandler.createEmptyFiles as Mock).mockImplementation((fileNames, folderNames) => {
+        let currentElement = exampleFileSystemTree;
+
+        for (const folder of folderNames) {
+            if (!currentElement[folder]) {
+                currentElement[folder] = {};
+            }
+            currentElement = currentElement[folder];
+        }
+
+        if (currentElement['[files]'] === undefined) {
+            currentElement['[files]'] = [];
+        }
+
+        for (const fileName of fileNames) {
+            currentElement['[files]'].push(fileName);
+        }
+
+        return Promise.resolve();
     });
 }

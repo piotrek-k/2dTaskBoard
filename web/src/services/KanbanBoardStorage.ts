@@ -1,5 +1,5 @@
 import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
-import taskStorage from "./CardMetadataStorage";
+import { ICardMetadataStorage } from "./CardMetadataStorage";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
@@ -8,7 +8,7 @@ export class KanbanBoardStorage {
 
     private cache: KanbanDataContainer | null = null;
 
-    constructor(private storageHandler: IStorageHandler) {
+    constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardMetadataStorage) {
     }
 
     public async getKanbanState(): Promise<KanbanDataContainer> {
@@ -104,24 +104,25 @@ export class KanbanBoardStorage {
             groupedTasks[key].push(task);
         }
 
+        let rowCounter = 1;
         for (const taskGroup of Object.values(groupedTasks)) {
             if (taskGroup.length === 0) {
                 throw new Error('Empty task group found');
             }
 
-            const rowMetadata = await taskStorage.getRowMetadata(taskGroup[0].rowId);
+            const rowMetadata = await this.cardMetadataStorage.getRowMetadata(taskGroup[0].rowId);
 
             if (rowMetadata === undefined) {
                 throw new Error('Row metadata not found');
             }
 
-            const rowName = `${this.sanitizeFilename(rowMetadata.title)} (${taskGroup[0].rowId}, ${rowMetadata.syncId})`;
+            const rowName = `${this.sanitizeFilename(rowMetadata.title)} (${taskGroup[0].rowId}, ${rowMetadata.syncId}, ${rowCounter})`;
             const columnName = this.convertColumnIdToName(taskGroup[0].columnId);
             const fileNames: string[] = [];
 
             let counter = 1;
             for (const task of taskGroup) {
-                const taskMetadata = await taskStorage.getTaskMetadata(task.id);
+                const taskMetadata = await this.cardMetadataStorage.getTaskMetadata(task.id);
 
                 if (taskMetadata === undefined) {
                     console.warn('Task metadata not found, skipping');
@@ -135,6 +136,8 @@ export class KanbanBoardStorage {
             deferredSaveOperations.push(async () => {
                 await this.storageHandler.createEmptyFiles(fileNames, ['board', rowName, columnName]);
             })
+
+            rowCounter += 1;
         }
 
         await this.storageHandler.removeDirectory('board');
