@@ -151,4 +151,39 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         expect(fakeFileSystemTree['board']).toEqual(expect.objectContaining({ 'row1 (1, abc123, 1)': expect.anything() }));
         expect(fakeFileSystemTree['board']).toEqual(expect.objectContaining({ 'row2 (2, def456, 2)': expect.anything() }));
     });
+
+    it('should save new positions for tasks based on their location in tasks array', async () => {
+        const boardStateBeingSaved = {
+            columns: knownColumns,
+            rows: [
+                { id: 1, position: 1 }
+            ],
+            tasks: [
+                { id: 2, position: 2, columnId: 1, rowId: 1 },
+                { id: 3, position: 1, columnId: 1, rowId: 1 }
+            ]
+        } as KanbanDataContainer;
+
+        const fakeFileSystemTree = {};
+
+        mockFileSystemTree(mockStorageHandler, fakeFileSystemTree);
+
+        (mockCardMetadataStorage.getRowMetadata as Mock).mockResolvedValue({ id: 1, title: 'row1', type: MetadataType.Row, syncId: 'abc123' } as RowStoredMetadata);
+        (mockCardMetadataStorage.getTaskMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 2) {
+                return Promise.resolve({ id: 2, title: 'task2', type: MetadataType.Task, syncId: 'def456' } as TaskStoredMetadata);
+            } else if (id === 3) {
+                return Promise.resolve({ id: 3, title: 'task3', type: MetadataType.Task, syncId: 'ghi789' } as TaskStoredMetadata);
+            } else {
+                return Promise.resolve(undefined);
+            }
+        });
+
+        await kanbanBoardStorage.saveNewKanbanState(boardStateBeingSaved);
+
+        expect(fakeFileSystemTree['board']['row1 (1, abc123, 1)']['To Do']['[files]']).toEqual([
+            'task2 (2, def456, 1)',
+            'task3 (3, ghi789, 2)'
+        ]);
+    });
 });
