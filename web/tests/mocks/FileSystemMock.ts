@@ -15,6 +15,7 @@ export const mockStorageHandler: IStorageHandler = {
     getLinkToFile: vi.fn(),
     removeDirectory: vi.fn(),
     createEmptyFiles: vi.fn(),
+    createDirectory: vi.fn()
 };
 
 // const exampleFileSystemTree = {
@@ -33,8 +34,6 @@ export function mockFileSystemTree(mockStorageHandler: IStorageHandler, exampleF
         let currentElement = exampleFileSystemTree;
 
         for (const folder of folderNames) {
-            console.log('entering ', folder)
-
             currentElement = currentElement[folder];
         }
 
@@ -71,6 +70,19 @@ export function mockFileSystemTree(mockStorageHandler: IStorageHandler, exampleF
 
         for (const fileName of fileNames) {
             currentElement['[files]'].push(fileName);
+        }
+
+        return Promise.resolve();
+    });
+
+    (mockStorageHandler.createDirectory as Mock).mockImplementation((folderNames) => {
+        let currentElement = exampleFileSystemTree;
+
+        for (const folder of folderNames) {
+            if (!currentElement[folder]) {
+                currentElement[folder] = {};
+            }
+            currentElement = currentElement[folder];
         }
 
         return Promise.resolve();

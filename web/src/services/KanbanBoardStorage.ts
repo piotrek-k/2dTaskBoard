@@ -1,7 +1,17 @@
 import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
-import { ICardMetadataStorage } from "./CardMetadataStorage";
+import taskStorage, { ICardMetadataStorage } from "./CardMetadataStorage";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
+
+type TreeRowContainer = {
+    id: number;
+    columns: { [key: number]: TreeColumnContianer };
+}
+
+type TreeColumnContianer = {
+    id: number;
+    tasks: TaskInStorage[];
+};
 
 export class KanbanBoardStorage {
     private fileName = 'data.json';
@@ -11,7 +21,7 @@ export class KanbanBoardStorage {
     constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardMetadataStorage) {
     }
 
-    public readonly knownColumns = [
+    public static readonly knownColumns = [
         { id: 1, title: 'To Do' },
         { id: 2, title: 'In Progress' },
         { id: 3, title: 'Done' }
@@ -87,58 +97,83 @@ export class KanbanBoardStorage {
         const orderedExtractedTasksInfo = extractedTasksInfo.sort((a, b) => a.position - b.position);
 
         return {
-            columns: this.knownColumns,
+            columns: KanbanBoardStorage.knownColumns,
             rows: orderedRowsInfo,
             tasks: orderedExtractedTasksInfo
         }
     }
 
+
+
     public async saveNewKanbanState(boardStateContainer: KanbanDataContainer) {
         const deferredSaveOperations: (() => Promise<void>)[] = [];
 
-        const groupedTasks: { [key: string]: TaskInStorage[] } = {};
-        for (const task of boardStateContainer.tasks) {
-            const key = `(${task.rowId}, ${task.columnId})`;
+        const rowsAsTree: { [key: number]: TreeRowContainer } = {};
 
-            if (!groupedTasks[key]) {
-                groupedTasks[key] = [];
+        for (const row of boardStateContainer.rows) {
+            const columnAsTree: { [key: number]: TreeColumnContianer } = [];
+
+            for (const column of KanbanBoardStorage.knownColumns) {
+                columnAsTree[column.id] = {
+                    id: column.id,
+                    tasks: []
+                };
             }
 
-            groupedTasks[key].push(task);
+            if (!rowsAsTree[row.id]) {
+                rowsAsTree[row.id] = {
+                    id: row.id,
+                    columns: columnAsTree
+                };
+            }
+        }
+
+        for (const task of boardStateContainer.tasks) {
+
+            if (!rowsAsTree[task.rowId].columns[task.columnId]) {
+                throw Error('Task without row or column found');
+            }
+
+            rowsAsTree[task.rowId].columns[task.columnId].tasks.push(task);
         }
 
         let rowCounter = 1;
-        for (const taskGroup of Object.values(groupedTasks)) {
-            if (taskGroup.length === 0) {
-                throw new Error('Empty task group found');
-            }
-
-            const rowMetadata = await this.cardMetadataStorage.getRowMetadata(taskGroup[0].rowId);
+        for (const row of Object.values(rowsAsTree)) {
+            const rowMetadata = await this.cardMetadataStorage.getRowMetadata(row.id);
 
             if (rowMetadata === undefined) {
                 throw new Error('Row metadata not found');
             }
 
-            const rowName = `${this.sanitizeFilename(rowMetadata.title)} (${taskGroup[0].rowId}, ${rowMetadata.syncId}, ${rowCounter})`;
-            const columnName = this.convertColumnIdToName(taskGroup[0].columnId);
-            const fileNames: string[] = [];
+            for (const column of Object.values(row.columns)) {
 
-            let counter = 1;
-            for (const task of taskGroup) {
-                const taskMetadata = await this.cardMetadataStorage.getTaskMetadata(task.id);
+                const rowName = `${this.sanitizeFilename(rowMetadata.title)} (${row.id}, ${rowMetadata.syncId}, ${rowCounter})`;
+                const columnName = this.convertColumnIdToName(column.id);
 
-                if (taskMetadata === undefined) {
-                    console.warn('Task metadata not found, skipping');
+                if (column.tasks.length === 0) {
+                    await this.storageHandler.createDirectory(['board', rowName, columnName]);
+
                     continue;
                 }
 
-                fileNames.push(`${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${counter})`);
-                counter += 1;
-            }
+                let taskCounter = 1;
+                for (const task of column.tasks) {
 
-            deferredSaveOperations.push(async () => {
-                await this.storageHandler.createEmptyFiles(fileNames, ['board', rowName, columnName]);
-            })
+                    const taskMetadata = await this.cardMetadataStorage.getTaskMetadata(task.id);
+
+                    if (taskMetadata === undefined) {
+                        throw new Error('Task metadata not found');
+                    }
+
+                    const taskName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter})`;
+
+                    deferredSaveOperations.push(async () => {
+                        await this.storageHandler.createEmptyFiles([taskName], ['board', rowName, columnName]);
+                    });
+
+                    taskCounter += 1;
+                }
+            }
 
             rowCounter += 1;
         }
@@ -149,7 +184,7 @@ export class KanbanBoardStorage {
     }
 
     private covertColumnNameToId(columnName: string): number {
-        const column = this.knownColumns.find(col => col.title === columnName);
+        const column = KanbanBoardStorage.knownColumns.find(col => col.title === columnName);
         if (!column) {
             throw new Error(`Unknown column name: ${columnName}`);
         }
@@ -157,7 +192,7 @@ export class KanbanBoardStorage {
     }
 
     private convertColumnIdToName(columnId: number): string {
-        const column = this.knownColumns.find(col => col.id === columnId);
+        const column = KanbanBoardStorage.knownColumns.find(col => col.id === columnId);
         if (!column) {
             throw new Error(`Unknown column id: ${columnId}`);
         }
@@ -167,7 +202,7 @@ export class KanbanBoardStorage {
     private convertRowFileNameToRowElement(fileName: string): RowInStorage {
         const regex = /\((\d+),\s*(.+),\s*(\d+)\)/;
         const match = fileName.match(regex);
-        
+
         if (match === null) {
             throw new Error('Row file name does not match expected pattern');
         }
@@ -227,6 +262,6 @@ export class KanbanBoardStorage {
     }
 }
 
-const kanbanBoardStorage = new KanbanBoardStorage(fileSystemHandler);
+const kanbanBoardStorage = new KanbanBoardStorage(fileSystemHandler, taskStorage);
 
 export default kanbanBoardStorage;

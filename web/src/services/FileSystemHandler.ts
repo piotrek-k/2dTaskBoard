@@ -305,6 +305,14 @@ class FileSystemHandler implements IStorageHandler {
         return targetDir;
     }
 
+    public async createDirectory(folderNames: string[]): Promise<void> {
+        if(this.settings.debugModeEnabled){
+            console.log('Creating directory: ', folderNames);
+        }
+
+        await this.followDirectories(folderNames);
+    }
+
     public async getLinkToFile(fileName: string, folderNames: string[]): Promise<string> {
         const directory = await this.followDirectories(folderNames);
 
