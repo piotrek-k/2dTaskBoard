@@ -3,9 +3,9 @@ import { Id } from '../../types';
 import { useParams } from 'react-router-dom';
 import TaskDetails from '../../components/cardDetails/TaskDetails';
 import RowDetails from '../../components/cardDetails/RowDetails';
-import taskStorage from '../../services/CardMetadataStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { MetadataType, RowMetadataViewModel, TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
+import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
 
 
 function CardDetailsStandalone() {
@@ -24,7 +24,7 @@ function CardDetailsStandalone() {
                 return;
             }
 
-            const metadataViewModel = await taskStorage.getMetadataOfUnknownType(cardId);
+            const metadataViewModel = await cardMetadataViewModelsBuilder.getMetadataOfUnknownType(cardId);
 
             if(metadataViewModel?.type == MetadataType.Task) {
                 const taskViewModel = metadataViewModel as TaskMetadataViewModel;
