@@ -151,7 +151,9 @@ export class KanbanBoardStorage {
                 const columnName = this.convertColumnIdToName(column.id);
 
                 if (column.tasks.length === 0) {
-                    await this.storageHandler.createDirectory(['board', rowName, columnName]);
+                    deferredSaveOperations.push(async () => {
+                        await this.storageHandler.createDirectory(['board', rowName, columnName]);
+                    });
 
                     continue;
                 }

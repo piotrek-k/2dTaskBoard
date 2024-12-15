@@ -2,20 +2,20 @@ import { vi, Mock } from 'vitest';
 import { IStorageHandler } from '../../src/services/IStorageHandler';
 
 export const mockStorageHandler: IStorageHandler = {
-    storageReady: vi.fn(),
-    getReadinessWatcher: vi.fn(),
-    getContent: vi.fn(),
-    getContentFromDirectory: vi.fn(),
-    saveJsonContentToDirectory: vi.fn(),
-    saveTextContentToDirectory: vi.fn(),
-    uploadFile: vi.fn(),
-    deleteFile: vi.fn(),
-    listFilesInDirectory: vi.fn(),
-    listDirectoriesInDirectory: vi.fn(),
-    getLinkToFile: vi.fn(),
-    removeDirectory: vi.fn(),
-    createEmptyFiles: vi.fn(),
-    createDirectory: vi.fn()
+    storageReady: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    getReadinessWatcher: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    getContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    getContentFromDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    saveJsonContentToDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    saveTextContentToDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    uploadFile: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    deleteFile: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    listFilesInDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    listDirectoriesInDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    getLinkToFile: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    removeDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    createEmptyFiles: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    createDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
 };
 
 // const exampleFileSystemTree = {
@@ -84,6 +84,12 @@ export function mockFileSystemTree(mockStorageHandler: IStorageHandler, exampleF
             }
             currentElement = currentElement[folder];
         }
+
+        return Promise.resolve();
+    });
+
+    (mockStorageHandler.removeDirectory as Mock).mockImplementation((folderName) => {
+        delete exampleFileSystemTree[folderName];
 
         return Promise.resolve();
     });

@@ -13,14 +13,13 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
 
     beforeEach(() => {
         mockCardMetadataStorage = {
-            getCardContent: vi.fn().mockResolvedValue(''),
+            getCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+            getCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             getRowMetadata: vi.fn().mockResolvedValue({ id: 1, title: 'row1', type: MetadataType.Row, syncId: 'abc123' } as RowStoredMetadata),
-            getRowMetadataViewModel: vi.fn().mockResolvedValue({ id: 1, title: 'Row 1', type: MetadataType.Row, syncId: 'abc123' } as RowMetadataViewModel),
             getTaskMetadata: vi.fn().mockResolvedValue({ id: 1, title: 'task1', type: MetadataType.Task, syncId: 'abc123' } as TaskStoredMetadata),
-            getTaskMetadataViewModel: vi.fn().mockResolvedValue({ id: 2, title: 'Task 2', columnId: 1, rowId: 1, type: MetadataType.Task, syncId: 'abc123' } as TaskMetadataViewModel),
-            getMetadataOfUnknownType: vi.fn().mockResolvedValue(undefined),
-            saveCardContent: vi.fn().mockResolvedValue(undefined),
-            saveCardMetadata: vi.fn().mockResolvedValue(undefined)
+            saveCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+            saveCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+            createNewRowMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
         } as ICardMetadataStorage;
 
         kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, mockCardMetadataStorage);
