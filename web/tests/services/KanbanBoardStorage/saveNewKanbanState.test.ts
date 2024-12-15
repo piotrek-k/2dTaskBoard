@@ -162,6 +162,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 { id: 1, position: 1 }
             ],
             tasks: [
+                { id: 4, position: 5, columnId: 1, rowId: 1 },
                 { id: 2, position: 2, columnId: 1, rowId: 1 },
                 { id: 3, position: 1, columnId: 1, rowId: 1 }
             ]
@@ -177,6 +178,8 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 return Promise.resolve({ id: 2, title: 'task2', type: MetadataType.Task, syncId: 'def456' } as TaskStoredMetadata);
             } else if (id === 3) {
                 return Promise.resolve({ id: 3, title: 'task3', type: MetadataType.Task, syncId: 'ghi789' } as TaskStoredMetadata);
+            } else if (id === 4) {
+                return Promise.resolve({ id: 4, title: 'task4', type: MetadataType.Task, syncId: 'ghi789' } as TaskStoredMetadata);
             } else {
                 return Promise.resolve(undefined);
             }
@@ -185,8 +188,9 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         await kanbanBoardStorage.saveNewKanbanState(boardStateBeingSaved);
 
         expect(fakeFileSystemTree['board']['row1 (1, abc123, 1)']['To Do']['[files]']).toEqual([
-            'task2 (2, def456, 1)',
-            'task3 (3, ghi789, 2)'
+            'task4 (4, ghi789, 1)',
+            'task2 (2, def456, 2)',
+            'task3 (3, ghi789, 3)'
         ]);
     });
 });
