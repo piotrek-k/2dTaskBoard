@@ -111,8 +111,8 @@ function KanbanBoard() {
         //     }
         // }
 
-        setTasks([...dataContainer.tasks] ?? []);
-        setRows([...dataContainer.rows] ?? []);
+        setTasks([...dataContainer.tasks]);
+        setRows([...dataContainer.rows]);
         setColumns(dataContainer.columns ?? []);
 
         setDataLoaded(true);
