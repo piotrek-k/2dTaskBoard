@@ -5,9 +5,9 @@ import { useContext, useEffect, useState } from 'react';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import RowDetails from '../cardDetails/RowDetails';
 import { useHotkeys } from 'react-hotkeys-hook';
-import taskStorage from '../../services/CardMetadataStorage';
 import { RowMetadataViewModel } from '../../dataTypes/CardMetadata';
 import { ArchivedStoredRow, ArchivedRowViewModel } from '../../dataTypes/ArchiveStructures';
+import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
 
 interface Props {
     archivedRow: ArchivedStoredRow;
@@ -22,7 +22,7 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
 
     useEffect(() => {
         const fetchRow = async () => {
-            const row = await taskStorage.getRowMetadataViewModel(archivedRow.id);
+            const row = await cardMetadataViewModelsBuilder.getRowMetadataViewModel(archivedRow.id);
 
             if(!row){
                 throw new Error("Row not found");
@@ -44,7 +44,7 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
             return;
         }
 
-        const row = await taskStorage.getRowMetadataViewModel(rowId) as RowMetadataViewModel;
+        const row = await cardMetadataViewModelsBuilder.getRowMetadataViewModel(rowId) as RowMetadataViewModel;
 
         setModalContent(<RowDetails row={row} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
         setTimeout(() => setModalOpen(true), 0);

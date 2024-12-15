@@ -1,11 +1,15 @@
 import { openDB } from "idb";
 import { IStorageHandler } from "./IStorageHandler";
 import { EventWatcher } from "./EventWatcher";
+import settingsProvider, { SettingsProvider } from "./SettingsProvider";
 
 class FileSystemHandler implements IStorageHandler {
     directoryHandle: FileSystemDirectoryHandle | undefined;
 
     readinessWatcher: EventWatcher<boolean> = new EventWatcher<boolean>();
+    
+    constructor(private settings: SettingsProvider) {
+    }
 
     private readonly reservedFileNames: string[] = ['content.md'];
 
@@ -129,6 +133,10 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string> {
+        if (this.settings.debugModeEnabled) {
+            console.log("Getting content from: ", dataContainerName, folderNames);
+        }
+
         if (this.directoryHandle == null) {
             this.directoryHandle = await this.restoreHandle();
         }
@@ -152,6 +160,10 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]) {
+        if (this.settings.debugModeEnabled) {
+            console.log("Saving content to ", dataContainerName, folderNames);
+        }
+
         if (this.directoryHandle == null) {
             this.directoryHandle = await this.restoreHandle();
         }
@@ -227,21 +239,56 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async listFilesInDirectory(folderNames: string[]): Promise<string[]> {
+        return this.listElementsFromDirectory(folderNames, 'file');
+    }
+
+    public async listDirectoriesInDirectory(folderNames: string[]): Promise<string[]> {
+        return this.listElementsFromDirectory(folderNames, 'directory');
+    }
+
+    private async listElementsFromDirectory(folderNames: string[], dataKind: string): Promise<string[]> {
+        if (this.settings.debugModeEnabled) {
+            console.log("Listing directory elements ", folderNames, dataKind);
+        }
+
+        if (this.directoryHandle == null) {
+            this.directoryHandle = await this.restoreHandle();
+        }
+
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }
 
         const directory = await this.followDirectories(folderNames);
 
-        const files: File[] = [];
+        const files: string[] = [];
         for await (const entry of (directory as any).values()) {
-            if (entry.kind === 'file' && !this.reservedFileNames.includes(entry.name) && !entry.name.endsWith('.crswap')) {
-                const file = await entry.getFile();
-                files.push(file);
+            if (entry.kind === dataKind && !this.reservedFileNames.includes(entry.name) && !entry.name.endsWith('.crswap')) {
+                files.push(entry.name);
             }
         }
 
-        return files.map(f => f.name);
+        return files;
+    }
+
+    public async removeDirectory(directoryName: string): Promise<void> {
+        if(this.settings.debugModeEnabled){
+            console.log('Removed directory: ', directoryName);
+        }
+
+        await this.directoryHandle?.removeEntry(directoryName, { recursive: true });
+    }
+
+    public async createEmptyFiles(fileNames: string[], folderNames: string[]): Promise<void> {
+        if(this.settings.debugModeEnabled){
+            console.log('Creating files: ', fileNames);
+        }
+
+        const directory = await this.followDirectories(folderNames);
+
+        for (const fileName of fileNames) {
+            await directory.getFileHandle(fileName, { create: true });
+        }
     }
 
     private async followDirectories(folderNames: string[]): Promise<FileSystemDirectoryHandle> {
@@ -256,6 +303,14 @@ class FileSystemHandler implements IStorageHandler {
         }
 
         return targetDir;
+    }
+
+    public async createDirectory(folderNames: string[]): Promise<void> {
+        if(this.settings.debugModeEnabled){
+            console.log('Creating directory: ', folderNames);
+        }
+
+        await this.followDirectories(folderNames);
     }
 
     public async getLinkToFile(fileName: string, folderNames: string[]): Promise<string> {
@@ -273,8 +328,9 @@ class FileSystemHandler implements IStorageHandler {
         await directory.removeEntry(fileName);
     }
 
+
 }
 
-const fileSystemHandler = new FileSystemHandler();
+const fileSystemHandler = new FileSystemHandler(settingsProvider);
 
 export default fileSystemHandler;

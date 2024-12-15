@@ -31,10 +31,10 @@ jobs:
           cd web
           npm install
 
-      # - name: Run tests (web)
-      #   run: |
-      #     cd web
-      #     npm test
+      - name: Run tests (web)
+        run: |
+          cd web
+          npm run test
 
       - name: Build app (web)
         run: |

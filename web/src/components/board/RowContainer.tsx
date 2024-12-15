@@ -13,7 +13,7 @@ import RowDetails from '../cardDetails/RowDetails';
 import { FocusRequest } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { RowMetadataViewModel } from '../../dataTypes/CardMetadata';
-import taskStorage from '../../services/CardMetadataStorage';
+import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
 
 interface Props {
     row: RowInStorage;
@@ -36,7 +36,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
 
     useEffect(() => {
         const fetchRowMetadata = async () => {
-            const rowMetadata = await taskStorage.getRowMetadataViewModel(row.id) as RowMetadataViewModel;
+            const rowMetadata = await cardMetadataViewModelsBuilder.getRowMetadataViewModel(row.id) as RowMetadataViewModel;
             
             setRowViewModel({
                 id: row.id,
@@ -51,7 +51,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
     const handleClickOnRowDetails = useCallback(async (rowId : Id) => {
-        const metadataRow = await taskStorage.getRowMetadataViewModel(rowId) as RowMetadataViewModel;
+        const metadataRow = await cardMetadataViewModelsBuilder.getRowMetadataViewModel(rowId) as RowMetadataViewModel;
 
         setModalContent(<RowDetails
             requestSavingDataToStorage={requestSavingDataToStorage}

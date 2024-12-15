@@ -6,7 +6,7 @@ import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import TaskDetails from '../cardDetails/TaskDetails';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
-import taskStorage from '../../services/CardMetadataStorage';
+import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
 
 interface Props {
     task: TaskInStorage;
@@ -24,7 +24,7 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
 
     useEffect(() => {
         const fetchTaskMetadata = async () => {
-            const taskMetadata = await taskStorage.getTaskMetadataViewModel(task.id) as TaskMetadataViewModel;
+            const taskMetadata = await cardMetadataViewModelsBuilder.getTaskMetadataViewModel(task.id) as TaskMetadataViewModel;
 
             setTaskViewModel(taskMetadata);
         };
@@ -37,7 +37,7 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
     const setHotkeyMoveLeftRef = useHotkeys('n', () => moveTaskToNextColumn(task, -1));
 
     const handleClickOnTask = useCallback(async (taskId: Id) => {
-        const taskMetadata = await taskStorage.getTaskMetadataViewModel(taskId) as TaskMetadataViewModel;
+        const taskMetadata = await cardMetadataViewModelsBuilder.getTaskMetadataViewModel(taskId) as TaskMetadataViewModel;
 
         setModalContent(<TaskDetails
             task={taskMetadata}

@@ -3,8 +3,8 @@ import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { Id } from '../../types';
 import TaskDetails from '../cardDetails/TaskDetails';
 import { useHotkeys } from 'react-hotkeys-hook';
-import taskStorage from '../../services/CardMetadataStorage';
 import { TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
+import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
 
 interface Props {
     taskId: Id;
@@ -18,7 +18,7 @@ function TaskArchiveCard({taskId} : Props) {
 
     useEffect(() => {
         const fetchTask = async () => {
-            const task = await taskStorage.getTaskMetadataViewModel(taskId);
+            const task = await cardMetadataViewModelsBuilder.getTaskMetadataViewModel(taskId);
 
             setTask(task);
         };
