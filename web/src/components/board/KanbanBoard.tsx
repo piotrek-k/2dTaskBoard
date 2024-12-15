@@ -20,6 +20,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import { generateSyncId } from '../../tools/syncTools';
+import MenuIcon from '../../icons/MenuIcon';
 
 function KanbanBoard() {
 
@@ -38,6 +39,8 @@ function KanbanBoard() {
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
     const { modalOpen } = useContext(ModalContext) as ModalContextProps;
+
+    const [navMenuOpened, setNavMenuOpened] = useState(false);
 
     const storageIsReady = useStorageHandlerStatus();
 
@@ -152,7 +155,7 @@ function KanbanBoard() {
             <nav className="bg-gray-800 py-2 px-4">
                 <div className="container mx-auto flex justify-between items-center">
                     <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
-                    <div className="flex space-x-3">
+                    <div className="hidden md:flex space-x-3">
                         <button
                             onClick={() => { switchArchiveView() }}
                             className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
@@ -175,7 +178,35 @@ function KanbanBoard() {
                             Load Different Directory
                         </button>
                     </div>
+                    <div className="md:hidden" onClick={() => setNavMenuOpened(!navMenuOpened)}>
+                        <MenuIcon />
+                    </div>
                 </div>
+                {navMenuOpened ? <div className="flex flex-col my-5">
+                    <button
+                        onClick={() => { switchArchiveView() }}
+                        className="flex items-center bg-gray-700 text-white px-3 py-1 text-sm"
+                    >
+                        <ArchiveIcon />
+                        <span className="p-2">Show archive</span>
+                    </button>
+                    <button
+                        onClick={() => createNewRow()}
+                        className="flex items-center bg-gray-700 text-white px-3 py-1 text-sm"
+                    >
+                        <PlusIcon />
+                        
+                        <span className="p-2">Add Row</span>
+                    </button>
+                    <button
+                        onClick={() => loadFromDifferentSource()}
+                        className="flex items-center bg-gray-700 text-white px-3 py-1 text-sm"
+                    >
+                        <FolderIcon />
+                        
+                        <span className="p-2">Load Different Directory</span>
+                    </button>
+                </div> : <></>}
             </nav>
 
             <div className="flex-grow overflow-auto scrollbar-thin">

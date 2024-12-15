@@ -12,7 +12,9 @@ function ColumnHeaderContainer(props: Props) {
             w-full 
             items-center
             overflow-x-auto
-            overflow-y-hidden'>
+            overflow-y-hidden
+            hidden
+            md:block'>
             <div className='flex flex-row w-full'>
                 <div className='w-[200px] flex-none bg-mainBackgroundColor'
                 >

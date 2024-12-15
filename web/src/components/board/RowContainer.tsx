@@ -101,17 +101,17 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
             "
             onFocus={() => handleRowFocusChange(row.id)}
         >
-            <div className='flex w-full'>
-                <div className='w-[200px] flex-none bg-rowTitleBackgroundColor
-                flex justify-center
+            <div className='flex flex-col w-full md:flex-row'>
+                <div className='md:w-[200px] flex-none bg-rowTitleBackgroundColor
+                flex justify-center w-full
                 '>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col w-full md:w-auto">
                         <div className="
                                 bg-mainBackgroundColor
-                                w-[150px] 
+                                md:w-[150px] 
                                 p-2.5
                                 m-[12px]
-                                h-[100px]
+                                md:h-[100px]
                                 "
                             ref={elementRef}
                             onClick={() => {
@@ -134,7 +134,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
                 </div>
 
                 <SortableContext items={columnsId}>
-                    <div className='flex grow w-full'>
+                    <div className='flex flex-col grow w-full md:flex-row'>
                         {columns.map((col) => (
                             <ColumnContainer
                                 key={col.id}
