@@ -18,7 +18,7 @@ import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
-import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
+import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import { generateSyncId } from '../../tools/syncTools';
 
 function KanbanBoard() {
@@ -111,8 +111,8 @@ function KanbanBoard() {
         //     }
         // }
 
-        setTasks(dataContainer.tasks ?? []);
-        setRows(dataContainer.rows ?? []);
+        setTasks([...dataContainer.tasks] ?? []);
+        setRows([...dataContainer.rows] ?? []);
         setColumns(dataContainer.columns ?? []);
 
         setDataLoaded(true);
@@ -387,16 +387,11 @@ function KanbanBoard() {
             position: getHighestPositionForRow()
         };
 
-        const rowMetadata: RowStoredMetadata = {
-            id: rowToAdd.id,
-            title: `Row ${rows.length + 1}`,
-            type: MetadataType.Row,
-            syncId: generateSyncId()
-        }
+        await taskStorage.createNewRowMetadata(rowToAdd.id, `Row ${rowToAdd.id}`);
 
-        taskStorage.saveCardMetadata(rowMetadata);
+        await kanbanBoardStorage.addRowToBoard(rowToAdd, []);
 
-        setRows([...rows, rowToAdd]);
+        await loadBoard();
     }
 
     async function generateId(): Promise<number> {

@@ -1,4 +1,4 @@
-import { CardStoredMetadata, TaskStoredMetadata, RowStoredMetadata } from "../dataTypes/CardMetadata";
+import { CardStoredMetadata, TaskStoredMetadata, RowStoredMetadata, MetadataType } from "../dataTypes/CardMetadata";
 import { generateSyncId } from "../tools/syncTools";
 import { Id } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
@@ -12,6 +12,7 @@ export interface ICardMetadataStorage {
     getTaskMetadata(taskId: Id): Promise<TaskStoredMetadata | undefined>;
     saveCardContent(cardId: Id, content: string): Promise<void>;
     saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void>;
+    createNewRowMetadata(id: Id, title: string): Promise<void>;
 }
 
 export class CardMetadataStorage implements ICardMetadataStorage {
@@ -71,6 +72,17 @@ export class CardMetadataStorage implements ICardMetadataStorage {
         delete this.cache[card.id];
 
         await this.storageHandler.saveJsonContentToDirectory<T>('metadata.md', card, ['tasks', `${card.id}`]);
+    }
+
+    public async createNewRowMetadata(id: Id, title: string){
+        const rowMetadata: RowStoredMetadata = {
+            id: id,
+            title: title,
+            type: MetadataType.Row,
+            syncId: generateSyncId()
+        }
+
+        await taskStorage.saveCardMetadata(rowMetadata);
     }
 }
 

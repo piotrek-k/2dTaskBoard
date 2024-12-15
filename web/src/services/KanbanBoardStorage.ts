@@ -240,6 +240,8 @@ export class KanbanBoardStorage {
         await this.storageHandler.saveJsonContentToDirectory<KanbanDataContainer>(this.fileName, dataContainer, []);
 
         await this.saveNewKanbanState(boardStateContainer);
+
+        this.cache = boardStateContainer;
     }
 
     public async addRowToBoard(row: RowInStorage, tasks: TaskInStorage[]) {
