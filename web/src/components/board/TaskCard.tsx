@@ -92,13 +92,13 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
             {...attributes}
             {...listeners}
             onClick={() => handleClickOnTask(task.id)}
-            className={`bg-mainBackgroundColor p-2.5 h-[100px] min-h-[100px]
+            className={`bg-mainBackgroundColor p-2.5 md:h-[100px] md:min-h-[100px]
         items-center flex text-left hover-ring-2 hover:ring-inset
-        hover:ring-rose-500 relative task m-1 w-[150px] touch-none`}
+        hover:ring-rose-500 relative task m-1 w-full md:w-[150px] touch-none`}
             tabIndex={0}
         >
             <p
-                className='my-auto h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap touch-none'
+                className='my-auto md:h-[90%] w-full overflow-y-auto overflow-x-hidden whitespace-pre-wrap touch-none'
                 tabIndex={-1}
             >
                 {taskViewModel?.title}

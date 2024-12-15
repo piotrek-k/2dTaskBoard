@@ -76,14 +76,18 @@ function ColumnContainer(props: Props) {
             style={style}
             className="
             bg-columnBackgroundColor
-            min-h-[200px]
+            md:min-h-[200px]
             flex
             flex-col
+            md:flex-row
             grow
             basis-0
             min-w-0
             "
         >
+            <div className="md:hidden p-2">
+                {column.title}
+            </div>
             {/* Tasks container */}
             <div className="p-2 overflow-x-hidden overflow-y-hidden flex flex-row flex-wrap">
                 <SortableContext items={tasksIds}>
