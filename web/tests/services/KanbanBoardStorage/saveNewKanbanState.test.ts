@@ -124,6 +124,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         const boardStateBeingSaved = {
             columns: knownColumns,
             rows: [
+                { id: 3, position: 5 },
                 { id: 1, position: 2 },
                 { id: 2, position: 1 }
             ],
@@ -139,6 +140,8 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 return Promise.resolve({ id: 1, title: 'row1', type: MetadataType.Row, syncId: 'abc123' } as RowStoredMetadata);
             } else if (id === 2) {
                 return Promise.resolve({ id: 2, title: 'row2', type: MetadataType.Row, syncId: 'def456' } as RowStoredMetadata);
+            } else if (id === 3) {
+                return Promise.resolve({ id: 3, title: 'row3', type: MetadataType.Row, syncId: 'ghi789' } as RowStoredMetadata);
             } else {
                 return Promise.resolve(undefined);
             }
@@ -146,9 +149,10 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
 
         await kanbanBoardStorage.saveNewKanbanState(boardStateBeingSaved);
 
-        expect(Object.values(fakeFileSystemTree['board'])).toHaveLength(2);
-        expect(fakeFileSystemTree['board']).toEqual(expect.objectContaining({ 'row1 (1, abc123, 1)': expect.anything() }));
-        expect(fakeFileSystemTree['board']).toEqual(expect.objectContaining({ 'row2 (2, def456, 2)': expect.anything() }));
+        expect(Object.values(fakeFileSystemTree['board'])).toHaveLength(3);
+        expect(fakeFileSystemTree['board']).toEqual(expect.objectContaining({ 'row3 (3, ghi789, 1)': expect.anything() }));
+        expect(fakeFileSystemTree['board']).toEqual(expect.objectContaining({ 'row1 (1, abc123, 2)': expect.anything() }));
+        expect(fakeFileSystemTree['board']).toEqual(expect.objectContaining({ 'row2 (2, def456, 3)': expect.anything() }));
     });
 
     it('should save new positions for tasks based on their location in tasks array', async () => {

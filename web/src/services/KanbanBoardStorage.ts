@@ -108,7 +108,7 @@ export class KanbanBoardStorage {
     public async saveNewKanbanState(boardStateContainer: KanbanDataContainer) {
         const deferredSaveOperations: (() => Promise<void>)[] = [];
 
-        const rowsAsTree: { [key: number]: TreeRowContainer } = {};
+        const rowsAsTree = new Map<number, TreeRowContainer>();
 
         for (const row of boardStateContainer.rows) {
             const columnAsTree: { [key: number]: TreeColumnContianer } = [];
@@ -120,25 +120,25 @@ export class KanbanBoardStorage {
                 };
             }
 
-            if (!rowsAsTree[row.id]) {
-                rowsAsTree[row.id] = {
+            if (!rowsAsTree.has(row.id)) {
+                rowsAsTree.set(row.id, {
                     id: row.id,
                     columns: columnAsTree
-                };
+                });
             }
         }
 
         for (const task of boardStateContainer.tasks) {
 
-            if (!rowsAsTree[task.rowId].columns[task.columnId]) {
+            if (!rowsAsTree.get(task.rowId)?.columns[task.columnId]) {
                 throw Error('Task without row or column found');
             }
 
-            rowsAsTree[task.rowId].columns[task.columnId].tasks.push(task);
+            rowsAsTree.get(task.rowId)?.columns[task.columnId].tasks.push(task);
         }
 
         let rowCounter = 1;
-        for (const row of Object.values(rowsAsTree)) {
+        for (const [, row] of rowsAsTree) {
             const rowMetadata = await this.cardMetadataStorage.getRowMetadata(row.id);
 
             if (rowMetadata === undefined) {
