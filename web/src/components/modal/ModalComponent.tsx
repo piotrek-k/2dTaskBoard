@@ -24,7 +24,7 @@ function ModalComponent() {
       overlayClassName="fixed inset-0 bg-black bg-opacity-50"
     >
       <div className="relative bg-gray-800 dark:bg-gray-900 text-white rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-        <FocusLock>
+        <FocusLock lockProps={{ tabIndex: -1 }}>
           <div className="sticky top-0 z-10 bg-gray-950 p-2 flex justify-end">
             <button
               onClick={handleCloseModal}
