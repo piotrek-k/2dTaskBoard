@@ -22,6 +22,7 @@ function LinkRenderer({ taskId, props }: Props) {
 
     return (
         <a
+            {...props}
             href={customSrc}
             target="_blank"
             rel="noopener noreferrer"

@@ -151,8 +151,11 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
                 img: (props: any) => <CustomImageRenderer props={props} taskId={card.id} />,
                 a: (props: any) => <LinkRenderer props={props} taskId={card.id} />
             }}
-            style={{ whiteSpace: 'pre-wrap', backgroundColor: 'inherit' }}
-            className='m-3'
+            style={{
+                maxWidth: '100%',
+                padding: '20px',
+            }}
+            className='m-3 prose prose-invert lg:prose-xl'
         />
     ), [taskContent, card.id]);
 
@@ -172,7 +175,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
     }, [useEditMode]);
 
     useEffect(() => {
-        if(useEditMode && cardTitleRef?.current != null){
+        if (useEditMode && cardTitleRef?.current != null) {
             cardTitleRef?.current.focus();
         }
     }, [useEditMode]);
