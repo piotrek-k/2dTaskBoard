@@ -1,39 +1,39 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, protocol, net  } = require("electron");
 const path = require("path");
-const express = require("express");
-const cors = require("cors");
-const localServerApp = express();
-const PORT = 8088;
-const startLocalServer = (done) => {
-  localServerApp.use(express.json({ limit: "100mb" }));
-  localServerApp.use(cors());
-  localServerApp.use(express.static(__dirname + '/dist'));
-  localServerApp.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  });
-  localServerApp.listen(PORT, async () => {
-    console.log("Server Started on PORT ", PORT);
-    done();
-  });
-};
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1000,
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-    },
+    height: 600
   });
 
-  mainWindow.loadURL("http://localhost:" + PORT);
+  mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
-  startLocalServer(createWindow);
+  protocol.registerFileProtocol('file', (request, cb) => {
+    const url = request.url.replace('file:///', '')
+    const decodedUrl = decodeURI(url)
+    try {
+      return cb(decodedUrl)
+    } catch (error) {
+      console.error('ERROR: registerLocalResourceProtocol: Could not get file path:', error)
+    }
+  });
+
+  // protocol.handle('file', (request) => {
+  //   // const url = request.url.substr(7); // Remove 'file://' from the start of the URL
+  //   // return { path: path.normalize(`${__dirname}/dist/${url}`) };
+
+  //   const url = request.url.replace('file:///', '')
+  //   const decodedUrl = decodeURI(url)
+
+  //   return { path: decodedUrl };
+  // });
+
+  createWindow();
 
   app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

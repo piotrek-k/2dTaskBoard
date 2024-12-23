@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "rm -rf dist && npm run build --prefix ../web && cp -r ../web/dist . && electron-builder"
+    "build": "rm -rf dist && npm --prefix ../web install && npm run build --prefix ../web && cp -r ../web/dist . && electron-builder"
   },
   "author": "Piotr Kozerski <piotr.kozerski@pm.me>",
   "license": "ISC",
