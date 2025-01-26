@@ -110,6 +110,10 @@ export class KanbanBoardStorage {
     public async saveNewKanbanState(boardStateContainer: KanbanDataContainer) {
         const changeTracker = new FileSystemChangeTracker();
 
+        const directoriesRepresentingRows = await this.storageHandler.loadEntireTree(['board']);
+
+        changeTracker.loadExistingDataFromFileSystemTree(directoriesRepresentingRows, ['board']);
+
         // const deferredSaveOperations: (() => Promise<void>)[] = [];
 
         const rowsAsTree = new Map<number, TreeRowContainer>();

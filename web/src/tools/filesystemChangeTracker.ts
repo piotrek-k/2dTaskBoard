@@ -1,3 +1,5 @@
+import { FileSystemDirectory } from "./filesystemTree";
+
 export class FileSystemChangeTracker {
     private existingData: { [key: string]: DataInChangeTracker } = {};
     private newData: { [key: string]: DataInChangeTracker } = {};
@@ -65,6 +67,18 @@ export class FileSystemChangeTracker {
                     removeDirectoryCallback(data.fileName, data.filePath);
                 }
             }
+        }
+    }
+
+    public loadExistingDataFromFileSystemTree(fileSystemDirectory: FileSystemDirectory, path: string[]) {
+        for (const file of fileSystemDirectory.getChildFiles()) {
+            this.registerExistingFile(file.getName(), path);
+        }
+
+        for (const directory of fileSystemDirectory.getChildDirectories()) {
+            this.registerExistingDirectory(directory.getName(), path);
+
+            this.loadExistingDataFromFileSystemTree(directory, [...path, directory.getName()]);
         }
     }
 }
