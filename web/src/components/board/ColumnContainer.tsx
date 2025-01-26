@@ -79,7 +79,6 @@ function ColumnContainer(props: Props) {
             md:min-h-[200px]
             flex
             flex-col
-            md:flex-row
             grow
             basis-0
             min-w-0
