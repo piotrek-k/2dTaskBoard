@@ -95,6 +95,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 }
             }
         });
+        expect(mockStorageHandler.deleteFile).toHaveBeenCalledTimes(1);
     });
 
     it('should remove and then create task if it is moved on board', async () => {
