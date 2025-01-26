@@ -2,6 +2,7 @@ import { openDB } from "idb";
 import { IStorageHandler } from "./IStorageHandler";
 import { EventWatcher } from "./EventWatcher";
 import settingsProvider, { SettingsProvider } from "./SettingsProvider";
+import { FileSystemDirectory, recursivelyLoadDirectoryTree } from "../tools/filesystemTree";
 
 class FileSystemHandler implements IStorageHandler {
     directoryHandle: FileSystemDirectoryHandle | undefined;
@@ -244,11 +245,11 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async listFilesInDirectory(folderNames: string[]): Promise<string[]> {
-        return this.listElementsFromDirectory(folderNames, 'file');
+        return (await this.listElementsFromDirectory(folderNames, 'file')).map(file => file.name);
     }
 
     public async listDirectoriesInDirectory(folderNames: string[]): Promise<string[]> {
-        return this.listElementsFromDirectory(folderNames, 'directory');
+        return (await this.listElementsFromDirectory(folderNames, 'directory')).map(file => file.name);
     }
 
     private async listElementsFromDirectory(folderNames: string[], dataKind: string): Promise<string[]> {
@@ -276,8 +277,14 @@ class FileSystemHandler implements IStorageHandler {
         return files;
     }
 
+    public async loadEntireTree(folderNames: string[]): Promise<FileSystemDirectory> {
+        const handle = await this.followDirectories(folderNames);
+
+        return await recursivelyLoadDirectoryTree(handle);
+    }
+
     public async removeDirectory(directoryName: string): Promise<void> {
-        if(this.settings.debugModeEnabled){
+        if (this.settings.debugModeEnabled) {
             console.log('Removed directory: ', directoryName);
         }
 
@@ -285,7 +292,7 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async createEmptyFiles(fileNames: string[], folderNames: string[]): Promise<void> {
-        if(this.settings.debugModeEnabled){
+        if (this.settings.debugModeEnabled) {
             console.log('Creating files: ', fileNames);
         }
 
@@ -297,6 +304,10 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     private async followDirectories(folderNames: string[]): Promise<FileSystemDirectoryHandle> {
+        if (this.directoryHandle == null) {
+            this.directoryHandle = await this.restoreHandle();
+        }
+
         if (this.directoryHandle == null) {
             throw new Error("Directory handle not set up");
         }

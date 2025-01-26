@@ -65,8 +65,8 @@ export class KanbanBoardStorage {
     }
 
     public async getNewKanbanState(): Promise<KanbanDataContainer | undefined> {
-        const rowsAsFileNames = await this.storageHandler.listDirectoriesInDirectory(['board']);
-        const directoryWasEmpty = rowsAsFileNames.length == 0;
+        const directoriesRepresentingRows = await this.storageHandler.loadEntireTree(['board']);
+        const directoryWasEmpty = directoriesRepresentingRows.getChildDirectories().length == 0;
 
         if (directoryWasEmpty) {
             return undefined;
@@ -75,18 +75,19 @@ export class KanbanBoardStorage {
         const extractedRowsInfo: RowInStorage[] = [];
         const extractedTasksInfo: TaskInStorage[] = [];
 
-        for (const rowFileName of rowsAsFileNames) {
-            const rowInfo = this.convertRowFileNameToRowElement(rowFileName);
-            const extractedColumns = await this.storageHandler.listDirectoriesInDirectory(['board', rowFileName]);
+        for (const rowFileName of directoriesRepresentingRows.getChildDirectories()) {
+            const rowInfo = this.convertRowFileNameToRowElement(rowFileName.getName());
+            const directoriesRepresentingColumns = rowFileName.getChildDirectories();
 
             extractedRowsInfo.push(rowInfo);
 
-            for (const columnName of extractedColumns) {
+            for (const columnDirectory of directoriesRepresentingColumns) {
+                const columnName = columnDirectory.getName();
                 const columnId = this.covertColumnNameToId(columnName);
-                const tasks = await this.storageHandler.listFilesInDirectory(['board', rowFileName, columnName]);
+                const filesRepresentingTasks = columnDirectory.getChildFiles();
 
-                for (const task of tasks) {
-                    const taskInfo = this.convertTaskFileNameToTaskElement(task, columnId, rowInfo.id);
+                for (const task of filesRepresentingTasks) {
+                    const taskInfo = this.convertTaskFileNameToTaskElement(task.getName(), columnId, rowInfo.id);
 
                     extractedTasksInfo.push(taskInfo);
                 }

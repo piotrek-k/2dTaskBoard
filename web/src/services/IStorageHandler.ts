@@ -1,3 +1,4 @@
+import { FileSystemDirectory } from "../tools/filesystemTree";
 import { EventWatcher } from "./EventWatcher";
 
 export interface IStorageHandler {
@@ -13,6 +14,7 @@ export interface IStorageHandler {
     deleteFile(fileName: string, folderNames: string[]): Promise<void>;
     listFilesInDirectory(folderNames: string[]): Promise<string[]>;
     listDirectoriesInDirectory(folderNames: string[]): Promise<string[]>;
+    loadEntireTree(folderNames: string[]): Promise<FileSystemDirectory>;
     getLinkToFile(fileName: string, folderNames: string[]): Promise<string>;
     removeDirectory(directoryName: string): Promise<void>;
     createEmptyFiles(fileNames: string[], folderNames: string[]): Promise<void>;
