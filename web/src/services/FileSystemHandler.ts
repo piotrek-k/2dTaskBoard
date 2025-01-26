@@ -72,13 +72,18 @@ class FileSystemHandler implements IStorageHandler {
             console.log("Handle exists, but lost permission. Requesting for permission...");
         }
 
-        if ((await (handle as any).requestPermission(opts)) === "granted") {
-            this.registerPossibleSourceChange(true);
-            return true;
-        }
-        else {
-            this.registerPossibleSourceChange(false);
-            console.error("Requesting for permission failed");
+        try {
+            if ((await (handle as any).requestPermission(opts)) === "granted") {
+                this.registerPossibleSourceChange(true);
+                return true;
+            }
+            else {
+                this.registerPossibleSourceChange(false);
+                console.error("Requesting for permission failed");
+            }
+        } catch (error) {
+            console.error(error);
+            return false;
         }
 
         return false;
