@@ -2,12 +2,14 @@ import { describe, it, expect, Mock } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
 import taskStorage from '../../../src/services/CardMetadataStorage';
+import { FileSystemDirectory } from '../../../src/tools/filesystemTree';
 
 describe('KanbanBoardStorage getNewKanbanState', () => {
     const kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage);
 
     it('should return undefined when directory is empty', async () => {
         (mockStorageHandler.listDirectoriesInDirectory as Mock).mockResolvedValue([]);
+        (mockStorageHandler.loadEntireTree as Mock).mockResolvedValue(new FileSystemDirectory(''));
         const result = await kanbanBoardStorage.getNewKanbanState();
         expect(result).toBeUndefined();
     });
@@ -21,9 +23,11 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         mockFileSystemTree(mockStorageHandler, {
             'board': {
                 [`row1 (${exprectedRowId}, abc123, ${expectedRowPosition})`]: {
-                    'To Do': [
-                        `task1 (${expectedTaskId}, abc123, ${expectedTaskPosition})`
-                    ]
+                    'To Do': {
+                        '[files]': [
+                            `task2 (${expectedTaskId}, abc123, ${expectedTaskPosition})`
+                        ]
+                    }
                 }
             }
         });
@@ -76,10 +80,12 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         mockFileSystemTree(mockStorageHandler, {
             'board': {
                 [`row1 (1, abc123, 1)`]: {
-                    'To Do': [
-                        `task1 (${secondTaskId}, abc456, 2)`,
-                        `task2 (${firstTaskId}, abc123, 1)`
-                    ]
+                    'To Do': {
+                        '[files]': [
+                            `task2 (${firstTaskId}, abc123, 1)`,
+                            `task1 (${secondTaskId}, abc123, 2)`
+                        ]
+                    }
                 }
             }
         });
@@ -120,10 +126,12 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         mockFileSystemTree(mockStorageHandler, {
             'board': {
                 [`row1 (${firstRowId}, abc123, 1)`]: {
-                    'To Do': [
-                        `task1 (${secondTaskId}, abc456, 2)`,
-                        `task2 (${firstTaskId}, abc123, 1)`
-                    ]
+                    'To Do': {
+                        '[files]': [
+                            `task1 (${secondTaskId}, abc456, 2)`,
+                            `task2 (${firstTaskId}, abc123, 1)`
+                        ]
+                    }
                 },
                 [`row2 (${secondRowId}, abc123, 2)`]: {
                     'In Progress': []
@@ -154,9 +162,11 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         mockFileSystemTree(mockStorageHandler, {
             'board': {
                 [`row1 (1, abc123, 1)`]: {
-                    'To Do': [
-                        `task1 (abc123, 1)`
-                    ]
+                    'To Do': {
+                        '[files]': [
+                            `task1 (abc123, 1)`
+                        ]
+                    }
                 }
             }
         });
@@ -168,9 +178,11 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         mockFileSystemTree(mockStorageHandler, {
             'board': {
                 [`row1 (abc123, 1)`]: {
-                    'To Do': [
-                        `task1 (1, abc123, 1)`
-                    ]
+                    'To Do': {
+                        '[files]': [
+                            `task1 (1, abc123, 1)`
+                        ]
+                    }
                 }
             }
         });
@@ -182,12 +194,16 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         mockFileSystemTree(mockStorageHandler, {
             'board': {
                 [`row1 (1, abc123, 1)`]: {
-                    'To Do': [
-                        `task1 (1, abc123, 1)`
-                    ],
-                    'Tttodo': [
-                        `task2 (1, abc123, 1)`
-                    ]
+                    'To Do': {
+                        "[files]": [
+                            `task1 (1, abc123, 1)`
+                        ]
+                    },
+                    'Tttodo': {
+                        "[files]": [
+                            `task2 (1, abc123, 1)`
+                        ]
+                    }
                 }
             }
         });

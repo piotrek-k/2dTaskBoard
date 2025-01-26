@@ -2,7 +2,7 @@ export class FileSystemDirectory {
     private childDirectories: FileSystemDirectory[] = [];
     private childFiles: FileSystemFile[] = [];
 
-    constructor(public directory: FileSystemDirectoryHandle) {
+    constructor(public directoryName: string) {
 
     }
 
@@ -10,8 +10,8 @@ export class FileSystemDirectory {
         this.childDirectories.push(directory);
     }
 
-    public addChildFile(file: FileSystemHandle) {
-        this.childFiles.push(new FileSystemFile(file));
+    public addChildFile(fileName : string) {
+        this.childFiles.push(new FileSystemFile(fileName));
     }
 
     public getChildDirectories() {
@@ -23,27 +23,27 @@ export class FileSystemDirectory {
     }
 
     public getName() {
-        return this.directory.name;
+        return this.directoryName;
     }
 }
 
 export class FileSystemFile {
-    constructor(public file: FileSystemHandle) {
+    constructor(public fileName: string) {
 
     }
 
     public getName() {
-        return this.file.name;
+        return this.fileName;
     }
 }
 
 export async function recursivelyLoadDirectoryTree(handle: FileSystemDirectoryHandle): Promise<FileSystemDirectory> {
-    const directory = new FileSystemDirectory(handle);
+    const directory = new FileSystemDirectory(handle.name);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for await (const entry of (handle as any).values()) {
         if (entry.kind === 'file') {
-            directory.addChildFile(entry as FileSystemHandle);
+            directory.addChildFile(entry.name);
         }
         else if (entry.kind === 'directory') {
             const childDirectory = await recursivelyLoadDirectoryTree(entry as FileSystemDirectoryHandle);
