@@ -245,11 +245,11 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async listFilesInDirectory(folderNames: string[]): Promise<string[]> {
-        return (await this.listElementsFromDirectory(folderNames, 'file')).map(file => file.name);
+        return (await this.listElementsFromDirectory(folderNames, 'file'));
     }
 
     public async listDirectoriesInDirectory(folderNames: string[]): Promise<string[]> {
-        return (await this.listElementsFromDirectory(folderNames, 'directory')).map(file => file.name);
+        return (await this.listElementsFromDirectory(folderNames, 'directory'));
     }
 
     private async listElementsFromDirectory(folderNames: string[], dataKind: string): Promise<string[]> {
