@@ -16,6 +16,10 @@ export class FileSystemChangeTracker {
         const data = new DataInChangeTracker(name, filePath, type);
 
         this.existingData[data.getKey()] = data;
+
+        if (filePath.length > 0) {
+            this.registerExisitingElement(filePath[filePath.length - 1], filePath.slice(0, filePath.length - 1), ChangeTrackerDataType.Directory);
+        }
     }
 
     public registerNewFile(fileName: string, filePath: string[]) {
@@ -30,6 +34,10 @@ export class FileSystemChangeTracker {
         const data = new DataInChangeTracker(name, filePath, type);
 
         this.newData[data.getKey()] = data;
+
+        if (filePath.length > 0) {
+            this.registerNewElement(filePath[filePath.length - 1], filePath.slice(0, filePath.length - 1), ChangeTrackerDataType.Directory);
+        }
     }
 
     public createAll(

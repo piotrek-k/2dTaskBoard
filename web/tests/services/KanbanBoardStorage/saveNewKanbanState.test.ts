@@ -2,7 +2,7 @@ import { describe, it, expect, vi, Mock, beforeEach } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
 import { ICardMetadataStorage } from '../../../src/services/CardMetadataStorage'; import { KanbanDataContainer } from '../../../src/types';
-import { MetadataType, RowMetadataViewModel, RowStoredMetadata, TaskMetadataViewModel, TaskStoredMetadata } from '../../../src/dataTypes/CardMetadata';
+import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../../src/dataTypes/CardMetadata';
 
 
 describe('KanbanBoardStorage saveNewKanbanState', () => {
@@ -12,6 +12,8 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
     const knownColumns = KanbanBoardStorage.knownColumns;
 
     beforeEach(() => {
+        vi.resetAllMocks();
+
         mockCardMetadataStorage = {
             getCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             getCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
@@ -93,6 +95,53 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 }
             }
         });
+    });
+
+    it('should remove and then create task if it is moved on board', async () => {
+        const newBoardState = {
+            columns: knownColumns,
+            rows: [
+                { id: 1, position: 1 }
+            ],
+            tasks: [
+                { id: 2, position: 1, columnId: 2, rowId: 1 }
+            ]
+        } as KanbanDataContainer;
+
+        const currentSavedState = {
+            'board': {
+                'row1 (1, abc123, 1)': {
+                    'To Do': {
+                        '[files]': [
+                            'task1 (2, abc123, 1)'
+                        ]
+                    },
+                    'In Progress': {},
+                    'Done': {}
+                }
+            }
+        };
+
+        mockFileSystemTree(mockStorageHandler, currentSavedState);
+
+        await kanbanBoardStorage.saveNewKanbanState(newBoardState);
+
+        expect(currentSavedState).toEqual({
+            'board': {
+                'row1 (1, abc123, 1)': {
+                    'To Do': {},
+                    'In Progress': {
+                        '[files]': [
+                            'task1 (2, abc123, 1)'
+                        ]
+                    },
+                    'Done': {}
+                }
+            }
+        });
+
+        expect(mockStorageHandler.deleteFile).toHaveBeenCalledTimes(1);
+        expect(mockStorageHandler.createEmptyFiles).toHaveBeenCalledTimes(1);
     });
 
     it('should throw an error when any it is not possible to get metadata for any row', async () => {

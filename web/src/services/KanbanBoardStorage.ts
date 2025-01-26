@@ -112,9 +112,9 @@ export class KanbanBoardStorage {
 
         const directoriesRepresentingRows = await this.storageHandler.loadEntireTree(['board']);
 
-        changeTracker.loadExistingDataFromFileSystemTree(directoriesRepresentingRows, ['board']);
-
-        // const deferredSaveOperations: (() => Promise<void>)[] = [];
+        if (directoriesRepresentingRows !== undefined) {
+            changeTracker.loadExistingDataFromFileSystemTree(directoriesRepresentingRows, ['board']);
+        }
 
         const rowsAsTree = new Map<number, TreeRowContainer>();
 
@@ -159,9 +159,6 @@ export class KanbanBoardStorage {
                 const columnName = this.convertColumnIdToName(column.id);
 
                 if (column.tasks.length === 0) {
-                    // deferredSaveOperations.push(async () => {
-                    //     await this.storageHandler.createDirectory(['board', rowName, columnName]);
-                    // });
                     changeTracker.registerNewDirectory(columnName, ['board', rowName]);
 
                     continue;
@@ -178,9 +175,6 @@ export class KanbanBoardStorage {
 
                     const taskName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter})`;
 
-                    // deferredSaveOperations.push(async () => {
-                    //     await this.storageHandler.createEmptyFiles([taskName], ['board', rowName, columnName]);
-                    // });
                     changeTracker.registerNewFile(taskName, ['board', rowName, columnName]);
 
                     taskCounter += 1;
@@ -189,10 +183,6 @@ export class KanbanBoardStorage {
 
             rowCounter += 1;
         }
-
-        // await this.storageHandler.removeDirectory('board');
-
-        // await Promise.all(deferredSaveOperations.map(func => func()));
 
         changeTracker.createAll(
             (fileName, filePath) => this.storageHandler.createEmptyFiles([fileName], filePath),
