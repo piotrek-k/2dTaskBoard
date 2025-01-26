@@ -8,16 +8,19 @@ function MainPage() {
         <div className="container mx-auto px-4">
             <div className="relative w-full h-96 mb-12 bg-cover bg-center rounded-lg overflow-hidden">
                 <div className="absolute inset-0 bg-black opacity-60"></div>
-                <img 
-                    src="/screenshot.png" 
-                    alt="Panoramic view" 
+                <img
+                    src="/screenshot.png"
+                    alt="Panoramic view"
                     className="absolute inset-0 w-full h-full object-cover filter blur-sm"
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                     <h1 className="text-5xl font-bold text-center mb-12 drop-shadow-lg">2D Kanban Board</h1>
-                    <button className="animate-bounce bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-600 text-lg shadow-lg">
-                        <Link to="/board">Get Started</Link>
-                    </button>
+                    <Link
+                        to="/board"
+                        className="animate-bounce bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-600 text-lg shadow-lg"
+                    >
+                        Get Started
+                    </Link>
                 </div>
             </div>
 
