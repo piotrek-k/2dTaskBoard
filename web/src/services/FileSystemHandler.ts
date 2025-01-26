@@ -283,12 +283,14 @@ class FileSystemHandler implements IStorageHandler {
         return await recursivelyLoadDirectoryTree(handle);
     }
 
-    public async removeDirectory(directoryName: string): Promise<void> {
+    public async removeDirectory(directoryName: string, folderNames: string[]): Promise<void> {
         if (this.settings.debugModeEnabled) {
             console.log('Removed directory: ', directoryName);
         }
 
-        await this.directoryHandle?.removeEntry(directoryName, { recursive: true });
+        const handle = await this.followDirectories(folderNames);
+
+        await handle?.removeEntry(directoryName, { recursive: true });
     }
 
     public async createEmptyFiles(fileNames: string[], folderNames: string[]): Promise<void> {

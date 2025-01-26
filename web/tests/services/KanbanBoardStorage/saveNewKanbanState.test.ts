@@ -57,6 +57,44 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         });
     });
 
+    it('should remove task if it is no longer present in the board state', async () => {
+        const newBoardState = {
+            columns: knownColumns,
+            rows: [
+                { id: 1, position: 1 }
+            ],
+            tasks: []
+        } as KanbanDataContainer;
+
+        const currentSavedState = {
+            'board': {
+                'row1 (1, abc123, 1)': {
+                    'To Do': {
+                        '[files]': [
+                            'task1 (2, abc123, 1)'
+                        ]
+                    },
+                    'In Progress': {},
+                    'Done': {}
+                }
+            }
+        };
+
+        mockFileSystemTree(mockStorageHandler, currentSavedState);
+
+        await kanbanBoardStorage.saveNewKanbanState(newBoardState);
+
+        expect(currentSavedState).toEqual({
+            'board': {
+                'row1 (1, abc123, 1)': {
+                    'To Do': {},
+                    'In Progress': {},
+                    'Done': {}
+                }
+            }
+        });
+    });
+
     it('should throw an error when any it is not possible to get metadata for any row', async () => {
         const boardStateBeingSaved = {
             columns: knownColumns,
