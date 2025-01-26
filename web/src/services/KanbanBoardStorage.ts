@@ -1,3 +1,4 @@
+import { FileSystemChangeTracker } from "../tools/filesystemChangeTracker";
 import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
 import taskStorage, { ICardMetadataStorage } from "./CardMetadataStorage";
 import fileSystemHandler from "./FileSystemHandler";
@@ -107,7 +108,13 @@ export class KanbanBoardStorage {
 
 
     public async saveNewKanbanState(boardStateContainer: KanbanDataContainer) {
-        const deferredSaveOperations: (() => Promise<void>)[] = [];
+        const changeTracker = new FileSystemChangeTracker();
+
+        const directoriesRepresentingRows = await this.storageHandler.loadEntireTree(['board']);
+
+        if (directoriesRepresentingRows !== undefined) {
+            changeTracker.loadExistingDataFromFileSystemTree(directoriesRepresentingRows, ['board']);
+        }
 
         const rowsAsTree = new Map<number, TreeRowContainer>();
 
@@ -152,9 +159,7 @@ export class KanbanBoardStorage {
                 const columnName = this.convertColumnIdToName(column.id);
 
                 if (column.tasks.length === 0) {
-                    deferredSaveOperations.push(async () => {
-                        await this.storageHandler.createDirectory(['board', rowName, columnName]);
-                    });
+                    changeTracker.registerNewDirectory(columnName, ['board', rowName]);
 
                     continue;
                 }
@@ -170,9 +175,7 @@ export class KanbanBoardStorage {
 
                     const taskName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter})`;
 
-                    deferredSaveOperations.push(async () => {
-                        await this.storageHandler.createEmptyFiles([taskName], ['board', rowName, columnName]);
-                    });
+                    changeTracker.registerNewFile(taskName, ['board', rowName, columnName]);
 
                     taskCounter += 1;
                 }
@@ -181,9 +184,15 @@ export class KanbanBoardStorage {
             rowCounter += 1;
         }
 
-        await this.storageHandler.removeDirectory('board');
+        changeTracker.createAll(
+            (fileName, filePath) => this.storageHandler.createEmptyFiles([fileName], filePath),
+            (directoryName, filePath) => this.storageHandler.createDirectory([...filePath, directoryName])
+        );
 
-        await Promise.all(deferredSaveOperations.map(func => func()));
+        changeTracker.removeUnneeded(
+            (fileName, filePath) => this.storageHandler.deleteFile(fileName, filePath),
+            (directoryName, filePath) => this.storageHandler.removeDirectory(directoryName, filePath)
+        );
     }
 
     private covertColumnNameToId(columnName: string): number {

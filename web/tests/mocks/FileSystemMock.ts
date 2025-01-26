@@ -85,7 +85,7 @@ export function mockFileSystemTree(mockStorageHandler: IStorageHandler, exampleF
             const foundFolder = convertedTree.getChildDirectories().find((dir) => dir.getName() === folder);
 
             if (foundFolder === undefined) {
-                throw new Error('Folder not found');
+                continue;
             }
 
             convertedTree = foundFolder;
@@ -128,8 +128,44 @@ export function mockFileSystemTree(mockStorageHandler: IStorageHandler, exampleF
         return Promise.resolve();
     });
 
-    (mockStorageHandler.removeDirectory as Mock).mockImplementation((folderName) => {
+    (mockStorageHandler.removeDirectory as Mock).mockImplementation((folderName, folderNames: string[]) => {
+        let currentElement = exampleFileSystemTree;
+
+        for (const folder of folderNames) {
+            currentElement = currentElement[folder];
+        }
+
         delete exampleFileSystemTree[folderName];
+
+        return Promise.resolve();
+    });
+
+    (mockStorageHandler.deleteFile as Mock).mockImplementation((fileName, folderNames) => {
+        let currentElement = exampleFileSystemTree;
+
+        for (const folder of folderNames) {
+            currentElement = currentElement[folder];
+        }
+
+        const filesContainer = currentElement;
+
+        currentElement = currentElement['[files]'];
+
+        if (!Array.isArray(currentElement)) {
+            throw new Error('Expected array');
+        }
+
+        const index = currentElement.indexOf(fileName);
+
+        if (index === -1) {
+            throw new Error('File not found');
+        }
+
+        currentElement.splice(index, 1);
+
+        if (currentElement.length === 0) {
+            delete filesContainer['[files]'];
+        }
 
         return Promise.resolve();
     });
