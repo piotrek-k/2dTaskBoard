@@ -1,13 +1,10 @@
 import { useCallback, useState } from "react";
 import { ColumnInStorage, Id, RowInStorage, TaskInStorage } from "../types";
 
-export enum FocusDirection {
-    DOWN = "DOWN",
-}
-
 export interface FocusRequest {
     rowId?: Id;
     columnId?: Id;
+    focusAddTaskButton?: boolean;
 }
 
 export function useBoardFocusManager(rows: RowInStorage[], columns: ColumnInStorage[], tasks: TaskInStorage[]) {
@@ -15,6 +12,7 @@ export function useBoardFocusManager(rows: RowInStorage[], columns: ColumnInStor
     const [currentyActiveColumnId, setCurrentlyActiveColumnId] = useState<Id | undefined>(undefined);
 
     const [focusRequest, setFocusRequest] = useState<FocusRequest>({} as FocusRequest);
+    const [currentlyFocusedOnAddButton, setCurrentlyFocusedOnAddButton] = useState<boolean>(false);
 
     const handleRowFocusChange = useCallback((rowId?: Id) => {
         if (rowId !== currentyActiveRowId) {
@@ -24,48 +22,67 @@ export function useBoardFocusManager(rows: RowInStorage[], columns: ColumnInStor
 
     const moveToNextElement = useCallback(function <T extends HasId>(
         arrayToNavigateOn: T[],
-        activeId: Id | undefined,
+        currentlyActiveElementId: Id | undefined,
         modifierNumber: number,
-        stopMethod?: (element: T) => boolean
+        shouldStopHere?: (element: T) => boolean
     ): T | undefined {
-        const currentRowId = activeId;
 
-        let indexOfRow = currentRowId ? arrayToNavigateOn.findIndex((element) => element.id === currentRowId) : -1;
-        let nextRow: T = arrayToNavigateOn[indexOfRow];
-        const initialIndexOfRow = indexOfRow;
-        let canMoveOn = false;
+        const arrayIndexAtStart = currentlyActiveElementId ?
+            arrayToNavigateOn.findIndex((element) => element.id === currentlyActiveElementId) :
+            -1;
+
+        let resultCandidate: T = arrayToNavigateOn[arrayIndexAtStart];
+        let indexOfElementInArray = arrayIndexAtStart;
 
         do {
-            canMoveOn = modifierNumber > 0 ? indexOfRow < arrayToNavigateOn.length - 1 : indexOfRow > 0;
+            indexOfElementInArray += modifierNumber;
 
-            if (canMoveOn) {
-                nextRow = arrayToNavigateOn[indexOfRow + modifierNumber];
+            const isIndexInRange = indexOfElementInArray >= 0 && indexOfElementInArray <= arrayToNavigateOn.length;
+
+            if (isIndexInRange) {
+                resultCandidate = arrayToNavigateOn[indexOfElementInArray];
             }
             else {
                 break;
             }
 
-            indexOfRow += modifierNumber;
-        } while (stopMethod && !stopMethod(nextRow));
+        } while (shouldStopHere && !shouldStopHere(resultCandidate));
 
-        if (nextRow == undefined || (stopMethod && !stopMethod(nextRow))) {
-            return arrayToNavigateOn[initialIndexOfRow];
+        if (resultCandidate == undefined || (shouldStopHere && !shouldStopHere(resultCandidate))) {
+            return arrayToNavigateOn[arrayIndexAtStart];
         }
 
-        return nextRow;
+        return resultCandidate;
     }, []);
 
-    const checkIfColumnHasTasks = useCallback((element: ColumnInStorage) => {
+    const getColumnById = useCallback((columnId: Id) => {
+        return columns.find((column) => column.id === columnId);
+    }, [columns]);
+
+    const columnHasAnyTasks = useCallback((element: ColumnInStorage) => {
+        if (element === undefined) {
+            return false;
+        }
+
         let result = false;
 
         if (currentyActiveRowId !== undefined) {
-            result = tasks.some((task) => task.columnId === element.id && task.rowId === currentyActiveRowId);
+            result = tasks.some((task) => element !== undefined && task.columnId === element.id && task.rowId === currentyActiveRowId);
         }
-
-        console.log("Check if column has tasks: ", result, " column id: ", element.id);
 
         return result;
     }, [tasks, currentyActiveRowId]);
+
+    const columnHasAddButton = useCallback((element: ColumnInStorage) => {
+        if (element === undefined) {
+            return false;
+        }
+
+        const columnWithAddTaskButton = columns[0];
+
+        return element.id === columnWithAddTaskButton.id;
+    }, [columns]);
+
 
     const focusNextRow = useCallback(() => {
         const nextRow = moveToNextElement(rows, currentyActiveRowId, 1);
@@ -90,26 +107,76 @@ export function useBoardFocusManager(rows: RowInStorage[], columns: ColumnInStor
     }, [currentyActiveRowId, rows, moveToNextElement]);
 
     const focusNextColumn = useCallback(() => {
-        const columnWithAddTaskButton = columns[0];
-        const nextRow = moveToNextElement(columns, currentyActiveColumnId, 1, (element) => checkIfColumnHasTasks(element) || element.id === columnWithAddTaskButton.id);
+        const currentColumn = currentyActiveColumnId ? getColumnById(currentyActiveColumnId) : undefined;
+        const currentColumnHasTasks = currentColumn ? columnHasAnyTasks(currentColumn) : false;
+        const currentColumnHasAddButton = currentColumn ? columnHasAddButton(currentColumn) : false;
 
-        console.log("Moving focus to ", nextRow?.id);
+        if (!currentlyFocusedOnAddButton && currentColumnHasAddButton && currentColumnHasTasks) {
 
-        setCurrentlyActiveColumnId(nextRow?.id);
+            setFocusRequest({
+                rowId: currentyActiveRowId,
+                columnId: currentyActiveColumnId,
+                focusAddTaskButton: true
+            });
+
+            setCurrentlyFocusedOnAddButton(true);
+
+            return;
+        }
+
+        setCurrentlyFocusedOnAddButton(false);
+
+        const nextColumn = moveToNextElement(
+            columns,
+            currentyActiveColumnId,
+            1,
+            (element) =>
+                columnHasAnyTasks(element)
+                || columnHasAddButton(element)
+        );
+
+        setCurrentlyActiveColumnId(nextColumn?.id);
 
         setFocusRequest({
             rowId: currentyActiveRowId,
-            columnId: nextRow?.id
+            columnId: nextColumn?.id,
+            focusAddTaskButton: false
         });
-    }, [currentyActiveColumnId, columns, moveToNextElement, checkIfColumnHasTasks, currentyActiveRowId]);
+    }, [currentyActiveColumnId, columns, moveToNextElement, columnHasAnyTasks, currentyActiveRowId, columnHasAddButton, currentlyFocusedOnAddButton, setCurrentlyFocusedOnAddButton, getColumnById]);
 
     const focusPreviousColumn = useCallback(() => {
-        const columnWithAddTaskButton = columns[0];
-        const nextRow = moveToNextElement(columns, currentyActiveColumnId, -1, (element) => checkIfColumnHasTasks(element) || element.id === columnWithAddTaskButton.id);
 
-        console.log("Moving focus to ", nextRow?.id);
+        const currentColumn = currentyActiveColumnId ? getColumnById(currentyActiveColumnId) : undefined;
+        const currentColumnHasTasks = currentColumn ? columnHasAnyTasks(currentColumn) : false;
 
-        if (nextRow?.id === currentyActiveColumnId) {
+        if (currentlyFocusedOnAddButton && currentColumnHasTasks) {
+
+            setFocusRequest({
+                rowId: currentyActiveRowId,
+                columnId: currentyActiveColumnId,
+                focusAddTaskButton: false
+            });
+            
+            setCurrentlyFocusedOnAddButton(false);
+
+            return;
+        }
+
+        setCurrentlyFocusedOnAddButton(false);
+
+        const nextColumn = moveToNextElement(
+            columns,
+            currentyActiveColumnId,
+            -1,
+            (element) =>
+                columnHasAnyTasks(element)
+                || columnHasAddButton(element)
+        );
+
+        const noNextColumn = currentyActiveColumnId === nextColumn?.id;
+
+        if (noNextColumn) {
+
             setFocusRequest({
                 rowId: currentyActiveRowId
             });
@@ -119,13 +186,29 @@ export function useBoardFocusManager(rows: RowInStorage[], columns: ColumnInStor
             return;
         }
 
-        setCurrentlyActiveColumnId(nextRow?.id);
+        if (nextColumn !== undefined && !noNextColumn && columnHasAddButton(nextColumn)) {
+
+            setCurrentlyActiveColumnId(nextColumn?.id);
+            setFocusRequest({
+                rowId: currentyActiveRowId,
+                columnId: nextColumn.id,
+                focusAddTaskButton: true
+            });
+
+            setCurrentlyFocusedOnAddButton(true);
+
+            return;
+        }
+
+        setCurrentlyActiveColumnId(nextColumn?.id);
+        setCurrentlyFocusedOnAddButton(false);
 
         setFocusRequest({
             rowId: currentyActiveRowId,
-            columnId: nextRow?.id
+            columnId: nextColumn?.id,
+            focusAddTaskButton: false
         });
-    }, [currentyActiveColumnId, columns, moveToNextElement, checkIfColumnHasTasks, currentyActiveRowId]);
+    }, [currentyActiveColumnId, columns, moveToNextElement, columnHasAnyTasks, currentyActiveRowId, columnHasAddButton, getColumnById, currentlyFocusedOnAddButton]);
 
     interface HasId {
         id: Id;

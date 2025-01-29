@@ -57,14 +57,19 @@ function ColumnContainer(props: Props) {
 
     useEffect(() => {
         if (focusRequest.columnId === column.id && focusRequest.rowId === row.id) {
-            if (tasks.length > 0) {
-                setTaskToFocus(tasks[0]);
-            }
-            else {
+            if (focusRequest.focusAddTaskButton) {
                 addTaskButtonRef.current?.focus();
             }
+            else {
+                if (tasks.length > 0) {
+                    setTaskToFocus(tasks[0]);
+                }
+                else {
+                    addTaskButtonRef.current?.focus();
+                }
+            }
         }
-    }, [tasks, column.id, row.id, focusRequest.columnId, focusRequest.rowId]);
+    }, [tasks, column.id, row.id, focusRequest.columnId, focusRequest.rowId, focusRequest.focusAddTaskButton]);
 
     const removeFocusRequest = () => {
         setTaskToFocus(undefined);
