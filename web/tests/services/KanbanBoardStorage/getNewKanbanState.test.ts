@@ -1,7 +1,7 @@
 import { describe, it, expect, Mock } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
-import taskStorage from '../../../src/services/CardMetadataStorage';
+import taskStorage from '../../../src/services/CardStorage';
 import { FileSystemDirectory } from '../../../src/tools/filesystemTree';
 
 describe('KanbanBoardStorage getNewKanbanState', () => {

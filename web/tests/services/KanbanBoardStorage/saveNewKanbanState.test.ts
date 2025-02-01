@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, Mock, beforeEach } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
-import { ICardMetadataStorage } from '../../../src/services/CardMetadataStorage'; import { KanbanDataContainer } from '../../../src/types';
+import { ICardStorage } from '../../../src/services/CardStorage'; 
+import { KanbanDataContainer } from '../../../src/types';
 import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../../src/dataTypes/CardMetadata';
 
 
 describe('KanbanBoardStorage saveNewKanbanState', () => {
 
-    let mockCardMetadataStorage: ICardMetadataStorage;
+    let mockCardMetadataStorage: ICardStorage;
     let kanbanBoardStorage: KanbanBoardStorage;
     const knownColumns = KanbanBoardStorage.knownColumns;
 
@@ -22,7 +23,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
             saveCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             saveCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             createNewRowMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
-        } as ICardMetadataStorage;
+        } as ICardStorage;
 
         kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, mockCardMetadataStorage);
     });
@@ -49,7 +50,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 'row1 (1, abc123, 1)': {
                     'To Do': {
                         '[files]': [
-                            'task1 (2, abc123, 1)'
+                            'task1 (2, abc123, 1).md'
                         ]
                     },
                     'In Progress': {},
@@ -73,7 +74,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 'row1 (1, abc123, 1)': {
                     'To Do': {
                         '[files]': [
-                            'task1 (2, abc123, 1)'
+                            'task1 (2, abc123, 1).md'
                         ]
                     },
                     'In Progress': {},
@@ -114,7 +115,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 'row1 (1, abc123, 1)': {
                     'To Do': {
                         '[files]': [
-                            'task1 (2, abc123, 1)'
+                            'task1 (2, abc123, 1).md'
                         ]
                     },
                     'In Progress': {},
@@ -133,7 +134,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                     'To Do': {},
                     'In Progress': {
                         '[files]': [
-                            'task1 (2, abc123, 1)'
+                            'task1 (2, abc123, 1).md'
                         ]
                     },
                     'Done': {}
@@ -142,7 +143,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         });
 
         expect(mockStorageHandler.deleteFile).toHaveBeenCalledTimes(1);
-        expect(mockStorageHandler.createEmptyFiles).toHaveBeenCalledTimes(1);
+        expect(mockStorageHandler.saveTextContentToDirectory).toHaveBeenCalledTimes(1);
     });
 
     it('should throw an error when any it is not possible to get metadata for any row', async () => {
@@ -276,9 +277,9 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         await kanbanBoardStorage.saveNewKanbanState(boardStateBeingSaved);
 
         expect(fakeFileSystemTree['board']['row1 (1, abc123, 1)']['To Do']['[files]']).toEqual([
-            'task4 (4, ghi789, 1)',
-            'task2 (2, def456, 2)',
-            'task3 (3, ghi789, 3)'
+            'task4 (4, ghi789, 1).md',
+            'task2 (2, def456, 2).md',
+            'task3 (3, ghi789, 3).md'
         ]);
     });
 });

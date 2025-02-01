@@ -18,6 +18,7 @@ export const mockStorageHandler: IStorageHandler = {
     removeDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
     createEmptyFiles: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
     createDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    getNameOfStorage: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); })
 };
 
 // const exampleFileSystemTree = {
@@ -111,6 +112,25 @@ export function mockFileSystemTree(mockStorageHandler: IStorageHandler, exampleF
         for (const fileName of fileNames) {
             currentElement['[files]'].push(fileName);
         }
+
+        return Promise.resolve();
+    });
+
+    (mockStorageHandler.saveTextContentToDirectory as Mock).mockImplementation((fileName, content, folderNames) => {
+        let currentElement = exampleFileSystemTree;
+
+        for (const folder of folderNames) {
+            if (!currentElement[folder]) {
+                currentElement[folder] = {};
+            }
+            currentElement = currentElement[folder];
+        }
+
+        if (currentElement['[files]'] === undefined) {
+            currentElement['[files]'] = [];
+        }
+
+        currentElement['[files]'].push(fileName);
 
         return Promise.resolve();
     });
