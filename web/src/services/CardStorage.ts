@@ -1,4 +1,5 @@
 import { TASKS_DIRECTORY_NAME } from "../constants";
+import { ContentMdFile } from "../converters/ContentMdFile";
 import { CardStoredMetadata, TaskStoredMetadata, RowStoredMetadata, MetadataType } from "../dataTypes/CardMetadata";
 import { generateSyncId } from "../tools/syncTools";
 import { Id } from "../types";
@@ -6,26 +7,26 @@ import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 import settingsProvider, { SettingsProvider } from "./SettingsProvider";
 
-export interface ICardMetadataStorage {
-    getCardContent(cardId: Id): Promise<string>;
+export interface ICardStorage {
+    getCardContent(cardId: Id): Promise<ContentMdFile>;
     getCardMetadata<T extends CardStoredMetadata>(cardId: Id): Promise<T | undefined>;
     getRowMetadata(rowId: Id): Promise<RowStoredMetadata | undefined>;
     getTaskMetadata(taskId: Id): Promise<TaskStoredMetadata | undefined>;
-    saveCardContent(cardId: Id, content: string): Promise<void>;
+    saveCardContent(cardId: Id, contentWithoutProperties: string, cardStoredMetadata: CardStoredMetadata): Promise<void>;
     saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void>;
     createNewRowMetadata(id: Id, title: string): Promise<void>;
 }
 
-export class CardMetadataStorage implements ICardMetadataStorage {
+export class CardStorage implements ICardStorage {
     readonly cache: { [key: Id]: object } = {};
 
     constructor(private storageHandler: IStorageHandler, private settingsProvider: SettingsProvider) {
     }
 
-    public async getCardContent(cardId: Id): Promise<string> {
+    public async getCardContent(cardId: Id): Promise<ContentMdFile> {
         const fileContents = await this.storageHandler.getContentFromDirectory('content.md', [TASKS_DIRECTORY_NAME, `${cardId}`]);
 
-        return fileContents;
+        return new ContentMdFile(fileContents);
     }
 
     public async getCardMetadata<T extends CardStoredMetadata>(cardId: Id): Promise<T | undefined> {
@@ -65,7 +66,12 @@ export class CardMetadataStorage implements ICardMetadataStorage {
         return await this.getCardMetadata<TaskStoredMetadata>(taskId);
     }
 
-    public async saveCardContent(cardId: Id, content: string) {
+    public async saveCardContent(cardId: Id, contentWithoutProperties: string, cardStoredMetadata: CardStoredMetadata) {
+        const contentMdFile = await this.getCardContent(cardId);
+        contentMdFile.setJustMarkdownContent(contentWithoutProperties);
+
+        const content = contentMdFile.getRawContentMdFileReadyToSave(cardStoredMetadata);
+
         await this.storageHandler.saveTextContentToDirectory('content.md', content, [TASKS_DIRECTORY_NAME, `${cardId}`]);
     }
 
@@ -87,6 +93,6 @@ export class CardMetadataStorage implements ICardMetadataStorage {
     }
 }
 
-const taskStorage = new CardMetadataStorage(fileSystemHandler, settingsProvider);
+const taskStorage = new CardStorage(fileSystemHandler, settingsProvider);
 
 export default taskStorage;

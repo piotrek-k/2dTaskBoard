@@ -1,7 +1,7 @@
 import { TASKS_DIRECTORY_NAME } from "../constants";
 import { FileSystemChangeTracker } from "../tools/filesystemChangeTracker";
 import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
-import taskStorage, { ICardMetadataStorage } from "./CardMetadataStorage";
+import taskStorage, { ICardStorage } from "./CardStorage";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
@@ -20,7 +20,7 @@ export class KanbanBoardStorage {
 
     private cache: KanbanDataContainer | null = null;
 
-    constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardMetadataStorage) {
+    constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardStorage) {
     }
 
     public static readonly knownColumns = [
