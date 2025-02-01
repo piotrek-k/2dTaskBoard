@@ -173,9 +173,9 @@ export class KanbanBoardStorage {
                         throw new Error('Task metadata not found');
                     }
 
-                    const taskName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter})`;
+                    const taskFileName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter}).md`;
 
-                    changeTracker.registerNewFile(taskName, ['board', rowName, columnName]);
+                    changeTracker.registerNewFile(taskFileName, ['board', rowName, columnName]);
 
                     taskCounter += 1;
                 }
