@@ -8,8 +8,12 @@ class FileSystemHandler implements IStorageHandler {
     directoryHandle: FileSystemDirectoryHandle | undefined;
 
     readinessWatcher: EventWatcher<boolean> = new EventWatcher<boolean>();
-    
+
     constructor(private settings: SettingsProvider) {
+    }
+
+    public getNameOfStorage(): string {
+        return this.directoryHandle?.name ?? '';
     }
 
     private readonly reservedFileNames: string[] = ['content.md'];
@@ -324,7 +328,7 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async createDirectory(folderNames: string[]): Promise<void> {
-        if(this.settings.debugModeEnabled){
+        if (this.settings.debugModeEnabled) {
             console.log('Creating directory: ', folderNames);
         }
 

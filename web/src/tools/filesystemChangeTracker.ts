@@ -1,3 +1,4 @@
+import { FileToCreate } from "../dataTypes/FileSystemStructures";
 import { FileSystemDirectory } from "./filesystemTree";
 
 export class FileSystemChangeTracker {
@@ -22,16 +23,16 @@ export class FileSystemChangeTracker {
         }
     }
 
-    public registerNewFile(fileName: string, filePath: string[]) {
-        this.registerNewElement(fileName, filePath, ChangeTrackerDataType.File);
+    public registerNewFile(fileName: string, filePath: string[], content?: string) {
+        this.registerNewElement(fileName, filePath, ChangeTrackerDataType.File, content);
     }
 
     public registerNewDirectory(directoryName: string, filePath: string[]) {
         this.registerNewElement(directoryName, filePath, ChangeTrackerDataType.Directory);
     }
 
-    private registerNewElement(name: string, filePath: string[], type: ChangeTrackerDataType) {
-        const data = new DataInChangeTracker(name, filePath, type);
+    private registerNewElement(name: string, filePath: string[], type: ChangeTrackerDataType, content?: string) {
+        const data = new DataInChangeTracker(name, filePath, type, content);
 
         this.newData[data.getKey()] = data;
 
@@ -41,7 +42,7 @@ export class FileSystemChangeTracker {
     }
 
     public createAll(
-        createFileCallback: (fileName: string, filePath: string[]) => void,
+        createFileCallback: (fileName: FileToCreate, filePath: string[]) => void,
         createDirectoryCallback: (directoryName: string, filePath: string[]) => void
     ) {
         for (const key in this.newData) {
@@ -52,7 +53,13 @@ export class FileSystemChangeTracker {
             }
 
             if (data.dataType === ChangeTrackerDataType.File) {
-                createFileCallback(data.fileName, data.filePath);
+                createFileCallback(
+                    {
+                        content: data.content,
+                        name: data.fileName
+                    } as FileToCreate,
+                    data.filePath
+                );
             }
             else if (data.dataType === ChangeTrackerDataType.Directory) {
                 createDirectoryCallback(data.fileName, data.filePath);
@@ -97,7 +104,7 @@ enum ChangeTrackerDataType {
 }
 
 export class DataInChangeTracker {
-    constructor(public fileName: string, public filePath: string[], public dataType: ChangeTrackerDataType) {
+    constructor(public fileName: string, public filePath: string[], public dataType: ChangeTrackerDataType, public content?: string) {
 
     }
 

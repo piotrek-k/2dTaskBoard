@@ -1,3 +1,4 @@
+import { TASKS_DIRECTORY_NAME } from "../constants";
 import { FileSystemChangeTracker } from "../tools/filesystemChangeTracker";
 import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
 import taskStorage, { ICardMetadataStorage } from "./CardMetadataStorage";
@@ -175,7 +176,9 @@ export class KanbanBoardStorage {
 
                     const taskFileName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter}).md`;
 
-                    changeTracker.registerNewFile(taskFileName, ['board', rowName, columnName]);
+                    const fileContent = `![[${this.storageHandler.getNameOfStorage()}/${TASKS_DIRECTORY_NAME}/${task.id}/content]]`;
+
+                    changeTracker.registerNewFile(taskFileName, ['board', rowName, columnName], fileContent);
 
                     taskCounter += 1;
                 }
@@ -185,7 +188,7 @@ export class KanbanBoardStorage {
         }
 
         changeTracker.createAll(
-            (fileName, filePath) => this.storageHandler.createEmptyFiles([fileName], filePath),
+            (fileDetails, filePath) => this.storageHandler.saveTextContentToDirectory(fileDetails.name, fileDetails.content, filePath),
             (directoryName, filePath) => this.storageHandler.createDirectory([...filePath, directoryName])
         );
 

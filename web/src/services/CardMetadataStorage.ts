@@ -1,3 +1,4 @@
+import { TASKS_DIRECTORY_NAME } from "../constants";
 import { CardStoredMetadata, TaskStoredMetadata, RowStoredMetadata, MetadataType } from "../dataTypes/CardMetadata";
 import { generateSyncId } from "../tools/syncTools";
 import { Id } from "../types";
@@ -22,7 +23,7 @@ export class CardMetadataStorage implements ICardMetadataStorage {
     }
 
     public async getCardContent(cardId: Id): Promise<string> {
-        const fileContents = await this.storageHandler.getContentFromDirectory('content.md', ['tasks', `${cardId}`]);
+        const fileContents = await this.storageHandler.getContentFromDirectory('content.md', [TASKS_DIRECTORY_NAME, `${cardId}`]);
 
         return fileContents;
     }
@@ -37,7 +38,7 @@ export class CardMetadataStorage implements ICardMetadataStorage {
             return this.cache[cardId] as T;
         }
 
-        const content = await this.storageHandler.getContentFromDirectory('metadata.md', ['tasks', `${cardId}`]);
+        const content = await this.storageHandler.getContentFromDirectory('metadata.md', [TASKS_DIRECTORY_NAME, `${cardId}`]);
 
         if (content.length === 0) {
             return undefined;
@@ -65,16 +66,16 @@ export class CardMetadataStorage implements ICardMetadataStorage {
     }
 
     public async saveCardContent(cardId: Id, content: string) {
-        await this.storageHandler.saveTextContentToDirectory('content.md', content, ['tasks', `${cardId}`]);
+        await this.storageHandler.saveTextContentToDirectory('content.md', content, [TASKS_DIRECTORY_NAME, `${cardId}`]);
     }
 
     public async saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void> {
         delete this.cache[card.id];
 
-        await this.storageHandler.saveJsonContentToDirectory<T>('metadata.md', card, ['tasks', `${card.id}`]);
+        await this.storageHandler.saveJsonContentToDirectory<T>('metadata.md', card, [TASKS_DIRECTORY_NAME, `${card.id}`]);
     }
 
-    public async createNewRowMetadata(id: Id, title: string){
+    public async createNewRowMetadata(id: Id, title: string) {
         const rowMetadata: RowStoredMetadata = {
             id: id,
             title: title,
