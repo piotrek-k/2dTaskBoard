@@ -30,6 +30,10 @@ export class ContentMdFile {
         this.properties["tags"] = [
             "2dTaskBoardAppTask"
         ]
+        if(!("created_datetime" in this.properties)){
+            this.properties["created_datetime"] = new Date().toISOString();
+        }
+        this.properties["modified_datetime"] = new Date().toISOString();
     }
 
     getRawContentMdFileReadyToSave(cardMetadata: CardStoredMetadata) {
