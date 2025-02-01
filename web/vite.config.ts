@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react-swc';
 import { VitePWA } from 'vite-plugin-pwa';
 import basicSsl from '@vitejs/plugin-basic-ssl'
 
+// required for the gray-matter plugin.
+// https://github.com/davidmyersdev/vite-plugin-node-polyfills
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   return {
@@ -29,7 +33,8 @@ export default defineConfig(({ mode }) => {
             },
           ],
         },
-      })
+      }),
+      nodePolyfills()
     ],
     build: {
       chunkSizeWarningLimit: 1600

@@ -1,12 +1,12 @@
 import { RowMetadataViewModel, MetadataType, RowStoredMetadata, TaskMetadataViewModel, TaskStoredMetadata, CardStoredMetadata } from "../dataTypes/CardMetadata";
-import taskStorage, { ICardMetadataStorage } from "../services/CardMetadataStorage";
+import taskStorage, { ICardStorage } from "../services/CardStorage";
 import kanbanBoardStorage, { KanbanBoardStorage } from "../services/KanbanBoardStorage";
 import { generateSyncId } from "../tools/syncTools";
 import { Id, KanbanDataContainer } from "../types";
 
 export class CardMetadataViewModels {
 
-    constructor(private boardStorage: KanbanBoardStorage, private cardStorage: ICardMetadataStorage) {
+    constructor(private boardStorage: KanbanBoardStorage, private cardStorage: ICardStorage) {
     }
 
     public async getRowMetadataViewModel(rowId: Id): Promise<RowMetadataViewModel | undefined> {

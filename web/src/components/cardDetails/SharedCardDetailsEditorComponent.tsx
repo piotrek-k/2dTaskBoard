@@ -5,7 +5,7 @@ import CustomImageRenderer from '../customMarkdownRenderers/CustomImageRenderer'
 import FileUploader from '../fileUploader/FileUploader';
 import LinkRenderer from '../customMarkdownRenderers/LinkRenderer';
 import { Link } from "react-router-dom";
-import taskStorage from '../../services/CardMetadataStorage';
+import taskStorage from '../../services/CardStorage';
 import attachmentsStorage from '../../services/AttachmentsStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { CardStoredMetadata } from '../../dataTypes/CardMetadata';
@@ -38,8 +38,9 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
         if (storageIsReady) {
             taskStorage.getCardContent(card.id)
                 .then(content => {
-                    setTaskContent(content);
-                    setSavedTaskContent(content);
+                    const contentText = content.getJustMarkdownContent();
+                    setTaskContent(contentText);
+                    setSavedTaskContent(contentText);
                 })
                 .catch(err => {
                     console.error('Error fetching task content:', err);
@@ -136,7 +137,8 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
     const handleSave = useCallback(async () => {
         if (storageIsReady && taskContent !== undefined) {
             card.title = taskName;
-            await taskStorage.saveCardContent(card.id, taskContent);
+
+            await taskStorage.saveCardContent(card.id, taskContent, card);
             await taskStorage.saveCardMetadata(card);
             setSavedTaskContent(taskContent);
             await requestSavingDataToStorage();

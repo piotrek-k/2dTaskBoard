@@ -1,0 +1,1 @@
+export const TASKS_DIRECTORY_NAME: string = "tasks";

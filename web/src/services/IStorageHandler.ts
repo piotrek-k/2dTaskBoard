@@ -19,4 +19,6 @@ export interface IStorageHandler {
     removeDirectory(directoryName: string, folderNames: string[]): Promise<void>;
     createEmptyFiles(fileNames: string[], folderNames: string[]): Promise<void>;
     createDirectory(folderNames: string[]): Promise<void>;
+
+    getNameOfStorage(): string;
 }

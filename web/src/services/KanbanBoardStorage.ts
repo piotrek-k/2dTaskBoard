@@ -1,6 +1,7 @@
+import { TASKS_DIRECTORY_NAME } from "../constants";
 import { FileSystemChangeTracker } from "../tools/filesystemChangeTracker";
 import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
-import taskStorage, { ICardMetadataStorage } from "./CardMetadataStorage";
+import taskStorage, { ICardStorage } from "./CardStorage";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
@@ -19,7 +20,7 @@ export class KanbanBoardStorage {
 
     private cache: KanbanDataContainer | null = null;
 
-    constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardMetadataStorage) {
+    constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardStorage) {
     }
 
     public static readonly knownColumns = [
@@ -173,9 +174,11 @@ export class KanbanBoardStorage {
                         throw new Error('Task metadata not found');
                     }
 
-                    const taskName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter})`;
+                    const taskFileName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter}).md`;
 
-                    changeTracker.registerNewFile(taskName, ['board', rowName, columnName]);
+                    const fileContent = `![[${this.storageHandler.getNameOfStorage()}/${TASKS_DIRECTORY_NAME}/${task.id}/content]]`;
+
+                    changeTracker.registerNewFile(taskFileName, ['board', rowName, columnName], fileContent);
 
                     taskCounter += 1;
                 }
@@ -185,7 +188,7 @@ export class KanbanBoardStorage {
         }
 
         changeTracker.createAll(
-            (fileName, filePath) => this.storageHandler.createEmptyFiles([fileName], filePath),
+            (fileDetails, filePath) => this.storageHandler.saveTextContentToDirectory(fileDetails.name, fileDetails.content, filePath),
             (directoryName, filePath) => this.storageHandler.createDirectory([...filePath, directoryName])
         );
 
