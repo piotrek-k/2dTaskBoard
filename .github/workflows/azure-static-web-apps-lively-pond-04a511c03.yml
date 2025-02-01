@@ -51,10 +51,10 @@ jobs:
       #     cd desktop
       #     npm test
 
-      - name: Build app (desktop)
-        run: |
-          cd desktop
-          npm run build
+      # - name: Build app (desktop)
+      #   run: |
+      #     cd desktop
+      #     npm run build
 
   build_and_deploy_job:
     if: startsWith(github.ref, 'refs/heads/release')
