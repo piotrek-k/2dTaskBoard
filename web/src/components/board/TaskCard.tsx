@@ -44,7 +44,9 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
             task={taskMetadata}
             requestSavingDataToStorage={requestSavingDataToStorage}
             isReadOnly={false}
-            requestRemovingCard={requestRemovingCard} />);
+            requestRemovingCard={requestRemovingCard}
+            allowDelete={true}
+        />);
         setModalOpen(true);
     }, [requestSavingDataToStorage, setModalContent, setModalOpen, requestRemovingCard]);
 

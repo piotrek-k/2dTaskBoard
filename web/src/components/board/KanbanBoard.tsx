@@ -233,6 +233,7 @@ function KanbanBoard() {
                                             columns={columns}
                                             createTask={createTask}
                                             removeTask={removeTask}
+                                            removeRow={removeRow}
                                             tasks={tasks.filter((task) => task.rowId === row.id)}
                                             requestSavingDataToStorage={saveBoardAndReload}
                                             rowNavigation={{
@@ -259,6 +260,7 @@ function KanbanBoard() {
                                             shouldBeFocused={false}
                                             removeFocusRequest={() => { }}
                                             moveTaskToNextColumn={() => { }}
+                                            requestRemovingCard={() => { }}
                                         />
                                     }
                                 </DragOverlay>,
@@ -351,6 +353,11 @@ function KanbanBoard() {
 
     async function modifyTask(task: TaskInStorage) {
         setTasks([task, ...tasks.filter(x => x.id != task.id)]);
+    }
+
+    async function removeRow(rowId: Id) {
+        setTasks(tasks.filter(task => task.rowId !== rowId));
+        setRows(rows.filter(row => row.id !== rowId));
     }
 
     function moveRowUp(rowId: Id) {

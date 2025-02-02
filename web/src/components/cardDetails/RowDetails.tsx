@@ -6,9 +6,10 @@ interface Props {
   requestSavingDataToStorage: () => Promise<void>;
   isReadOnly: boolean;
   requestRemovingCard: (cardId: number) => void;
+  allowDelete: boolean;
 }
 
-function RowDetails({ row, requestSavingDataToStorage, isReadOnly, requestRemovingCard }: Props) {
+function RowDetails({ row, requestSavingDataToStorage, isReadOnly, requestRemovingCard, allowDelete }: Props) {
 
   return (
     <>
@@ -17,6 +18,7 @@ function RowDetails({ row, requestSavingDataToStorage, isReadOnly, requestRemovi
         requestSavingDataToStorage={requestSavingDataToStorage}
         isReadOnly={isReadOnly}
         requestRemovingCard={requestRemovingCard}
+        allowDelete={allowDelete}
       />
     </>
   )

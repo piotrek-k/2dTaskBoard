@@ -26,7 +26,7 @@ function CardDetailsStandalone() {
 
             const metadataViewModel = await cardMetadataViewModelsBuilder.getMetadataOfUnknownType(cardId);
 
-            if(metadataViewModel?.type == MetadataType.Task) {
+            if (metadataViewModel?.type == MetadataType.Task) {
                 const taskViewModel = metadataViewModel as TaskMetadataViewModel;
 
                 setTask(taskViewModel);
@@ -34,7 +34,7 @@ function CardDetailsStandalone() {
                 return;
             }
 
-            if(metadataViewModel?.type == MetadataType.Row) {
+            if (metadataViewModel?.type == MetadataType.Row) {
                 const rowViewModel = metadataViewModel as RowMetadataViewModel;
 
                 setRow(rowViewModel);
@@ -60,8 +60,19 @@ function CardDetailsStandalone() {
 
     return (
         <>
-            {task ? <TaskDetails task={task} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={false} /> :
-                row ? <RowDetails row={row} requestSavingDataToStorage={requestSavingDataToStorage} isReadOnly={false} /> :
+            {task ? <TaskDetails
+                task={task}
+                requestSavingDataToStorage={requestSavingDataToStorage}
+                isReadOnly={false}
+                requestRemovingCard={() => { throw new Error("Not implemented"); }}
+                allowDelete={false} /> :
+                row ? <RowDetails
+                    row={row}
+                    requestSavingDataToStorage={requestSavingDataToStorage}
+                    isReadOnly={false}
+                    requestRemovingCard={() => { throw new Error("Not implemented"); }}
+                    allowDelete={false}
+                /> :
                     <div>Loading...</div>}
         </>
     )
