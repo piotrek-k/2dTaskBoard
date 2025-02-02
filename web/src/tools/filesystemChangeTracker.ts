@@ -41,9 +41,9 @@ export class FileSystemChangeTracker {
         }
     }
 
-    public createAll(
-        createFileCallback: (fileName: FileToCreate, filePath: string[]) => void,
-        createDirectoryCallback: (directoryName: string, filePath: string[]) => void
+    public async createAll(
+        createFileCallback: (fileName: FileToCreate, filePath: string[]) => Promise<void>,
+        createDirectoryCallback: (directoryName: string, filePath: string[]) => Promise<void>
     ) {
         for (const key in this.newData) {
             const data = this.newData[key];
@@ -53,7 +53,7 @@ export class FileSystemChangeTracker {
             }
 
             if (data.dataType === ChangeTrackerDataType.File) {
-                createFileCallback(
+                await createFileCallback(
                     {
                         content: data.content,
                         name: data.fileName
@@ -62,24 +62,24 @@ export class FileSystemChangeTracker {
                 );
             }
             else if (data.dataType === ChangeTrackerDataType.Directory) {
-                createDirectoryCallback(data.fileName, data.filePath);
+                await createDirectoryCallback(data.fileName, data.filePath);
             }
         }
     }
 
-    public removeUnneeded(
-        removeFileCallback: (fileName: string, filePath: string[]) => void,
-        removeDirectoryCallback: (directoryName: string, filePath: string[]) => void
+    public async removeUnneeded(
+        removeFileCallback: (fileName: string, filePath: string[]) => Promise<void>,
+        removeDirectoryCallback: (directoryName: string, filePath: string[]) => Promise<void>
     ) {
-        for (const key in this.existingData) {
-            if (!(key in this.newData)) {
-                const data = this.existingData[key];
+        const existingDataOrdered = Object.values(this.existingData).sort((a, b) => b.getPathLength() - a.getPathLength());
 
+        for (const data of existingDataOrdered) {
+            if (!(data.getKey() in this.newData)) {
                 if (data.dataType === ChangeTrackerDataType.File) {
-                    removeFileCallback(data.fileName, data.filePath);
+                    await removeFileCallback(data.fileName, data.filePath);
                 }
                 else if (data.dataType === ChangeTrackerDataType.Directory) {
-                    removeDirectoryCallback(data.fileName, data.filePath);
+                    await removeDirectoryCallback(data.fileName, data.filePath);
                 }
             }
         }
@@ -110,5 +110,9 @@ export class DataInChangeTracker {
 
     public getKey() {
         return this.filePath.join('/') + '/' + this.fileName;
+    }
+
+    public getPathLength() {
+        return this.filePath.length;
     }
 }

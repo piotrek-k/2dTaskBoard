@@ -187,14 +187,14 @@ export class KanbanBoardStorage {
             rowCounter += 1;
         }
 
-        changeTracker.createAll(
-            (fileDetails, filePath) => this.storageHandler.saveTextContentToDirectory(fileDetails.name, fileDetails.content, filePath),
-            (directoryName, filePath) => this.storageHandler.createDirectory([...filePath, directoryName])
+        await changeTracker.createAll(
+            async (fileDetails, filePath) => await this.storageHandler.saveTextContentToDirectory(fileDetails.name, fileDetails.content, filePath),
+            async (directoryName, filePath) => await this.storageHandler.createDirectory([...filePath, directoryName])
         );
 
-        changeTracker.removeUnneeded(
-            (fileName, filePath) => this.storageHandler.deleteFile(fileName, filePath),
-            (directoryName, filePath) => this.storageHandler.removeDirectory(directoryName, filePath)
+        await changeTracker.removeUnneeded(
+            async (fileName, filePath) => await this.storageHandler.deleteFile(fileName, filePath),
+            async (directoryName, filePath) => await this.storageHandler.removeDirectory(directoryName, filePath)
         );
     }
 
