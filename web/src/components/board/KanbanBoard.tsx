@@ -195,7 +195,7 @@ function KanbanBoard() {
                         className="flex items-center bg-gray-700 text-white px-3 py-1 text-sm"
                     >
                         <PlusIcon />
-                        
+
                         <span className="p-2">Add Row</span>
                     </button>
                     <button
@@ -203,7 +203,7 @@ function KanbanBoard() {
                         className="flex items-center bg-gray-700 text-white px-3 py-1 text-sm"
                     >
                         <FolderIcon />
-                        
+
                         <span className="p-2">Load Different Directory</span>
                     </button>
                 </div> : <></>}
@@ -232,6 +232,7 @@ function KanbanBoard() {
                                             row={row}
                                             columns={columns}
                                             createTask={createTask}
+                                            removeTask={removeTask}
                                             tasks={tasks.filter((task) => task.rowId === row.id)}
                                             requestSavingDataToStorage={saveBoardAndReload}
                                             rowNavigation={{
@@ -342,6 +343,10 @@ function KanbanBoard() {
         await taskStorage.saveCardMetadata(newTaskMetadata);
 
         setTasks([newTask, ...tasks]);
+    }
+
+    async function removeTask(taskId: Id) {
+        setTasks(tasks.filter(task => task.id !== taskId));
     }
 
     async function modifyTask(task: TaskInStorage) {

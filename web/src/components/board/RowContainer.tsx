@@ -19,6 +19,7 @@ interface Props {
     row: RowInStorage;
     columns: ColumnInStorage[];
     createTask: (columnId: Id, rowId: Id) => void;
+    removeTask: (cardId: Id) => void;
     requestSavingDataToStorage: () => Promise<void>;
     rowNavigation: RowNavigation;
     handleRowFocusChange: (rowId?: Id) => void;
@@ -28,7 +29,7 @@ interface Props {
     modifyTask: (task: TaskInStorage) => void;
 }
 
-function RowContainer({ row, columns, createTask, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, setFocusRequest, tasks, modifyTask }: Props) {
+function RowContainer({ row, columns, createTask, removeTask, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, setFocusRequest, tasks, modifyTask }: Props) {
 
     const elementRef = useRef<HTMLDivElement>(null);
 
@@ -141,6 +142,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
                                 column={col}
                                 row={row}
                                 createTask={createTask}
+                                removeTask={removeTask}
                                 tasks={tasks.filter((task) => task.columnId === col.id && task.rowId === row.id)}
                                 requestSavingDataToStorage={requestSavingDataToStorage}
                                 isFirstColumn={col.id === columns[0].id}

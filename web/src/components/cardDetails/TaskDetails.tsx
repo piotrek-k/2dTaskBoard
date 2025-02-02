@@ -5,9 +5,10 @@ interface Props {
   task: TaskMetadataViewModel;
   requestSavingDataToStorage: () => Promise<void>;
   isReadOnly: boolean;
+  requestRemovingCard: (cardId: number) => void;
 }
 
-function TaskDetails({ task, requestSavingDataToStorage, isReadOnly }: Props) {
+function TaskDetails({ task, requestSavingDataToStorage, isReadOnly, requestRemovingCard }: Props) {
 
   return (
     <>
@@ -15,6 +16,7 @@ function TaskDetails({ task, requestSavingDataToStorage, isReadOnly }: Props) {
         card={task}
         requestSavingDataToStorage={requestSavingDataToStorage}
         isReadOnly={isReadOnly}
+        requestRemovingCard={requestRemovingCard}
       />
     </>
   )

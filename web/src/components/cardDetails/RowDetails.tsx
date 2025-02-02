@@ -5,9 +5,10 @@ interface Props {
   row: RowMetadataViewModel;
   requestSavingDataToStorage: () => Promise<void>;
   isReadOnly: boolean;
+  requestRemovingCard: (cardId: number) => void;
 }
 
-function RowDetails({ row, requestSavingDataToStorage, isReadOnly }: Props) {
+function RowDetails({ row, requestSavingDataToStorage, isReadOnly, requestRemovingCard }: Props) {
 
   return (
     <>
@@ -15,6 +16,7 @@ function RowDetails({ row, requestSavingDataToStorage, isReadOnly }: Props) {
         card={row}
         requestSavingDataToStorage={requestSavingDataToStorage}
         isReadOnly={isReadOnly}
+        requestRemovingCard={requestRemovingCard}
       />
     </>
   )
