@@ -21,6 +21,7 @@ import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import { generateSyncId } from '../../tools/syncTools';
 import MenuIcon from '../../icons/MenuIcon';
+import attachmentsStorage from '../../services/AttachmentsStorage';
 
 function KanbanBoard() {
 
@@ -351,6 +352,7 @@ function KanbanBoard() {
         setTasks(tasks.filter(task => task.id !== taskId));
 
         taskStorage.removeCard(taskId);
+        attachmentsStorage.deleteEntireContainer(taskId);
     }
 
     async function modifyTask(task: TaskInStorage) {
@@ -364,6 +366,7 @@ function KanbanBoard() {
         setRows(rows.filter(row => row.id !== rowId));
 
         taskStorage.removeCard(rowId);
+        attachmentsStorage.deleteEntireContainer(rowId);
     }
 
     function moveRowUp(rowId: Id) {
