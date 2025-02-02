@@ -349,6 +349,8 @@ function KanbanBoard() {
 
     async function removeTask(taskId: Id) {
         setTasks(tasks.filter(task => task.id !== taskId));
+
+        taskStorage.removeCard(taskId);
     }
 
     async function modifyTask(task: TaskInStorage) {
@@ -356,8 +358,12 @@ function KanbanBoard() {
     }
 
     async function removeRow(rowId: Id) {
-        setTasks(tasks.filter(task => task.rowId !== rowId));
+        const tasksToRemove = tasks.filter(task => task.rowId === rowId);
+        tasksToRemove.forEach(task => removeTask(task.id));
+
         setRows(rows.filter(row => row.id !== rowId));
+
+        taskStorage.removeCard(rowId);
     }
 
     function moveRowUp(rowId: Id) {
