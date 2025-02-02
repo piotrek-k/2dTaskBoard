@@ -14,11 +14,14 @@ import { FocusRequest } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { RowMetadataViewModel } from '../../dataTypes/CardMetadata';
 import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
+import ConfirmationDialogContext, { ConfirmationDialogContextProps } from '../../context/ConfirmationDialogContext';
 
 interface Props {
     row: RowInStorage;
     columns: ColumnInStorage[];
     createTask: (columnId: Id, rowId: Id) => void;
+    removeTask: (cardId: Id) => void;
+    removeRow: (rowId: Id) => void;
     requestSavingDataToStorage: () => Promise<void>;
     rowNavigation: RowNavigation;
     handleRowFocusChange: (rowId?: Id) => void;
@@ -28,38 +31,56 @@ interface Props {
     modifyTask: (task: TaskInStorage) => void;
 }
 
-function RowContainer({ row, columns, createTask, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, setFocusRequest, tasks, modifyTask }: Props) {
+function RowContainer({ row, columns, createTask, removeTask, removeRow, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, setFocusRequest, tasks, modifyTask }: Props) {
 
     const elementRef = useRef<HTMLDivElement>(null);
 
     const [rowViewModel, setRowViewModel] = useState<RowViewModel | null>(null);
 
+    const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
+    const { setConfirmationDialogOpen, setSettings } = useContext(ConfirmationDialogContext) as ConfirmationDialogContextProps;
+
     useEffect(() => {
         const fetchRowMetadata = async () => {
             const rowMetadata = await cardMetadataViewModelsBuilder.getRowMetadataViewModel(row.id) as RowMetadataViewModel;
-            
+
             setRowViewModel({
                 id: row.id,
                 title: rowMetadata.title
             });
         };
-    
+
         fetchRowMetadata();
     }, [row]);
 
     const columnsId = useMemo(() => columns.map((col) => col.id), [columns]);
 
-    const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
-    const handleClickOnRowDetails = useCallback(async (rowId : Id) => {
+    const askToRemoveRow = useCallback((rowId: Id) => {
+        setSettings({
+            question: 'Are you sure you want to remove this row?',
+            acceptCallback: () => {
+                removeRow(rowId);
+
+                setConfirmationDialogOpen(false);
+                setModalOpen(false);
+            }
+        });
+        setConfirmationDialogOpen(true);
+    }, [removeRow, setConfirmationDialogOpen, setSettings, setModalOpen]);
+
+    
+    const handleClickOnRowDetails = useCallback(async (rowId: Id) => {
         const metadataRow = await cardMetadataViewModelsBuilder.getRowMetadataViewModel(rowId) as RowMetadataViewModel;
 
         setModalContent(<RowDetails
             requestSavingDataToStorage={requestSavingDataToStorage}
             row={metadataRow}
             isReadOnly={false}
+            requestRemovingCard={() => askToRemoveRow(rowId)}
+            allowDelete={true}
         />);
         setTimeout(() => setModalOpen(true), 0);
-    }, [requestSavingDataToStorage, setModalContent, setModalOpen]);
+    }, [requestSavingDataToStorage, setModalContent, setModalOpen, askToRemoveRow]);
 
     const enterHotKeyRef = useHotkeys('enter', () => handleClickOnRowDetails(row.id));
 
@@ -141,6 +162,7 @@ function RowContainer({ row, columns, createTask, requestSavingDataToStorage, ro
                                 column={col}
                                 row={row}
                                 createTask={createTask}
+                                removeTask={removeTask}
                                 tasks={tasks.filter((task) => task.columnId === col.id && task.rowId === row.id)}
                                 requestSavingDataToStorage={requestSavingDataToStorage}
                                 isFirstColumn={col.id === columns[0].id}

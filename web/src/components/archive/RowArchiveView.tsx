@@ -24,7 +24,7 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
         const fetchRow = async () => {
             const row = await cardMetadataViewModelsBuilder.getRowMetadataViewModel(archivedRow.id);
 
-            if(!row){
+            if (!row) {
                 throw new Error("Row not found");
             }
 
@@ -46,7 +46,12 @@ function RowArchiveView({ archivedRow, restoreFromArchive }: Props) {
 
         const row = await cardMetadataViewModelsBuilder.getRowMetadataViewModel(rowId) as RowMetadataViewModel;
 
-        setModalContent(<RowDetails row={row} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
+        setModalContent(<RowDetails
+            row={row}
+            requestSavingDataToStorage={async () => { }}
+            isReadOnly={true}
+            requestRemovingCard={() => { }}
+            allowDelete={false} />);
         setTimeout(() => setModalOpen(true), 0);
     };
 

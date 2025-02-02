@@ -10,11 +10,14 @@ import attachmentsStorage from '../../services/AttachmentsStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { CardStoredMetadata } from '../../dataTypes/CardMetadata';
 import CustomMDEditor from '../customMarkdownRenderers/CustomMDEditor';
+import TrashIcon from '../../icons/TrashIcon';
 
 interface Props {
     card: CardStoredMetadata;
     requestSavingDataToStorage: () => Promise<void>;
     isReadOnly: boolean;
+    requestRemovingCard: (cardId: number) => void;
+    allowDelete: boolean;
 }
 
 interface TaskFile {
@@ -22,7 +25,7 @@ interface TaskFile {
     src: string;
 }
 
-function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, isReadOnly }: Props) {
+function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, isReadOnly, requestRemovingCard, allowDelete }: Props) {
     const { setContextHasUnsavedChanges } = useContext(DataSavingContext) as DataSavingContextProps;
     const [taskContent, setTaskContent] = useState<string | undefined>('');
     const [savedTaskContent, setSavedTaskContent] = useState(taskContent);
@@ -209,6 +212,17 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
                     </div>
                     <div className='flex flex-row gap-2'>
                         {!isReadOnly ? <>
+                            {allowDelete &&
+                                <button
+                                    onClick={() => {
+                                        requestRemovingCard(card.id);
+                                    }}
+                                    className="flex items-center px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-red-800 text-white transition-colors duration-200"
+                                >
+                                    <TrashIcon />
+                                </button>
+                            }
+
                             <button
                                 onClick={() => {
                                     setUseEditMode(!useEditMode);

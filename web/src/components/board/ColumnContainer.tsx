@@ -1,11 +1,13 @@
 import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { ColumnInStorage, Id, RowInStorage, TaskInStorage } from "../../types"
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import PlusIcon from "../../icons/PlusIcon";
 import TaskCard from "./TaskCard";
 import { CSS } from "@dnd-kit/utilities";
 import { FocusRequest } from "../../hooks/useBoardFocusManager";
 import { useHotkeys } from "react-hotkeys-hook";
+import ConfirmationDialogContext, { ConfirmationDialogContextProps } from "../../context/ConfirmationDialogContext";
+import ModalContext, { ModalContextProps } from "../../context/ModalContext";
 
 interface Props {
     column: ColumnInStorage;
@@ -13,6 +15,8 @@ interface Props {
     isFirstColumn: boolean;
 
     createTask: (columnId: Id, rowId: Id) => void;
+    removeTask: (cardId: Id) => void;
+    
     tasks: TaskInStorage[];
 
     requestSavingDataToStorage: () => Promise<void>;
@@ -21,7 +25,10 @@ interface Props {
 }
 
 function ColumnContainer(props: Props) {
-    const { column, row, createTask, tasks, requestSavingDataToStorage, isFirstColumn, focusRequest, moveTaskToNextColumn } = props;
+    const { column, row, createTask, removeTask, tasks, requestSavingDataToStorage, isFirstColumn, focusRequest, moveTaskToNextColumn } = props;
+
+    const { setConfirmationDialogOpen, setSettings} = useContext(ConfirmationDialogContext) as ConfirmationDialogContextProps;
+    const { setModalOpen } = useContext(ModalContext) as ModalContextProps;
 
     const addTaskButtonRef = useRef<HTMLButtonElement>(null);
     const columnRef = useRef<HTMLDivElement>(null);
@@ -75,6 +82,21 @@ function ColumnContainer(props: Props) {
         setTaskToFocus(undefined);
     };
 
+    const requestRemovingCard = (cardId: Id) => {
+        setSettings({
+            question: "Are you sure you want to remove this card?",
+            acceptCallback: () => {
+                console.log("Removing card with id: ", cardId);
+
+                removeTask(cardId);
+
+                setConfirmationDialogOpen(false);
+                setModalOpen(false);
+            }
+        });
+        setConfirmationDialogOpen(true);
+    }
+
     return (
         <div
             ref={columnRef}
@@ -103,6 +125,7 @@ function ColumnContainer(props: Props) {
                             shouldBeFocused={taskToFocus?.id === task.id}
                             removeFocusRequest={removeFocusRequest}
                             moveTaskToNextColumn={moveTaskToNextColumn}
+                            requestRemovingCard={requestRemovingCard}
                         />
                     ))}
                 </SortableContext>

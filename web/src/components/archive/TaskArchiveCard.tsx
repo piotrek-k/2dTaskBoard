@@ -10,7 +10,7 @@ interface Props {
     taskId: Id;
 }
 
-function TaskArchiveCard({taskId} : Props) {
+function TaskArchiveCard({ taskId }: Props) {
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
@@ -27,15 +27,20 @@ function TaskArchiveCard({taskId} : Props) {
     }, [taskId]);
 
     const handleClickOnTask = async () => {
-        if(task == null) {
+        if (task == null) {
             throw new Error("Task not found");
         }
 
-        setModalContent(<TaskDetails task={task} requestSavingDataToStorage={async () => { }} isReadOnly={true} />);
-        setTimeout(()=>setModalOpen(true), 0);
+        setModalContent(<TaskDetails
+            task={task}
+            requestSavingDataToStorage={async () => { }}
+            isReadOnly={true}
+            requestRemovingCard={() => { }}
+            allowDelete={false} />);
+        setTimeout(() => setModalOpen(true), 0);
     };
 
-    const ref = useHotkeys('enter', () => handleClickOnTask()); 
+    const ref = useHotkeys('enter', () => handleClickOnTask());
 
     return (
         <div

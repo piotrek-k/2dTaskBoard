@@ -157,6 +157,10 @@ class FileSystemHandler implements IStorageHandler {
 
         const targetDir = await this.followDirectories(folderNames);
 
+        if (targetDir == null) {
+            throw new Error("Directory not found");
+        }
+
         const fileHandle = await targetDir.getFileHandle(dataContainerName, { create: true });
 
         const file = await fileHandle.getFile();
@@ -184,6 +188,10 @@ class FileSystemHandler implements IStorageHandler {
 
         const targetDir = await this.followDirectories(folderNames);
 
+        if (targetDir == null) {
+            throw new Error("Directory not found");
+        }
+
         const fileHandle = await targetDir.getFileHandle(dataContainerName, { create: true });
 
         const writable = await fileHandle.createWritable();
@@ -198,6 +206,10 @@ class FileSystemHandler implements IStorageHandler {
         }
 
         const targetDir = await this.followDirectories(folderNames);
+
+        if (targetDir == null) {
+            throw new Error("Directory not found");
+        }
 
         if (ensureUniqueName) {
             targetFileName = await this.generateUniqueFileName(targetDir, targetFileName);
@@ -269,7 +281,11 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        const directory = await this.followDirectories(folderNames);
+        const directory = await this.followDirectories(folderNames, false);
+
+        if (directory == null) {
+            return [];
+        }
 
         const files: string[] = [];
         for await (const entry of (directory as any).values()) {
@@ -282,7 +298,11 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async loadEntireTree(folderNames: string[]): Promise<FileSystemDirectory> {
-        const handle = await this.followDirectories(folderNames);
+        const handle = await this.followDirectories(folderNames, false);
+
+        if (handle == null) {
+            throw new Error("Directory not found");
+        }
 
         return await recursivelyLoadDirectoryTree(handle);
     }
@@ -304,12 +324,16 @@ class FileSystemHandler implements IStorageHandler {
 
         const directory = await this.followDirectories(folderNames);
 
+        if (directory == null) {
+            throw new Error("Directory not found");
+        }
+
         for (const fileName of fileNames) {
             await directory.getFileHandle(fileName, { create: true });
         }
     }
 
-    private async followDirectories(folderNames: string[]): Promise<FileSystemDirectoryHandle> {
+    private async followDirectories(folderNames: string[], createIfNotExist: boolean = true): Promise<FileSystemDirectoryHandle | null> {
         if (this.directoryHandle == null) {
             this.directoryHandle = await this.restoreHandle();
         }
@@ -321,7 +345,11 @@ class FileSystemHandler implements IStorageHandler {
         let targetDir = this.directoryHandle;
 
         for (const folderName of folderNames) {
-            targetDir = await targetDir.getDirectoryHandle(folderName, { create: true });
+            try {
+                targetDir = await targetDir.getDirectoryHandle(folderName, { create: createIfNotExist });
+            } catch (error) {
+                return null;
+            }
         }
 
         return targetDir;
@@ -336,7 +364,11 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async getLinkToFile(fileName: string, folderNames: string[]): Promise<string> {
-        const directory = await this.followDirectories(folderNames);
+        const directory = await this.followDirectories(folderNames, false);
+
+        if (directory == null) {
+            throw new Error("Directory not found");
+        }
 
         const fileHandle = await directory.getFileHandle(fileName);
         const file = await fileHandle.getFile();
@@ -345,9 +377,17 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async deleteFile(fileName: string, folderNames: string[]): Promise<void> {
-        const directory = await this.followDirectories(folderNames);
+        const directory = await this.followDirectories(folderNames, false);
 
-        await directory.removeEntry(fileName);
+        if (directory == null) {
+            throw new Error(`Directory ${folderNames.join('/')} ${fileName} not found`);
+        }
+
+        try {
+            await directory.removeEntry(fileName);
+        } catch (error) {
+            console.error(`${folderNames.join('/')} ${fileName}`, error);
+        }
     }
 
 

@@ -15,6 +15,7 @@ export interface ICardStorage {
     saveCardContent(cardId: Id, contentWithoutProperties: string, cardStoredMetadata: CardStoredMetadata): Promise<void>;
     saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void>;
     createNewRowMetadata(id: Id, title: string): Promise<void>;
+    removeCard(cardId: Id): Promise<void>;
 }
 
 export class CardStorage implements ICardStorage {
@@ -27,6 +28,10 @@ export class CardStorage implements ICardStorage {
         const fileContents = await this.storageHandler.getContentFromDirectory('content.md', [TASKS_DIRECTORY_NAME, `${cardId}`]);
 
         return new ContentMdFile(fileContents);
+    }
+
+    public async removeCard(cardId: Id): Promise<void> {
+        await this.storageHandler.removeDirectory(`${cardId}`, [TASKS_DIRECTORY_NAME]);
     }
 
     public async getCardMetadata<T extends CardStoredMetadata>(cardId: Id): Promise<T | undefined> {

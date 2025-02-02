@@ -6,6 +6,8 @@ import DataSavingContext from '../../context/DataSavingContext';
 import { useState } from 'react';
 import { RestoreAccessToStoragePopup } from '../../components/shared/RestoreAccessToStoragePopup';
 import { ModalProvider } from '../../context/ModalProvider';
+import { ConfirmationDialog } from '../../components/confirmationDialog/ConfirmationDialog';
+import { ConfirmationDialogProvider } from '../../context/ConfirmationDialogProvider';
 
 ReactModal.setAppElement('#root');
 if (ReactModal.defaultStyles.content) {
@@ -20,9 +22,12 @@ function App() {
 
       <DataSavingContext.Provider value={{ contextHasUnsavedChanges, setContextHasUnsavedChanges }}>
         <ModalProvider>
-          <KanbanBoard></KanbanBoard>
-          <ModalComponent />
-          <RestoreAccessToStoragePopup></RestoreAccessToStoragePopup>
+          <ConfirmationDialogProvider>
+            <KanbanBoard></KanbanBoard>
+            <ModalComponent />
+            <ConfirmationDialog />
+            <RestoreAccessToStoragePopup></RestoreAccessToStoragePopup>
+          </ConfirmationDialogProvider>
         </ModalProvider>
       </DataSavingContext.Provider>
 

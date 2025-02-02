@@ -14,9 +14,10 @@ interface Props {
     shouldBeFocused: boolean;
     removeFocusRequest: () => void;
     moveTaskToNextColumn: (task: TaskInStorage, direction: number) => void;
+    requestRemovingCard: (cardId: Id) => void;
 }
 
-function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn }: Props) {
+function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn, requestRemovingCard }: Props) {
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
@@ -42,9 +43,12 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
         setModalContent(<TaskDetails
             task={taskMetadata}
             requestSavingDataToStorage={requestSavingDataToStorage}
-            isReadOnly={false} />);
+            isReadOnly={false}
+            requestRemovingCard={requestRemovingCard}
+            allowDelete={true}
+        />);
         setModalOpen(true);
-    }, [requestSavingDataToStorage, setModalContent, setModalOpen]);
+    }, [requestSavingDataToStorage, setModalContent, setModalOpen, requestRemovingCard]);
 
     const { setNodeRef, node, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: task.id,

@@ -21,6 +21,7 @@ import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import { generateSyncId } from '../../tools/syncTools';
 import MenuIcon from '../../icons/MenuIcon';
+import attachmentsStorage from '../../services/AttachmentsStorage';
 
 function KanbanBoard() {
 
@@ -195,7 +196,7 @@ function KanbanBoard() {
                         className="flex items-center bg-gray-700 text-white px-3 py-1 text-sm"
                     >
                         <PlusIcon />
-                        
+
                         <span className="p-2">Add Row</span>
                     </button>
                     <button
@@ -203,7 +204,7 @@ function KanbanBoard() {
                         className="flex items-center bg-gray-700 text-white px-3 py-1 text-sm"
                     >
                         <FolderIcon />
-                        
+
                         <span className="p-2">Load Different Directory</span>
                     </button>
                 </div> : <></>}
@@ -232,6 +233,8 @@ function KanbanBoard() {
                                             row={row}
                                             columns={columns}
                                             createTask={createTask}
+                                            removeTask={removeTask}
+                                            removeRow={removeRow}
                                             tasks={tasks.filter((task) => task.rowId === row.id)}
                                             requestSavingDataToStorage={saveBoardAndReload}
                                             rowNavigation={{
@@ -258,6 +261,7 @@ function KanbanBoard() {
                                             shouldBeFocused={false}
                                             removeFocusRequest={() => { }}
                                             moveTaskToNextColumn={() => { }}
+                                            requestRemovingCard={() => { }}
                                         />
                                     }
                                 </DragOverlay>,
@@ -344,8 +348,25 @@ function KanbanBoard() {
         setTasks([newTask, ...tasks]);
     }
 
+    async function removeTask(taskId: Id) {
+        setTasks(tasks.filter(task => task.id !== taskId));
+
+        taskStorage.removeCard(taskId);
+        attachmentsStorage.deleteEntireContainer(taskId);
+    }
+
     async function modifyTask(task: TaskInStorage) {
         setTasks([task, ...tasks.filter(x => x.id != task.id)]);
+    }
+
+    async function removeRow(rowId: Id) {
+        const tasksToRemove = tasks.filter(task => task.rowId === rowId);
+        tasksToRemove.forEach(task => removeTask(task.id));
+
+        setRows(rows.filter(row => row.id !== rowId));
+
+        taskStorage.removeCard(rowId);
+        attachmentsStorage.deleteEntireContainer(rowId);
     }
 
     function moveRowUp(rowId: Id) {
