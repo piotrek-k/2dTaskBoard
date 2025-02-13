@@ -301,7 +301,7 @@ class FileSystemHandler implements IStorageHandler {
         const handle = await this.followDirectories(folderNames, false);
 
         if (handle == null) {
-            throw new Error("Directory not found");
+            return new FileSystemDirectory('');
         }
 
         return await recursivelyLoadDirectoryTree(handle);

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { ColumnInStorage, Id, KanbanDataContainer, RowInStorage, TaskInStorage } from '../../types';
@@ -128,9 +128,9 @@ function KanbanBoard() {
         await loadBoard();
     }
 
-    async function saveBoard() {
+    const saveBoard = useCallback(async () => {
         await kanbanBoardStorage.saveKanbanState(boardState);
-    }
+    }, [boardState]);
 
     async function saveBoardAndReload() {
         await saveBoard();
@@ -148,7 +148,7 @@ function KanbanBoard() {
         if (dataLoaded) {
             saveBoard();
         }
-    }, [boardState]);
+    }, [boardState, dataLoaded, saveBoard]);
 
     return (
         <div className="flex flex-col h-screen">

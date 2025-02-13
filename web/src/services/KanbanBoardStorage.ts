@@ -4,6 +4,7 @@ import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
 import taskStorage, { ICardStorage } from "./CardStorage";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
+import { Mutex } from 'async-mutex';
 
 type TreeRowContainer = {
     id: number;
@@ -20,6 +21,8 @@ export class KanbanBoardStorage {
 
     private cache: KanbanDataContainer | null = null;
 
+    private synchronizationLock = new Mutex();
+
     constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardStorage) {
     }
 
@@ -30,17 +33,23 @@ export class KanbanBoardStorage {
     ];
 
     public async getKanbanState(): Promise<KanbanDataContainer> {
-        if (this.cache !== null) {
-            return this.cache;
-        }
+        let result: KanbanDataContainer = {} as KanbanDataContainer;
 
-        let result = await this.getNewKanbanState();
+        await this.synchronizationLock.runExclusive(async () => {
+            if (this.cache !== null) {
+                result = this.cache;
+            }
 
-        if (result == undefined) {
-            const fileContents = await this.storageHandler.getContent(this.fileName);
+            let boardState = await this.getNewKanbanState();
 
-            if (fileContents.length === 0) {
-                const newKanbanState = {
+            if (boardState !== undefined) {
+                this.cache = boardState;
+            }
+
+            if(boardState == undefined) {
+                this.storageHandler.createDirectory(['board']);
+
+                boardState = {
                     columns: [
                         { id: 1, title: 'To Do' },
                         { id: 2, title: 'In Progress' },
@@ -49,19 +58,10 @@ export class KanbanBoardStorage {
                     tasks: [],
                     rows: []
                 } as KanbanDataContainer;
-
-                await this.saveKanbanState(newKanbanState);
-
-                result = newKanbanState;
             }
-            else {
-                result = JSON.parse(fileContents) as KanbanDataContainer;
-            }
-        }
 
-        if (result !== undefined) {
-            this.cache = result;
-        }
+            result = boardState;
+        });
 
         return result;
     }
@@ -108,18 +108,18 @@ export class KanbanBoardStorage {
 
 
 
-    public async saveNewKanbanState(boardStateContainer: KanbanDataContainer) {
+    public async saveNewKanbanState(boardStateToSave: KanbanDataContainer) {
         const changeTracker = new FileSystemChangeTracker();
 
-        const directoriesRepresentingRows = await this.storageHandler.loadEntireTree(['board']);
+        const fileSystemTree = await this.storageHandler.loadEntireTree(['board']);
 
-        if (directoriesRepresentingRows !== undefined) {
-            changeTracker.loadExistingDataFromFileSystemTree(directoriesRepresentingRows, ['board']);
+        if (fileSystemTree !== undefined) {
+            changeTracker.loadExistingDataFromFileSystemTree(fileSystemTree, ['board']);
         }
 
-        const rowsAsTree = new Map<number, TreeRowContainer>();
+        const rowsToSave = new Map<number, TreeRowContainer>();
 
-        for (const row of boardStateContainer.rows) {
+        for (const row of boardStateToSave.rows) {
             const columnAsTree: { [key: number]: TreeColumnContianer } = [];
 
             for (const column of KanbanBoardStorage.knownColumns) {
@@ -129,25 +129,25 @@ export class KanbanBoardStorage {
                 };
             }
 
-            if (!rowsAsTree.has(row.id)) {
-                rowsAsTree.set(row.id, {
+            if (!rowsToSave.has(row.id)) {
+                rowsToSave.set(row.id, {
                     id: row.id,
                     columns: columnAsTree
                 });
             }
         }
 
-        for (const task of boardStateContainer.tasks) {
+        for (const task of boardStateToSave.tasks) {
 
-            if (!rowsAsTree.get(task.rowId)?.columns[task.columnId]) {
+            if (!rowsToSave.get(task.rowId)?.columns[task.columnId]) {
                 throw Error('Task without row or column found');
             }
 
-            rowsAsTree.get(task.rowId)?.columns[task.columnId].tasks.push(task);
+            rowsToSave.get(task.rowId)?.columns[task.columnId].tasks.push(task);
         }
 
         let rowCounter = 1;
-        for (const [, row] of rowsAsTree) {
+        for (const [, row] of rowsToSave) {
             const rowMetadata = await this.cardMetadataStorage.getRowMetadata(row.id);
 
             if (rowMetadata === undefined) {
@@ -245,18 +245,19 @@ export class KanbanBoardStorage {
     }
 
     public async saveKanbanState(boardStateContainer: KanbanDataContainer) {
+        await this.synchronizationLock.runExclusive(async () => {
+            const dataContainer = {
+                tasks: boardStateContainer.tasks,
+                rows: boardStateContainer.rows,
+                columns: boardStateContainer.columns
+            }
 
-        const dataContainer = {
-            tasks: boardStateContainer.tasks,
-            rows: boardStateContainer.rows,
-            columns: boardStateContainer.columns
-        }
+            await this.storageHandler.saveJsonContentToDirectory<KanbanDataContainer>(this.fileName, dataContainer, []);
 
-        await this.storageHandler.saveJsonContentToDirectory<KanbanDataContainer>(this.fileName, dataContainer, []);
+            await this.saveNewKanbanState(boardStateContainer);
 
-        await this.saveNewKanbanState(boardStateContainer);
-
-        this.cache = boardStateContainer;
+            this.cache = boardStateContainer;
+        });
     }
 
     public async addRowToBoard(row: RowInStorage, tasks: TaskInStorage[]) {
