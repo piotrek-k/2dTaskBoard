@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, Mock, beforeEach } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
-import { ICardStorage } from '../../../src/services/CardStorage'; 
+import { ICardStorage } from '../../../src/services/CardStorage';
 import { KanbanDataContainer } from '../../../src/types';
 import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../../src/dataTypes/CardMetadata';
 
@@ -19,10 +19,11 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
             getCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             getCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             getRowMetadata: vi.fn().mockResolvedValue({ id: 1, title: 'row1', type: MetadataType.Row, syncId: 'abc123' } as RowStoredMetadata),
-            getTaskMetadata: vi.fn().mockResolvedValue({ id: 1, title: 'task1', type: MetadataType.Task, syncId: 'abc123' } as TaskStoredMetadata),
+            getTaskMetadata: vi.fn().mockResolvedValue({ id: 2, title: 'task1', type: MetadataType.Task, syncId: 'def345' } as TaskStoredMetadata),
             saveCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             saveCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             createNewRowMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+            removeCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
         } as ICardStorage;
 
         kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, mockCardMetadataStorage);
@@ -50,7 +51,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 'row1 (1, abc123, 1)': {
                     'To Do': {
                         '[files]': [
-                            'task1 (2, abc123, 1).md'
+                            'task1 (2, def345, 1).md'
                         ]
                     },
                     'In Progress': {},
@@ -74,7 +75,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 'row1 (1, abc123, 1)': {
                     'To Do': {
                         '[files]': [
-                            'task1 (2, abc123, 1).md'
+                            'task1 (2, def345, 1).md'
                         ]
                     },
                     'In Progress': {},
@@ -115,7 +116,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                 'row1 (1, abc123, 1)': {
                     'To Do': {
                         '[files]': [
-                            'task1 (2, abc123, 1).md'
+                            'task1 (2, def345, 1).md'
                         ]
                     },
                     'In Progress': {},
@@ -134,7 +135,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
                     'To Do': {},
                     'In Progress': {
                         '[files]': [
-                            'task1 (2, abc123, 1).md'
+                            'task1 (2, def345, 1).md'
                         ]
                     },
                     'Done': {}
@@ -259,27 +260,29 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
 
         const fakeFileSystemTree = {};
 
-        mockFileSystemTree(mockStorageHandler, fakeFileSystemTree);
-
-        (mockCardMetadataStorage.getRowMetadata as Mock).mockResolvedValue({ id: 1, title: 'row1', type: MetadataType.Row, syncId: 'abc123' } as RowStoredMetadata);
+        mockCardMetadataStorage.getRowMetadata = vi.fn().mockResolvedValue({ id: 1, title: 'row1', type: MetadataType.Row, syncId: 'abc123' } as RowStoredMetadata);
         (mockCardMetadataStorage.getTaskMetadata as Mock).mockImplementation((id: number) => {
-            if (id === 2) {
+            if (id === 4) {
+                return Promise.resolve({ id: 4, title: 'task4', type: MetadataType.Task, syncId: 'ghi789' } as TaskStoredMetadata);
+            } else if (id === 2) {
                 return Promise.resolve({ id: 2, title: 'task2', type: MetadataType.Task, syncId: 'def456' } as TaskStoredMetadata);
             } else if (id === 3) {
-                return Promise.resolve({ id: 3, title: 'task3', type: MetadataType.Task, syncId: 'ghi789' } as TaskStoredMetadata);
-            } else if (id === 4) {
-                return Promise.resolve({ id: 4, title: 'task4', type: MetadataType.Task, syncId: 'ghi789' } as TaskStoredMetadata);
+                return Promise.resolve({ id: 3, title: 'task3', type: MetadataType.Task, syncId: 'kij987' } as TaskStoredMetadata);
             } else {
                 return Promise.resolve(undefined);
             }
         });
+
+        kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, mockCardMetadataStorage);
+
+        mockFileSystemTree(mockStorageHandler, fakeFileSystemTree);
 
         await kanbanBoardStorage.saveNewKanbanState(boardStateBeingSaved);
 
         expect(fakeFileSystemTree['board']['row1 (1, abc123, 1)']['To Do']['[files]']).toEqual([
             'task4 (4, ghi789, 1).md',
             'task2 (2, def456, 2).md',
-            'task3 (3, ghi789, 3).md'
+            'task3 (3, kij987, 3).md'
         ]);
     });
 });
