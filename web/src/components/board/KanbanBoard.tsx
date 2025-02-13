@@ -22,6 +22,7 @@ import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import { generateSyncId } from '../../tools/syncTools';
 import MenuIcon from '../../icons/MenuIcon';
 import attachmentsStorage from '../../services/AttachmentsStorage';
+import { debounce } from 'lodash';
 
 function KanbanBoard() {
 
@@ -129,8 +130,17 @@ function KanbanBoard() {
     }
 
     const saveBoard = useCallback(async () => {
+        console.log("Saving board state");
         await kanbanBoardStorage.saveKanbanState(boardState);
     }, [boardState]);
+
+    const debouncedSaveBoard = useMemo(() => debounce(saveBoard, 3000), [saveBoard]);
+
+    useEffect(() => {
+        return () => {
+            debouncedSaveBoard.cancel();
+        };
+    }, [debouncedSaveBoard]);
 
     async function saveBoardAndReload() {
         await saveBoard();
@@ -146,9 +156,9 @@ function KanbanBoard() {
 
     useEffect(() => {
         if (dataLoaded) {
-            saveBoard();
+            debouncedSaveBoard();
         }
-    }, [boardState, dataLoaded, saveBoard]);
+    }, [boardState, dataLoaded, debouncedSaveBoard]); 
 
     return (
         <div className="flex flex-col h-screen">
