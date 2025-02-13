@@ -134,7 +134,7 @@ function KanbanBoard() {
         await kanbanBoardStorage.saveKanbanState(boardState);
     }, [boardState]);
 
-    const debouncedSaveBoard = useMemo(() => debounce(saveBoard, 3000), [saveBoard]);
+    const debouncedSaveBoard = useMemo(() => debounce(saveBoard, 500), [saveBoard]);
 
     useEffect(() => {
         return () => {
