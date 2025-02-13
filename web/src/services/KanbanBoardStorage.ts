@@ -46,7 +46,7 @@ export class KanbanBoardStorage {
                 this.cache = boardState;
             }
 
-            if(boardState == undefined) {
+            if (boardState == undefined) {
                 this.storageHandler.createDirectory(['board']);
 
                 boardState = {
@@ -160,7 +160,22 @@ export class KanbanBoardStorage {
                 const columnName = this.convertColumnIdToName(column.id);
 
                 if (column.tasks.length === 0) {
-                    changeTracker.registerNewDirectory(columnName, ['board', rowName]);
+                    changeTracker.registerNewDirectory(
+                        {
+                            fileName: columnName,
+                            syncId: undefined
+                        },
+                        [
+                            {
+                                fileName: 'board',
+                                syncId: undefined
+                            },
+                            {
+                                fileName: rowName,
+                                syncId: rowMetadata.syncId
+                            }
+                        ]
+                    );
 
                     continue;
                 }
@@ -178,7 +193,27 @@ export class KanbanBoardStorage {
 
                     const fileContent = `![[${this.storageHandler.getNameOfStorage()}/${TASKS_DIRECTORY_NAME}/${task.id}/content]]`;
 
-                    changeTracker.registerNewFile(taskFileName, ['board', rowName, columnName], fileContent);
+                    changeTracker.registerNewFile(
+                        {
+                            fileName: taskFileName,
+                            syncId: taskMetadata.syncId
+                        },
+                        [
+                            {
+                                fileName: 'board',
+                                syncId: undefined
+                            },
+                            {
+                                fileName: rowName,
+                                syncId: rowMetadata.syncId
+                            },
+                            {
+                                fileName: columnName,
+                                syncId: undefined
+                            }
+                        ],
+                        fileContent
+                    );
 
                     taskCounter += 1;
                 }
