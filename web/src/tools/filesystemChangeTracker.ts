@@ -48,7 +48,7 @@ export class FileSystemChangeTracker {
         for (const key in this.newData) {
             const data = this.newData[key];
 
-            if (key in this.existingData && data.fileName == this.existingData[key].fileName) {
+            if (key in this.existingData && !data.pathChanged(this.existingData[key])) {
                 continue;
             }
 
@@ -74,7 +74,7 @@ export class FileSystemChangeTracker {
         const existingDataOrdered = Object.values(this.existingData).sort((a, b) => b.getPathLength() - a.getPathLength());
 
         for (const data of existingDataOrdered) {
-            if (!(data.getKey() in this.newData) || (data.getKey() in this.newData && data.fileName !== this.newData[data.getKey()].fileName)) {
+            if (!(data.getKey() in this.newData) || (data.getKey() in this.newData && data.pathChanged(this.newData[data.getKey()]))) {
                 if (data.dataType === ChangeTrackerDataType.File) {
                     await removeFileCallback(data.fileName, data.filePath.map(x => x.fileName));
                 }
@@ -143,6 +143,20 @@ export class DataInChangeTracker {
         }
 
         return this.filePath.map(x => x.fileName).join('/') + '/' + this.fileName;
+    }
+
+    public pathChanged(otherData: DataInChangeTracker){
+        if (this.filePath.length !== otherData.filePath.length || this.fileName !== otherData.fileName) {
+            return true;
+        }
+
+        for (let i = 0; i < this.filePath.length; i++) {
+            if (this.filePath[i].fileName !== otherData.filePath[i].fileName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public getPathLength() {
