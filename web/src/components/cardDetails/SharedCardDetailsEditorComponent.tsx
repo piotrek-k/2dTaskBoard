@@ -92,11 +92,11 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
         if (storageIsReady) {
             const fetchTaskFiles = async () => {
                 try {
-                    const files = await attachmentsStorage.getFileNamesForTask(card.id);
+                    const files = await attachmentsStorage.getFileNamesForTask(card);
 
                     const mappedFiles = await Promise.all(files.map(async file => ({
                         name: file,
-                        src: await attachmentsStorage.getLinkForAttachment(card.id, file)
+                        src: await attachmentsStorage.getLinkForAttachment(card, file)
                     })));
 
                     setTaskFiles(mappedFiles);
@@ -107,7 +107,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
 
             fetchTaskFiles();
         }
-    }, [storageIsReady, card.id]);
+    }, [storageIsReady, card]);
 
     useEffect(() => {
         refreshAttachments();
@@ -153,8 +153,8 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
         <MDEditor.Markdown
             source={taskContent}
             components={{
-                img: (props: any) => <CustomImageRenderer props={props} taskId={card.id} />,
-                a: (props: any) => <LinkRenderer props={props} taskId={card.id} />
+                img: (props: any) => <CustomImageRenderer props={props} cardMetadata={card} />,
+                a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />
             }}
             style={{
                 maxWidth: '100%',
@@ -162,7 +162,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             }}
             className='m-3 prose prose-invert lg:prose-xl'
         />
-    ), [taskContent, card.id]);
+    ), [taskContent, card]);
 
     useEffect(() => {
         const handleKeydown = (event: KeyboardEvent) => {
@@ -193,13 +193,13 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             defaultTabEnable={true}
             previewOptions={{
                 components: {
-                    img: (props: any) => <CustomImageRenderer props={props} taskId={card.id} />,
-                    a: (props: any) => <LinkRenderer props={props} taskId={card.id} />
+                    img: (props: any) => <CustomImageRenderer props={props} cardMetadata={card} />,
+                    a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />
                 }
             }}
             className="min-h-[50vw]"
         />
-    ), [taskContent, card.id, handleContentChange]);
+    ), [taskContent, handleContentChange, card]);
 
     return (
         <>
@@ -300,7 +300,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
                                 <button
                                     onClick={async () => {
                                         if (window.confirm(`Are you sure you want to delete ${taskFile.name}?`)) {
-                                            await attachmentsStorage.deleteFileForTask(card.id, taskFile.name);
+                                            await attachmentsStorage.deleteFileForTask(card, taskFile.name);
                                             refreshAttachments();
                                         }
                                     }}
@@ -321,7 +321,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             {!isReadOnly ? <FileUploader
                 onFileUpload={async (file) => {
                     try {
-                        const newFileName = await attachmentsStorage.uploadFileForTask(card.id, file);
+                        const newFileName = await attachmentsStorage.uploadFileForTask(card, file);
 
                         appendFile(newFileName);
 

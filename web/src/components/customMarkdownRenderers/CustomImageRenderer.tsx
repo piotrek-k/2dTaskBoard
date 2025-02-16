@@ -1,19 +1,19 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Id } from '../../types';
 import attachmentsStorage from '../../services/AttachmentsStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
+import { CardStoredMetadata } from '../../dataTypes/CardMetadata';
 
 interface Props {
-    taskId: Id;
+    cardMetadata: CardStoredMetadata;
     props: any;
 }
 
 const srcCache: Record<string, string> = {};
 
-function CustomImageRenderer({ taskId, props }: Props) {
+function CustomImageRenderer({ cardMetadata, props }: Props) {
     const [customSrc, setCustomSrc] = useState<string>(props.src || '');
 
-    const cacheKey = useMemo(() => `${taskId}-${props.src}`, [taskId, props.src]);
+    const cacheKey = useMemo(() => `${cardMetadata.id}-${props.src}`, [cardMetadata, props.src]);
 
     const storageIsReady = useStorageHandlerStatus();
 
@@ -24,14 +24,14 @@ function CustomImageRenderer({ taskId, props }: Props) {
                 return;
             }
             
-            const src = await attachmentsStorage.getLinkForAttachment(taskId, props.src);
+            const src = await attachmentsStorage.getLinkForAttachment(cardMetadata, props.src);
             
             srcCache[cacheKey] = src;
             setCustomSrc(src);
         };
 
         fetchCustomSrc();
-    }, [taskId, props.src, storageIsReady, cacheKey]);
+    }, [cardMetadata, props.src, storageIsReady, cacheKey]);
 
     return (
         <img
