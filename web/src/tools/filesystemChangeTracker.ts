@@ -5,16 +5,16 @@ export class FileSystemChangeTracker {
     private existingData: { [key: string]: DataInChangeTracker } = {};
     private newData: { [key: string]: DataInChangeTracker } = {};
 
-    public registerExistingFile(fileName: string, filePath: string[]) {
+    public registerExistingFile(fileName: FilePathElement, filePath: FilePathElement[]) {
         this.registerExisitingElement(fileName, filePath, ChangeTrackerDataType.File);
     }
 
-    public registerExistingDirectory(directoryName: string, filePath: string[]) {
+    public registerExistingDirectory(directoryName: FilePathElement, filePath: FilePathElement[]) {
         this.registerExisitingElement(directoryName, filePath, ChangeTrackerDataType.Directory);
     }
 
-    private registerExisitingElement(name: string, filePath: string[], type: ChangeTrackerDataType) {
-        const data = new DataInChangeTracker(name, filePath, type);
+    private registerExisitingElement(elementDetails: FilePathElement, filePath: FilePathElement[], type: ChangeTrackerDataType) {
+        const data = new DataInChangeTracker(elementDetails.fileName, filePath, type, undefined, elementDetails.syncId);
 
         this.existingData[data.getKey()] = data;
 
@@ -23,16 +23,16 @@ export class FileSystemChangeTracker {
         }
     }
 
-    public registerNewFile(fileName: string, filePath: string[], content?: string) {
+    public registerNewFile(fileName: FilePathElement, filePath: FilePathElement[], content?: string) {
         this.registerNewElement(fileName, filePath, ChangeTrackerDataType.File, content);
     }
 
-    public registerNewDirectory(directoryName: string, filePath: string[]) {
+    public registerNewDirectory(directoryName: FilePathElement, filePath: FilePathElement[]) {
         this.registerNewElement(directoryName, filePath, ChangeTrackerDataType.Directory);
     }
 
-    private registerNewElement(name: string, filePath: string[], type: ChangeTrackerDataType, content?: string) {
-        const data = new DataInChangeTracker(name, filePath, type, content);
+    private registerNewElement(elementDetails: FilePathElement, filePath: FilePathElement[], type: ChangeTrackerDataType, content?: string) {
+        const data = new DataInChangeTracker(elementDetails.fileName, filePath, type, content, elementDetails.syncId);
 
         this.newData[data.getKey()] = data;
 
@@ -48,7 +48,7 @@ export class FileSystemChangeTracker {
         for (const key in this.newData) {
             const data = this.newData[key];
 
-            if (key in this.existingData) {
+            if (key in this.existingData && !data.pathChanged(this.existingData[key])) {
                 continue;
             }
 
@@ -58,11 +58,11 @@ export class FileSystemChangeTracker {
                         content: data.content,
                         name: data.fileName
                     } as FileToCreate,
-                    data.filePath
+                    data.filePath.map(x => x.fileName)
                 );
             }
             else if (data.dataType === ChangeTrackerDataType.Directory) {
-                await createDirectoryCallback(data.fileName, data.filePath);
+                await createDirectoryCallback(data.fileName, data.filePath.map(x => x.fileName));
             }
         }
     }
@@ -74,12 +74,12 @@ export class FileSystemChangeTracker {
         const existingDataOrdered = Object.values(this.existingData).sort((a, b) => b.getPathLength() - a.getPathLength());
 
         for (const data of existingDataOrdered) {
-            if (!(data.getKey() in this.newData)) {
+            if (!(data.getKey() in this.newData) || (data.getKey() in this.newData && data.pathChanged(this.newData[data.getKey()]))) {
                 if (data.dataType === ChangeTrackerDataType.File) {
-                    await removeFileCallback(data.fileName, data.filePath);
+                    await removeFileCallback(data.fileName, data.filePath.map(x => x.fileName));
                 }
                 else if (data.dataType === ChangeTrackerDataType.Directory) {
-                    await removeDirectoryCallback(data.fileName, data.filePath);
+                    await removeDirectoryCallback(data.fileName, data.filePath.map(x => x.fileName));
                 }
             }
         }
@@ -87,14 +87,34 @@ export class FileSystemChangeTracker {
 
     public loadExistingDataFromFileSystemTree(fileSystemDirectory: FileSystemDirectory, path: string[]) {
         for (const file of fileSystemDirectory.getChildFiles()) {
-            this.registerExistingFile(file.getName(), path);
+            this.registerExistingFile({
+                fileName: file.getName(),
+                syncId: this.extractSyncIdFromFileName(file.getName())
+            }, path.map(x => ({
+                fileName: x,
+                syncId: this.extractSyncIdFromFileName(x)
+            })));
         }
 
         for (const directory of fileSystemDirectory.getChildDirectories()) {
-            this.registerExistingDirectory(directory.getName(), path);
+            this.registerExistingDirectory(
+                {
+                    fileName: directory.getName(),
+                    syncId: this.extractSyncIdFromFileName(directory.getName())
+                },
+                path.map(x => ({
+                    fileName: x,
+                    syncId: this.extractSyncIdFromFileName(x)
+                }))
+            );
 
             this.loadExistingDataFromFileSystemTree(directory, [...path, directory.getName()]);
         }
+    }
+
+    private extractSyncIdFromFileName(fileName: string) {
+        const match = fileName.match(/\((\d+),\s([a-fA-F0-9]{6}),/);
+        return match ? match[2] : undefined;
     }
 }
 
@@ -103,13 +123,40 @@ enum ChangeTrackerDataType {
     File
 }
 
-export class DataInChangeTracker {
-    constructor(public fileName: string, public filePath: string[], public dataType: ChangeTrackerDataType, public content?: string) {
+type FilePathElement = {
+    fileName: string;
+    syncId: string | undefined;
+}
 
-    }
+export class DataInChangeTracker {
+    constructor(
+        public fileName: string,
+        public filePath: FilePathElement[],
+        public dataType: ChangeTrackerDataType,
+        public content?: string,
+        public syncId?: string
+    ) { }
 
     public getKey() {
-        return this.filePath.join('/') + '/' + this.fileName;
+        if (this.syncId !== undefined) {
+            return this.syncId;
+        }
+
+        return this.filePath.map(x => x.fileName).join('/') + '/' + this.fileName;
+    }
+
+    public pathChanged(otherData: DataInChangeTracker){
+        if (this.filePath.length !== otherData.filePath.length || this.fileName !== otherData.fileName) {
+            return true;
+        }
+
+        for (let i = 0; i < this.filePath.length; i++) {
+            if (this.filePath[i].fileName !== otherData.filePath[i].fileName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public getPathLength() {

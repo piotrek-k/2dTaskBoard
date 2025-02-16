@@ -69,7 +69,7 @@ export class CardMetadataViewModels {
     }
 
     private addBoardContextToTask(task: TaskStoredMetadata, boardState: KanbanDataContainer): TaskMetadataViewModel {
-        const boardTask = boardState.tasks.find(t => t.id == task.id);
+        const boardTask = boardState?.tasks?.find(t => t.id == task.id);
 
         if (!boardTask) {
             return task as TaskMetadataViewModel;

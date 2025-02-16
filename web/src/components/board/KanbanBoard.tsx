@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { ColumnInStorage, Id, KanbanDataContainer, RowInStorage, TaskInStorage } from '../../types';
@@ -22,6 +22,7 @@ import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import { generateSyncId } from '../../tools/syncTools';
 import MenuIcon from '../../icons/MenuIcon';
 import attachmentsStorage from '../../services/AttachmentsStorage';
+import { debounce } from 'lodash';
 
 function KanbanBoard() {
 
@@ -128,9 +129,18 @@ function KanbanBoard() {
         await loadBoard();
     }
 
-    async function saveBoard() {
+    const saveBoard = useCallback(async () => {
+        console.log("Saving board state");
         await kanbanBoardStorage.saveKanbanState(boardState);
-    }
+    }, [boardState]);
+
+    const debouncedSaveBoard = useMemo(() => debounce(saveBoard, 500), [saveBoard]);
+
+    useEffect(() => {
+        return () => {
+            debouncedSaveBoard.cancel();
+        };
+    }, [debouncedSaveBoard]);
 
     async function saveBoardAndReload() {
         await saveBoard();
@@ -146,9 +156,9 @@ function KanbanBoard() {
 
     useEffect(() => {
         if (dataLoaded) {
-            saveBoard();
+            debouncedSaveBoard();
         }
-    }, [boardState]);
+    }, [boardState, dataLoaded, debouncedSaveBoard]); 
 
     return (
         <div className="flex flex-col h-screen">
