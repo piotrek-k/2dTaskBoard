@@ -3,6 +3,7 @@ export type Id = number;
 export type RowInStorage = {
     id: Id;
     position: number;
+    syncId: string;
 };
 
 export type RowViewModel = {

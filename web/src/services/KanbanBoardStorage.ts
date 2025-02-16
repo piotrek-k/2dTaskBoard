@@ -1,6 +1,7 @@
 import { TASKS_DIRECTORY_NAME } from "../constants";
 import { FileSystemChangeTracker } from "../tools/filesystemChangeTracker";
-import { KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
+import { Id, KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
+import { IArchiveStorage } from "./ArchiveStorage";
 import taskStorage, { ICardStorage } from "./CardStorage";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
@@ -21,7 +22,7 @@ export class KanbanBoardStorage {
 
     private synchronizationLock = new Mutex();
 
-    constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardStorage) {
+    constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardStorage, private archiveStorage: IArchiveStorage) {
     }
 
     public static readonly knownColumns = [
@@ -76,12 +77,22 @@ export class KanbanBoardStorage {
         const extractedTasksInfo: TaskInStorage[] = [];
 
         const syncIdsOfElementsAlreadyAdded = new Set<string>();
+        const idMappedToSyncId = new Map<Id, string>();
+
+        const rowsThatNeedIdChange: RowInStorage[] = [];
+        const tasksThatNeedIdChange: TaskInStorage[] = [];
 
         for (const rowFileName of directoriesRepresentingRows.getChildDirectories()) {
             const rowInfo = this.convertRowFileNameToRowElement(rowFileName.getName());
             const directoriesRepresentingColumns = rowFileName.getChildDirectories();
 
-            extractedRowsInfo.push(rowInfo);
+            if (idMappedToSyncId.has(rowInfo.id)) {
+                rowsThatNeedIdChange.push(rowInfo);
+            }
+            else {
+                extractedRowsInfo.push(rowInfo);
+                idMappedToSyncId.set(rowInfo.id, rowInfo.syncId);
+            }
 
             for (const columnDirectory of directoriesRepresentingColumns) {
                 const columnName = columnDirectory.getName();
@@ -95,10 +106,27 @@ export class KanbanBoardStorage {
                         continue;
                     }
 
-                    extractedTasksInfo.push(taskInfo);
+                    if (idMappedToSyncId.has(taskInfo.id)) {
+                        tasksThatNeedIdChange.push(taskInfo);
+                    }
+                    else {
+                        extractedTasksInfo.push(taskInfo);
+                        idMappedToSyncId.set(taskInfo.id, taskInfo.syncId);
+                    }
+
                     syncIdsOfElementsAlreadyAdded.add(taskInfo.syncId);
                 }
             }
+        }
+
+        for (const row of rowsThatNeedIdChange) {
+            row.id = await this.generateId(extractedTasksInfo, extractedRowsInfo);
+            extractedRowsInfo.push(row);
+        }
+
+        for (const task of tasksThatNeedIdChange) {
+            task.id = await this.generateId(extractedTasksInfo, extractedRowsInfo);
+            extractedTasksInfo.push(task);
         }
 
         const orderedRowsInfo = extractedRowsInfo.sort((a, b) => a.position - b.position);
@@ -111,6 +139,15 @@ export class KanbanBoardStorage {
         }
     }
 
+    public async generateId(tasks: TaskInStorage[], rows: RowInStorage[]): Promise<number> {
+        const archive = await this.archiveStorage.getArchive();
+        const maxRowIdInArchive = archive?.rows.reduce((max, row) => row.id > max ? row.id : max, 0) ?? 0;
+        const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, taskId) => taskId > max ? taskId : max, max), max), 0) ?? 0;
+        const maxTaskIdOnBoard = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
+        const maxRowIdOnBoard = rows.reduce((max, row) => row.id > max ? row.id : max, 0);
+
+        return Math.max(maxRowIdInArchive, maxTaskIdInArchive, maxTaskIdOnBoard, maxRowIdOnBoard) + 1;
+    }
 
 
     public async saveNewKanbanState(boardStateToSave: KanbanDataContainer) {
@@ -264,6 +301,7 @@ export class KanbanBoardStorage {
 
         return {
             id: match ? parseInt(match[1]) : 0,
+            syncId: match ? match[2] : '',
             position: match ? parseInt(match[3]) : 0
         };
     }

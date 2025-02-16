@@ -1,11 +1,16 @@
-import { describe, it, expect, Mock } from 'vitest';
+import { describe, it, expect, Mock, vi } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
 import taskStorage from '../../../src/services/CardStorage';
 import { FileSystemDirectory } from '../../../src/tools/filesystemTree';
+import { IArchiveStorage } from '../../../src/services/ArchiveStorage';
 
 describe('KanbanBoardStorage getNewKanbanState', () => {
-    const kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage);
+    const archiveStorageMock: IArchiveStorage = {
+        getArchive: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    };
+
+    const kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage, archiveStorageMock);
 
     it('should return undefined when directory is empty', async () => {
         (mockStorageHandler.listDirectoriesInDirectory as Mock).mockResolvedValue([]);
@@ -115,6 +120,36 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
 
         expect(result?.tasks).toHaveLength(1);
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 1 }));
+    });
+
+    it('should move assing task different id if conflict happens', async () => {
+
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`row1 (1, aaaaaa, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task1 (3, cccccc, 1)`
+                        ]
+                    }
+                },
+                [`row2 (2, bbbbbb, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task2 (3, dddddd, 1)`
+                        ]
+                    }
+                }
+            }
+        });
+
+        (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+
+        const result = await kanbanBoardStorage.getNewKanbanState();
+
+        expect(result?.tasks).toHaveLength(2);
+        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 3, syncId: 'cccccc' }));
+        expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 4, syncId: 'dddddd' }));
     });
 
     it('should sort rows by position', async () => {

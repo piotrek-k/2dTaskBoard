@@ -457,13 +457,7 @@ function KanbanBoard() {
     }
 
     async function generateId(): Promise<number> {
-        const archive = await archiveStorage.getArchive();
-        const maxRowIdInArchive = archive?.rows.reduce((max, row) => row.id > max ? row.id : max, 0) ?? 0;
-        const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, taskId) => taskId > max ? taskId : max, max), max), 0) ?? 0;
-        const maxTaskIdOnBoard = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
-        const maxRowIdOnBoard = rows.reduce((max, row) => row.id > max ? row.id : max, 0);
-
-        return Math.max(maxRowIdInArchive, maxTaskIdInArchive, maxTaskIdOnBoard, maxRowIdOnBoard) + 1;
+        return kanbanBoardStorage.generateId(tasks, rows);
     }
 
     function getLowestPositionForTask() {
