@@ -1,22 +1,40 @@
 import { describe, it, expect, Mock, vi, beforeEach } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
-import taskStorage from '../../../src/services/CardStorage';
+import { ICardStorage } from '../../../src/services/CardStorage';
 import { FileSystemDirectory } from '../../../src/tools/filesystemTree';
 import { IArchiveStorage } from '../../../src/services/ArchiveStorage';
 import { ComparisionType } from '../../../src/dataTypes/FileSystemStructures';
+import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../../src/dataTypes/CardMetadata';
 
 describe('KanbanBoardStorage getNewKanbanState', () => {
     const archiveStorageMock: IArchiveStorage = {
         getArchive: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
     };
 
-    let kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage, archiveStorageMock);
+    const taskStorageMock: ICardStorage = {
+        getTaskMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        saveCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getRowMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        createNewRowMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        removeCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getSearchPathToCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getReadPathToCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        saveCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); })
+    };
+
+    let kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorageMock, archiveStorageMock);
 
     beforeEach(() => {
         vi.resetAllMocks();
 
-        kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage, archiveStorageMock);
+        taskStorageMock.getReadPathToCard = vi.fn().mockImplementation((id: number, syncId: string) => {
+            return [`tasks`, `${id} (${syncId})`];
+        });
+
+        kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorageMock, archiveStorageMock);
     });
 
     it('should return undefined when directory is empty', async () => {
@@ -151,6 +169,14 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         });
 
         (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+        (taskStorageMock.getTaskMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 3) {
+                return Promise.resolve({ id: 3, title: 'Task 1', type: MetadataType.Task, syncId: 'cccccc' } as TaskStoredMetadata);
+            }
+            if (id === 4) {
+                return Promise.resolve({ id: 4, title: 'Task 2', type: MetadataType.Task, syncId: 'dddddd' } as TaskStoredMetadata);
+            }
+        })
 
         const result = await kanbanBoardStorage.getNewKanbanState();
 
@@ -172,7 +198,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             ],
             '4 (dddddd)'
         );
-        
+
     });
 
     it('should assign different id to one of rows if conflict happens between rows', async () => {
@@ -197,6 +223,17 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         });
 
         (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+        (taskStorageMock.getReadPathToCard as Mock).mockImplementation((id: number, syncId: string) => {
+            return [`tasks`, `${id} (${syncId})`];
+        });
+        (taskStorageMock.getRowMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 1) {
+                return Promise.resolve({ id: 1, title: 'Row 1', type: MetadataType.Row, syncId: 'aaaaaa' } as RowStoredMetadata);
+            }
+            if (id === 4) {
+                return Promise.resolve({ id: 1, title: 'Row 2', type: MetadataType.Row, syncId: 'bbbbbb' } as RowStoredMetadata);
+            }
+        });
 
         const result = await kanbanBoardStorage.getNewKanbanState();
 
@@ -236,6 +273,15 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         });
 
         (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+        (taskStorageMock.getTaskMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 2) {
+                return Promise.resolve({ id: 2, title: 'Task 1', type: MetadataType.Task, syncId: 'f3bf29' } as TaskStoredMetadata);
+            }
+            if (id == 3) {
+                return Promise.resolve({ id: 2, title: 'Task 2', type: MetadataType.Task, syncId: '973348' } as TaskStoredMetadata);
+            }
+        });
+
 
         const result = await kanbanBoardStorage.getNewKanbanState();
 
@@ -257,6 +303,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             ],
             '3 (973348)'
         );
+        expect(taskStorageMock.saveCardMetadata).toHaveBeenCalledWith(expect.objectContaining({ id: 3, syncId: '973348' }));
     });
 
     it('should assign different id to task if conflict happens between rows and tasks', async () => {
@@ -275,6 +322,14 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         });
 
         (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+        (taskStorageMock.getTaskMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 2) {
+                return Promise.resolve({ id: 2, title: 'Task X', type: MetadataType.Task, syncId: 'cccccc' } as TaskStoredMetadata);
+            }
+            if (id === 3) {
+                return Promise.resolve({ id: 3, title: 'Task 1', type: MetadataType.Task, syncId: 'bbbbbb' } as TaskStoredMetadata);
+            }
+        })
 
         const result = await kanbanBoardStorage.getNewKanbanState();
 

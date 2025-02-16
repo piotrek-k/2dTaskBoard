@@ -136,13 +136,31 @@ export class KanbanBoardStorage {
         }
 
         for (const row of rowsThatNeedIdChange) {
-            this.renameCardDirectory(row.oldId, row.details.id, row.details.syncId);
+            await this.renameCardDirectory(row.oldId, row.details.id, row.details.syncId);
+
+            const metadata = await this.cardMetadataStorage.getRowMetadata(row.details.id);
+
+            if (metadata === undefined) {
+                throw new Error('Row metadata not found');
+            }
+
+            metadata.id = row.details.id;
+            await this.cardMetadataStorage.saveCardMetadata(metadata);
 
             extractedRowsInfo.push(row.details);
         }
 
         for (const task of tasksThatNeedIdChange) {
-            this.renameCardDirectory(task.oldId, task.details.id, task.details.syncId);
+            await this.renameCardDirectory(task.oldId, task.details.id, task.details.syncId);
+
+            const metadata = await this.cardMetadataStorage.getTaskMetadata(task.details.id);
+
+            if (metadata === undefined) {
+                throw new Error('Task metadata not found');
+            }
+
+            metadata.id = task.details.id;
+            await this.cardMetadataStorage.saveCardMetadata(metadata);
 
             extractedTasksInfo.push(task.details);
         }
@@ -157,8 +175,8 @@ export class KanbanBoardStorage {
         }
     }
 
-    private renameCardDirectory(oldCardId: Id, newCardId: Id, syncId: string) {
-        this.storageHandler.renameDirectory(
+    private async renameCardDirectory(oldCardId: Id, newCardId: Id, syncId: string): Promise<void> {
+        await this.storageHandler.renameDirectory(
             this.cardMetadataStorage.getReadPathToCard(oldCardId, syncId).map(x => ({ name: x, comparisionType: ComparisionType.Exact } as FolderToFollow)),
             `${newCardId} (${syncId})`
         );

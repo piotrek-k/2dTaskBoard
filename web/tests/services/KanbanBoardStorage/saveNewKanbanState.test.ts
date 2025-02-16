@@ -73,7 +73,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         const newBoardState = {
             columns: knownColumns,
             rows: [
-                { id: 1, position: 1 }
+                { id: 1, position: 1, syncId: 'abc123' }
             ],
             tasks: []
         } as KanbanDataContainer;
