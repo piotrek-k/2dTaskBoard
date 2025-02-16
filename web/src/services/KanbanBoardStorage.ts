@@ -289,14 +289,6 @@ export class KanbanBoardStorage {
 
     public async saveKanbanState(boardStateContainer: KanbanDataContainer) {
         await this.synchronizationLock.runExclusive(async () => {
-            const dataContainer = {
-                tasks: boardStateContainer.tasks,
-                rows: boardStateContainer.rows,
-                columns: boardStateContainer.columns
-            }
-
-            await this.storageHandler.saveJsonContentToDirectory<KanbanDataContainer>(this.fileName, dataContainer, []);
-
             await this.saveNewKanbanState(boardStateContainer);
 
             this.cache = boardStateContainer;
