@@ -1,3 +1,4 @@
+import { FolderToFollow } from "../dataTypes/FileSystemStructures";
 import { FileSystemDirectory } from "../tools/filesystemTree";
 import { EventWatcher } from "./EventWatcher";
 
@@ -7,8 +8,11 @@ export interface IStorageHandler {
 
     getContent(dataContainerName: string): Promise<string>;
     getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string>;
+    getContentFromDirectoryComplexFolderPath(dataContainerName: string, folderNames: FolderToFollow[]): Promise<string>;
     saveJsonContentToDirectory<Type>(dataContainerName: string, dataContainer: Type, folderNames: string[]): Promise<void>;
     saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]): Promise<void>;
+    saveJsonContentToDirectoryWithDynamicPath<Type>(dataContainerName: string, dataContainer: Type, folderNames: FolderToFollow[]): Promise<void>;
+    saveTextContentToDirectoryWithDynamicPath(dataContainerName: string, dataContainer: string, folderNames: FolderToFollow[]): Promise<void>;
 
     uploadFile(file: File, targetFileName: string, folderNames: string[]): Promise<string>;
     deleteFile(fileName: string, folderNames: string[]): Promise<void>;
