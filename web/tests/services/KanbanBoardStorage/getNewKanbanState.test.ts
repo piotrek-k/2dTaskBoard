@@ -1,4 +1,4 @@
-import { describe, it, expect, Mock, vi } from 'vitest';
+import { describe, it, expect, Mock, vi, beforeEach } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
 import taskStorage from '../../../src/services/CardStorage';
@@ -11,7 +11,13 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         getArchive: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
     };
 
-    const kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage, archiveStorageMock);
+    let kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage, archiveStorageMock);
+
+    beforeEach(() => {
+        vi.resetAllMocks();
+
+        kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage, archiveStorageMock);
+    });
 
     it('should return undefined when directory is empty', async () => {
         (mockStorageHandler.listDirectoriesInDirectory as Mock).mockResolvedValue([]);
@@ -123,7 +129,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 2 }));
     });
 
-    it('should move assing task different id if conflict happens', async () => {
+    it('should move assign different id to task if conflict happens', async () => {
 
         mockFileSystemTree(mockStorageHandler, {
             'board': {
@@ -151,6 +157,20 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         expect(result?.tasks).toHaveLength(2);
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 3, syncId: 'cccccc' }));
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 4, syncId: 'dddddd' }));
+
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
+            [
+                {
+                    name: 'tasks',
+                    comparisionType: ComparisionType.Exact
+                },
+                {
+                    name: '3 (dddddd)',
+                    comparisionType: ComparisionType.Exact
+                }
+            ],
+            '4 (dddddd)'
+        );
     });
 
     it('should assign row different id if conflict happens between rows', async () => {
@@ -187,25 +207,26 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
             [
                 {
-                    name: 'board',
+                    name: 'tasks',
                     comparisionType: ComparisionType.Exact
                 },
                 {
-                    name: 'row1 (1, bbbbbb, 2)',
+                    name: '1 (bbbbbb)',
                     comparisionType: ComparisionType.Exact
                 }
             ],
-            'row1 (4, bbbbbb, 2)'
+            '4 (bbbbbb)'
         );
     });
 
-    it('should assign task different id if conflict happens between rows and tasks', async () => {
+    it('should assign different id to task if conflict happens between rows and tasks', async () => {
 
         mockFileSystemTree(mockStorageHandler, {
             'board': {
                 [`row1 (1, aaaaaa, 1)`]: {
                     'To Do': {
                         '[files]': [
+                            `taskX (2, cccccc, 1)`,
                             `task1 (1, bbbbbb, 1)`
                         ]
                     }
@@ -217,10 +238,24 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
 
         const result = await kanbanBoardStorage.getNewKanbanState();
 
-        expect(result?.tasks).toHaveLength(1);
-        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 2, syncId: 'bbbbbb', rowId: 1 }));
+        expect(result?.tasks).toHaveLength(2);
+        expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 3, syncId: 'bbbbbb', rowId: 1 }));
         expect(result?.rows).toHaveLength(1);
         expect(result?.rows[0]).toEqual(expect.objectContaining({ id: 1, syncId: 'aaaaaa' }));
+
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
+            [
+                {
+                    name: 'tasks',
+                    comparisionType: ComparisionType.Exact
+                },
+                {
+                    name: '1 (bbbbbb)',
+                    comparisionType: ComparisionType.Exact
+                }
+            ],
+            '3 (bbbbbb)'
+        );
     });
 
     it('should sort rows by position', async () => {
