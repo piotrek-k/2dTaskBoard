@@ -152,6 +152,38 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 4, syncId: 'dddddd' }));
     });
 
+    it('should assign row different id if conflict happens', async () => {
+
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`row1 (1, aaaaaa, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task1 (2, cccccc, 1)`
+                        ]
+                    }
+                },
+                [`row1 (1, aaaaaa, 2)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task2 (3, dddddd, 1)`
+                        ]
+                    }
+                }
+            }
+        });
+
+        (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+
+        const result = await kanbanBoardStorage.getNewKanbanState();
+
+        expect(result?.rows).toHaveLength(2);
+        expect(result?.rows[0]).toEqual(expect.objectContaining({ id: 1 }));
+        expect(result?.rows[1]).toEqual(expect.objectContaining({ id: 4 }));
+        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 2, syncId: 'cccccc', rowId: 1 }));
+        expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 3, syncId: 'dddddd', rowId: 4 }));
+    });
+
     it('should sort rows by position', async () => {
         const firstRowId = 1;
         const secondRowId = 2;
