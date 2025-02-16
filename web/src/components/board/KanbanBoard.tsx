@@ -158,7 +158,7 @@ function KanbanBoard() {
         if (dataLoaded) {
             debouncedSaveBoard();
         }
-    }, [boardState, dataLoaded, debouncedSaveBoard]); 
+    }, [boardState, dataLoaded, debouncedSaveBoard]);
 
     return (
         <div className="flex flex-col h-screen">
@@ -339,18 +339,21 @@ function KanbanBoard() {
     }
 
     async function createTask(columnId: Id, rowId: Id) {
+        const syncId = generateSyncId();
+
         const newTask: TaskInStorage = {
             id: await generateId(),
             columnId,
             rowId,
-            position: getLowestPositionForTask()
+            position: getLowestPositionForTask(),
+            syncId: syncId
         };
 
         const newTaskMetadata: TaskStoredMetadata = {
             id: newTask.id,
             title: `Task ${tasks.length + 1}`,
             type: MetadataType.Task,
-            syncId: generateSyncId()
+            syncId: syncId
         }
 
         await taskStorage.saveCardMetadata(newTaskMetadata);

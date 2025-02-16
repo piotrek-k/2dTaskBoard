@@ -17,8 +17,6 @@ type TreeColumnContianer = {
 };
 
 export class KanbanBoardStorage {
-    private fileName = 'data.json';
-
     private cache: KanbanDataContainer | null = null;
 
     private synchronizationLock = new Mutex();
