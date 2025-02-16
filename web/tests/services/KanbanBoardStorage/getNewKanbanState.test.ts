@@ -25,7 +25,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
                 [`row1 (${exprectedRowId}, abc123, ${expectedRowPosition})`]: {
                     'To Do': {
                         '[files]': [
-                            `task2 (${expectedTaskId}, abc123, ${expectedTaskPosition})`
+                            `task2 (${expectedTaskId}, def345, ${expectedTaskPosition})`
                         ]
                     }
                 }
@@ -41,7 +41,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
                 { id: 3, title: 'Done' }
             ],
             rows: [{ id: exprectedRowId, position: expectedRowPosition }],
-            tasks: [{ id: expectedTaskId, position: expectedTaskPosition, columnId: 1, rowId: exprectedRowId }]
+            tasks: [{ id: expectedTaskId, position: expectedTaskPosition, columnId: 1, rowId: exprectedRowId, syncId: 'def345' }]
         });
     });
 
@@ -83,7 +83,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
                     'To Do': {
                         '[files]': [
                             `task2 (${firstTaskId}, abc123, 1)`,
-                            `task1 (${secondTaskId}, abc123, 2)`
+                            `task1 (${secondTaskId}, def345, 2)`
                         ]
                     }
                 }
@@ -94,6 +94,27 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
 
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: firstTaskId }));
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: secondTaskId }));
+    });
+
+    it('should remove duplicate tasks with the same syncId', async () => {
+
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`row1 (1, abc123, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task1 (1, abc123, 1)`,
+                            `task1 (1, abc123, 2)`
+                        ]
+                    }
+                }
+            }
+        });
+
+        const result = await kanbanBoardStorage.getNewKanbanState();
+
+        expect(result?.tasks).toHaveLength(1);
+        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 1 }));
     });
 
     it('should sort rows by position', async () => {

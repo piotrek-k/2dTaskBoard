@@ -77,6 +77,8 @@ export class KanbanBoardStorage {
         const extractedRowsInfo: RowInStorage[] = [];
         const extractedTasksInfo: TaskInStorage[] = [];
 
+        const syncIdsOfElementsAlreadyAdded = new Set<string>();
+
         for (const rowFileName of directoriesRepresentingRows.getChildDirectories()) {
             const rowInfo = this.convertRowFileNameToRowElement(rowFileName.getName());
             const directoriesRepresentingColumns = rowFileName.getChildDirectories();
@@ -91,7 +93,12 @@ export class KanbanBoardStorage {
                 for (const task of filesRepresentingTasks) {
                     const taskInfo = this.convertTaskFileNameToTaskElement(task.getName(), columnId, rowInfo.id);
 
+                    if (syncIdsOfElementsAlreadyAdded.has(taskInfo.syncId)) {
+                        continue;
+                    }
+
                     extractedTasksInfo.push(taskInfo);
+                    syncIdsOfElementsAlreadyAdded.add(taskInfo.syncId);
                 }
             }
         }
@@ -272,9 +279,10 @@ export class KanbanBoardStorage {
         }
 
         return {
-            id: match ? parseInt(match[1]) : 0,
             columnId: knownColumnId,
             rowId: knownRowId,
+            id: match ? parseInt(match[1]) : 0,
+            syncId: match ? match[2] : '',
             position: match ? parseInt(match[3]) : 0
         };
     }

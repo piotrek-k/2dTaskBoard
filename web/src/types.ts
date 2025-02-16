@@ -20,6 +20,7 @@ export type TaskInStorage = {
     columnId: Id;
     rowId: Id;
     position: number;
+    syncId: string;
 };
 
 export type TaskViewModel = {
