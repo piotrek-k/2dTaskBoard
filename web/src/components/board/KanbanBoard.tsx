@@ -444,12 +444,15 @@ function KanbanBoard() {
     }
 
     async function createNewRow() {
+        const syncId = generateSyncId();
+
         const rowToAdd: RowInStorage = {
             id: await generateId(),
-            position: getHighestPositionForRow()
+            position: getHighestPositionForRow(),
+            syncId: syncId
         };
 
-        await taskStorage.createNewRowMetadata(rowToAdd.id, `Row ${rowToAdd.id}`);
+        await taskStorage.createNewRowMetadata(rowToAdd.id, `Row ${rowToAdd.id}`, syncId);
 
         await kanbanBoardStorage.addRowToBoard(rowToAdd, []);
 

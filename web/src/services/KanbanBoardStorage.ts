@@ -3,7 +3,7 @@ import { ComparisionType, FolderToFollow } from "../dataTypes/FileSystemStructur
 import { FileSystemChangeTracker } from "../tools/filesystemChangeTracker";
 import { FileSystemDirectory } from "../tools/filesystemTree";
 import { Id, KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
-import { IArchiveStorage } from "./ArchiveStorage";
+import archiveStorage, { IArchiveStorage } from "./ArchiveStorage";
 import taskStorage, { ICardStorage } from "./CardStorage";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
@@ -201,6 +201,10 @@ export class KanbanBoardStorage {
     }
 
     private getNewId(listOfReserverIds: number[]): number {
+        if (listOfReserverIds.length === 0) {
+            return 1;
+        }
+
         const maxId = Math.max(...listOfReserverIds);
         return maxId + 1;
     }
@@ -411,6 +415,6 @@ export class KanbanBoardStorage {
     }
 }
 
-const kanbanBoardStorage = new KanbanBoardStorage(fileSystemHandler, taskStorage);
+const kanbanBoardStorage = new KanbanBoardStorage(fileSystemHandler, taskStorage, archiveStorage);
 
 export default kanbanBoardStorage;

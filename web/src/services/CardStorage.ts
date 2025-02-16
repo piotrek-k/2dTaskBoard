@@ -15,7 +15,7 @@ export interface ICardStorage {
     getTaskMetadata(taskId: Id): Promise<TaskStoredMetadata | undefined>;
     saveCardContent(cardId: Id, contentWithoutProperties: string, cardStoredMetadata: CardStoredMetadata): Promise<void>;
     saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void>;
-    createNewRowMetadata(id: Id, title: string): Promise<void>;
+    createNewRowMetadata(id: Id, title: string, syncId: string): Promise<void>;
     removeCard(cardId: Id): Promise<void>;
     getSearchPathToCard(cardId: Id): FolderToFollow[];
     getReadPathToCard(cardId: Id, syncId: string): string[];
@@ -139,12 +139,12 @@ export class CardStorage implements ICardStorage {
         await this.storageHandler.saveJsonContentToDirectoryWithDynamicPath<T>('metadata.md', card, this.getSearchPathToCard(card.id));
     }
 
-    public async createNewRowMetadata(id: Id, title: string) {
+    public async createNewRowMetadata(id: Id, title: string, syncId: string) {
         const rowMetadata: RowStoredMetadata = {
             id: id,
             title: title,
             type: MetadataType.Row,
-            syncId: generateSyncId()
+            syncId: syncId
         }
 
         await taskStorage.saveCardMetadata(rowMetadata);

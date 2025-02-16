@@ -129,7 +129,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 2 }));
     });
 
-    it('should move assign different id to task if conflict happens', async () => {
+    it('should assign different id to task if conflict happens', async () => {
 
         mockFileSystemTree(mockStorageHandler, {
             'board': {
@@ -158,6 +158,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 3, syncId: 'cccccc' }));
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 4, syncId: 'dddddd' }));
 
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledTimes(1);
         expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
             [
                 {
@@ -171,9 +172,10 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             ],
             '4 (dddddd)'
         );
+        
     });
 
-    it('should assign row different id if conflict happens between rows', async () => {
+    it('should assign different id to one of rows if conflict happens between rows', async () => {
 
         mockFileSystemTree(mockStorageHandler, {
             'board': {
@@ -219,6 +221,44 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         );
     });
 
+    it('should assign different id to one of tasks if two tasks have the same id', async () => {
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`Row_1 (1, 345118, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `Task_1 (2, f3bf29, 2).md`,
+                            `Task_2 (2, 973348, 1).md`
+                        ]
+                    }
+                }
+            }
+        });
+
+        (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+
+        const result = await kanbanBoardStorage.getNewKanbanState();
+
+        expect(result?.tasks).toHaveLength(2);
+        expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 2, syncId: 'f3bf29' }));
+        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 3, syncId: '973348' }));
+
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledTimes(1);
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
+            [
+                {
+                    name: 'tasks',
+                    comparisionType: ComparisionType.Exact
+                },
+                {
+                    name: '2 (973348)',
+                    comparisionType: ComparisionType.Exact
+                }
+            ],
+            '3 (973348)'
+        );
+    });
+
     it('should assign different id to task if conflict happens between rows and tasks', async () => {
 
         mockFileSystemTree(mockStorageHandler, {
@@ -243,6 +283,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         expect(result?.rows).toHaveLength(1);
         expect(result?.rows[0]).toEqual(expect.objectContaining({ id: 1, syncId: 'aaaaaa' }));
 
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledTimes(1);
         expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
             [
                 {
