@@ -1,5 +1,6 @@
 import { TASKS_DIRECTORY_NAME } from "../constants";
 import { FileSystemChangeTracker } from "../tools/filesystemChangeTracker";
+import { FileSystemDirectory } from "../tools/filesystemTree";
 import { Id, KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
 import { IArchiveStorage } from "./ArchiveStorage";
 import taskStorage, { ICardStorage } from "./CardStorage";
@@ -82,11 +83,15 @@ export class KanbanBoardStorage {
         const rowsThatNeedIdChange: RowInStorage[] = [];
         const tasksThatNeedIdChange: TaskInStorage[] = [];
 
+        let nextFreeId = this.getNextIdFromDirectoryTree(directoriesRepresentingRows);
+
         for (const rowFileName of directoriesRepresentingRows.getChildDirectories()) {
             const rowInfo = this.convertRowFileNameToRowElement(rowFileName.getName());
             const directoriesRepresentingColumns = rowFileName.getChildDirectories();
 
             if (idMappedToSyncId.has(rowInfo.id)) {
+                rowInfo.id = nextFreeId;
+                nextFreeId += 1;
                 rowsThatNeedIdChange.push(rowInfo);
             }
             else {
@@ -107,6 +112,8 @@ export class KanbanBoardStorage {
                     }
 
                     if (idMappedToSyncId.has(taskInfo.id)) {
+                        taskInfo.id = nextFreeId;
+                        nextFreeId += 1;
                         tasksThatNeedIdChange.push(taskInfo);
                     }
                     else {
@@ -120,12 +127,10 @@ export class KanbanBoardStorage {
         }
 
         for (const row of rowsThatNeedIdChange) {
-            row.id = await this.generateId(extractedTasksInfo, extractedRowsInfo);
             extractedRowsInfo.push(row);
         }
 
         for (const task of tasksThatNeedIdChange) {
-            task.id = await this.generateId(extractedTasksInfo, extractedRowsInfo);
             extractedTasksInfo.push(task);
         }
 
@@ -139,14 +144,45 @@ export class KanbanBoardStorage {
         }
     }
 
+    private getNextIdFromDirectoryTree(directoryTree: FileSystemDirectory): number {
+        const result: number[] = [];
+
+        for (const rowFileName of directoryTree.getChildDirectories()) {
+            const rowInfo = this.convertRowFileNameToRowElement(rowFileName.getName());
+            const directoriesRepresentingColumns = rowFileName.getChildDirectories();
+
+            result.push(rowInfo.id);
+
+            for (const columnDirectory of directoriesRepresentingColumns) {
+                const columnName = columnDirectory.getName();
+                const columnId = this.covertColumnNameToId(columnName);
+                const filesRepresentingTasks = columnDirectory.getChildFiles();
+
+                for (const task of filesRepresentingTasks) {
+                    const taskInfo = this.convertTaskFileNameToTaskElement(task.getName(), columnId, rowInfo.id);
+
+                    result.push(taskInfo.id);
+                }
+            }
+        }
+
+        return this.getNewId(result);
+    }
+
     public async generateId(tasks: TaskInStorage[], rows: RowInStorage[]): Promise<number> {
         const archive = await this.archiveStorage.getArchive();
-        const maxRowIdInArchive = archive?.rows.reduce((max, row) => row.id > max ? row.id : max, 0) ?? 0;
-        const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, taskId) => taskId > max ? taskId : max, max), max), 0) ?? 0;
-        const maxTaskIdOnBoard = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
-        const maxRowIdOnBoard = rows.reduce((max, row) => row.id > max ? row.id : max, 0);
 
-        return Math.max(maxRowIdInArchive, maxTaskIdInArchive, maxTaskIdOnBoard, maxRowIdOnBoard) + 1;
+        return this.getNewId([
+            ...tasks.map(task => task.id),
+            ...rows.map(row => row.id),
+            ...archive.rows.map(row => row.id),
+            ...archive.rows.flatMap(row => row.columns.flatMap(column => column.tasks)).map(taskId => taskId)
+        ]);
+    }
+
+    private getNewId(listOfReserverIds: number[]): number {
+        const maxId = Math.max(...listOfReserverIds);
+        return maxId + 1;
     }
 
 
