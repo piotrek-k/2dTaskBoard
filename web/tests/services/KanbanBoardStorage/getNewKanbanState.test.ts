@@ -4,6 +4,7 @@ import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMo
 import taskStorage from '../../../src/services/CardStorage';
 import { FileSystemDirectory } from '../../../src/tools/filesystemTree';
 import { IArchiveStorage } from '../../../src/services/ArchiveStorage';
+import { ComparisionType } from '../../../src/dataTypes/FileSystemStructures';
 
 describe('KanbanBoardStorage getNewKanbanState', () => {
     const archiveStorageMock: IArchiveStorage = {
@@ -182,6 +183,20 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         expect(result?.rows[1]).toEqual(expect.objectContaining({ id: 4, syncId: 'bbbbbb' }));
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 2, syncId: 'cccccc', rowId: 1 }));
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 3, syncId: 'dddddd', rowId: 4 }));
+
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
+            [
+                {
+                    name: 'board',
+                    comparisionType: ComparisionType.Exact
+                },
+                {
+                    name: 'row1 (1, bbbbbb, 2)',
+                    comparisionType: ComparisionType.Exact
+                }
+            ],
+            'row1 (4, bbbbbb, 2)'
+        );
     });
 
     it('should assign task different id if conflict happens between rows and tasks', async () => {

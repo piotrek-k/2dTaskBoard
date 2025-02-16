@@ -450,7 +450,48 @@ class FileSystemHandler implements IStorageHandler {
         }
     }
 
+    public async renameDirectory(pathToDirectory: FolderToFollow[], newName: string): Promise<void> {
 
+        const parentDirectory = await this.followDirectoriesComplex(pathToDirectory.slice(0, -1), false);
+        const oldDirectory = await this.followDirectoriesComplex(pathToDirectory, false);
+        const newDirectory = await parentDirectory?.getDirectoryHandle(newName, { create: true });
+        const oldDirectoryName = oldDirectory?.name;
+
+        if (oldDirectory == null) {
+            throw new Error(`Couldn't find old directory`);
+        }
+
+        if (newDirectory == null) {
+            throw new Error(`Couldn't create new directory`);
+        }
+
+        if (parentDirectory == null) {
+            throw new Error(`Couldn't find parent directory`);
+        }
+
+        if (oldDirectoryName == null) {
+            throw new Error(`Couldn't find old directory name`);
+        }
+
+        await this.copyDirectory(oldDirectory, newDirectory);
+
+        await parentDirectory.removeEntry(oldDirectoryName, { recursive: true });
+    }
+
+    private async copyDirectory(sourceHandle: FileSystemDirectoryHandle, targetHandle: FileSystemDirectoryHandle) {
+        for await (const entry of (sourceHandle as any).values()) {
+            if (entry.kind === 'file') {
+                const file = await entry.getFile();
+                const newFileHandle = await targetHandle.getFileHandle(entry.name, { create: true });
+                const writable = await newFileHandle.createWritable();
+                await writable.write(await file.arrayBuffer());
+                await writable.close();
+            } else if (entry.kind === 'directory') {
+                const newSubDir = await targetHandle.getDirectoryHandle(entry.name, { create: true });
+                await this.copyDirectory(entry, newSubDir);
+            }
+        }
+    }
 }
 
 const fileSystemHandler = new FileSystemHandler(settingsProvider);

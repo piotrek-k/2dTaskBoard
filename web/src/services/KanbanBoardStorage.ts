@@ -1,4 +1,5 @@
 import { TASKS_DIRECTORY_NAME } from "../constants";
+import { ComparisionType } from "../dataTypes/FileSystemStructures";
 import { FileSystemChangeTracker } from "../tools/filesystemChangeTracker";
 import { FileSystemDirectory } from "../tools/filesystemTree";
 import { Id, KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
@@ -80,8 +81,8 @@ export class KanbanBoardStorage {
         const syncIdsOfElementsAlreadyAdded = new Set<string>();
         const idMappedToSyncId = new Map<Id, string>();
 
-        const rowsThatNeedIdChange: RowInStorage[] = [];
-        const tasksThatNeedIdChange: TaskInStorage[] = [];
+        const rowsThatNeedIdChange: { dirName: string, details: RowInStorage }[] = [];
+        const tasksThatNeedIdChange: { dirName: string, details: TaskInStorage }[] = [];
 
         let nextFreeId = this.getNextIdFromDirectoryTree(directoriesRepresentingRows);
 
@@ -92,7 +93,10 @@ export class KanbanBoardStorage {
             if (idMappedToSyncId.has(rowInfo.id)) {
                 rowInfo.id = nextFreeId;
                 nextFreeId += 1;
-                rowsThatNeedIdChange.push(rowInfo);
+                rowsThatNeedIdChange.push({
+                    dirName: rowFileName.getName(),
+                    details: rowInfo
+                });
             }
             else {
                 extractedRowsInfo.push(rowInfo);
@@ -114,7 +118,10 @@ export class KanbanBoardStorage {
                     if (idMappedToSyncId.has(taskInfo.id)) {
                         taskInfo.id = nextFreeId;
                         nextFreeId += 1;
-                        tasksThatNeedIdChange.push(taskInfo);
+                        tasksThatNeedIdChange.push({
+                            dirName: task.getName(),
+                            details: taskInfo
+                        });
                     }
                     else {
                         extractedTasksInfo.push(taskInfo);
@@ -127,11 +134,32 @@ export class KanbanBoardStorage {
         }
 
         for (const row of rowsThatNeedIdChange) {
-            extractedRowsInfo.push(row);
+
+            const rowInfo = this.convertRowFileNameToRowElement(row.dirName);
+            const extractedNameMatch = row.dirName.match(/(.+)\s\(/);
+            const extractedName = extractedNameMatch ? extractedNameMatch[1] : '';
+
+            if (extractedName === '')
+                throw new Error('Row name does not match expected pattern');
+
+            this.storageHandler.renameDirectory(
+                [
+                    {
+                        name: 'board',
+                        comparisionType: ComparisionType.Exact
+                    },
+                    {
+                        name: row.dirName,
+                        comparisionType: ComparisionType.Exact
+                    }
+                ],
+                this.getDirectoryNameForRow(extractedName, row.details.id, rowInfo.syncId, row.details.position)
+            );
+            extractedRowsInfo.push(row.details);
         }
 
         for (const task of tasksThatNeedIdChange) {
-            extractedTasksInfo.push(task);
+            extractedTasksInfo.push(task.details);
         }
 
         const orderedRowsInfo = extractedRowsInfo.sort((a, b) => a.position - b.position);
@@ -234,7 +262,7 @@ export class KanbanBoardStorage {
 
             for (const column of Object.values(row.columns)) {
 
-                const rowName = `${this.sanitizeFilename(rowMetadata.title)} (${row.id}, ${rowMetadata.syncId}, ${rowCounter})`;
+                const rowName = this.getDirectoryNameForRow(rowMetadata.title, row.id, rowMetadata.syncId, rowCounter);
                 const columnName = this.convertColumnIdToName(column.id);
 
                 if (column.tasks.length === 0) {
@@ -309,6 +337,10 @@ export class KanbanBoardStorage {
             async (fileName, filePath) => await this.storageHandler.deleteFile(fileName, filePath),
             async (directoryName, filePath) => await this.storageHandler.removeDirectory(directoryName, filePath)
         );
+    }
+
+    private getDirectoryNameForRow(title: string, id: Id, syncId: string, position: number): string {
+        return `${this.sanitizeFilename(title)} (${id}, ${syncId}, ${position})`;
     }
 
     private covertColumnNameToId(columnName: string): number {
