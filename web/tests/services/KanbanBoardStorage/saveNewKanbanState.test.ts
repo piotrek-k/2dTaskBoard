@@ -147,7 +147,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         expect(mockStorageHandler.saveTextContentToDirectory).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw an error when any it is not possible to get metadata for any row', async () => {
+    it('should throw an error when it is not possible to get metadata for any row', async () => {
         const boardStateBeingSaved = {
             columns: knownColumns,
             rows: [
@@ -210,7 +210,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         expect(fakeFileSystemTree['board']).toEqual(expect.objectContaining({ 'row2 (2, def456, 2)': expect.anything() }));
     });
 
-    it('should save new positions based for rows, based on their location in rows array', async () => {
+    it('should save new positions for rows, based on their location in rows array', async () => {
         const boardStateBeingSaved = {
             columns: knownColumns,
             rows: [
