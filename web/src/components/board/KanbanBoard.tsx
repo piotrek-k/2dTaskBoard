@@ -339,18 +339,20 @@ function KanbanBoard() {
 
     async function createTask(columnId: Id, rowId: Id) {
         const syncId = generateSyncId();
+        const newTitle = `Task ${tasks.length + 1}`;
 
         const newTask: TaskInStorage = {
             id: await generateId(),
             columnId,
             rowId,
             position: getLowestPositionForTask(),
-            syncId: syncId
+            syncId: syncId,
+            title: newTitle
         };
 
         const newTaskMetadata: TaskStoredMetadata = {
             id: newTask.id,
-            title: `Task ${tasks.length + 1}`,
+            title: newTitle,
             type: MetadataType.Task,
             syncId: syncId
         }
@@ -445,14 +447,16 @@ function KanbanBoard() {
 
     async function createNewRow() {
         const syncId = generateSyncId();
+        const newTitle = `Row ${rows.length + 1}`;
 
         const rowToAdd: RowInStorage = {
             id: await generateId(),
             position: getHighestPositionForRow(),
-            syncId: syncId
+            syncId: syncId,
+            title: newTitle
         };
 
-        await taskStorage.createNewRowMetadata(rowToAdd.id, `Row ${rowToAdd.id}`, syncId);
+        await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle, syncId);
 
         await kanbanBoardStorage.addRowToBoard(rowToAdd, []);
 

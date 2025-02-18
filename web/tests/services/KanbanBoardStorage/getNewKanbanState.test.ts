@@ -40,7 +40,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
     it('should return undefined when directory is empty', async () => {
         (mockStorageHandler.listDirectoriesInDirectory as Mock).mockResolvedValue([]);
         (mockStorageHandler.loadEntireTree as Mock).mockResolvedValue(new FileSystemDirectory(''));
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
         expect(result).toBeUndefined();
     });
 
@@ -62,7 +62,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result).toEqual({
             columns: [
@@ -70,8 +70,8 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
                 { id: 2, title: 'In Progress' },
                 { id: 3, title: 'Done' }
             ],
-            rows: [{ id: exprectedRowId, position: expectedRowPosition, syncId: 'abc123' }],
-            tasks: [{ id: expectedTaskId, position: expectedTaskPosition, columnId: 1, rowId: exprectedRowId, syncId: 'def345' }]
+            rows: [{ id: exprectedRowId, position: expectedRowPosition, syncId: 'abc123', title: 'row1' }],
+            tasks: [{ id: expectedTaskId, position: expectedTaskPosition, columnId: 1, rowId: exprectedRowId, syncId: 'def345', title: 'task2' }]
         });
     });
 
@@ -90,7 +90,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result).not.toBeUndefined();
         expect(result?.rows).toHaveLength(2);
@@ -120,7 +120,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: firstTaskId }));
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: secondTaskId }));
@@ -141,7 +141,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.tasks).toHaveLength(1);
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 2 }));
@@ -178,7 +178,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         })
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.tasks).toHaveLength(2);
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 3, syncId: 'cccccc' }));
@@ -235,7 +235,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.rows).toHaveLength(2);
         expect(result?.rows[0]).toEqual(expect.objectContaining({ id: 1, syncId: 'aaaaaa' }));
@@ -283,7 +283,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
         });
 
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.tasks).toHaveLength(2);
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 2, syncId: 'f3bf29' }));
@@ -331,7 +331,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         })
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.tasks).toHaveLength(2);
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 3, syncId: 'bbbbbb', rowId: 1 }));
@@ -369,7 +369,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.rows[0]).toEqual(expect.objectContaining({ id: firstRowId }));
         expect(result?.rows[1]).toEqual(expect.objectContaining({ id: secondRowId }));
@@ -397,7 +397,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.rows).toHaveLength(2);
         expect(result?.rows).toEqual(

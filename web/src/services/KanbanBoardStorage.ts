@@ -35,17 +35,21 @@ export class KanbanBoardStorage {
 
     public async getKanbanState(): Promise<KanbanDataContainer> {
         let result: KanbanDataContainer = {} as KanbanDataContainer;
+        let syncChangesWereApplied = false;
 
         await this.synchronizationLock.runExclusive(async () => {
             if (this.cache !== null) {
                 result = this.cache;
             }
 
-            let boardState = await this.getNewKanbanState();
+            const resultOfGetNewState = await this.getNewKanbanState();
+            let boardState = resultOfGetNewState?.boardState;
 
             if (boardState !== undefined) {
                 this.cache = boardState;
             }
+
+            syncChangesWereApplied = resultOfGetNewState?.syncChangesWereApplied ?? false;
 
             if (boardState == undefined) {
                 this.storageHandler.createDirectory(['board']);
@@ -64,10 +68,18 @@ export class KanbanBoardStorage {
             result = boardState;
         });
 
+        if (syncChangesWereApplied) {
+            await this.saveKanbanState(result);
+        }
+
         return result;
     }
 
-    public async getNewKanbanState(): Promise<KanbanDataContainer | undefined> {
+
+    public async getNewKanbanState(): Promise<{
+        boardState: KanbanDataContainer;
+        syncChangesWereApplied: boolean;
+    } | undefined> {
         const directoriesRepresentingRows = await this.storageHandler.loadEntireTree(['board']);
         const directoryWasEmpty = directoriesRepresentingRows.getChildDirectories().length == 0;
 
@@ -168,10 +180,15 @@ export class KanbanBoardStorage {
         const orderedRowsInfo = extractedRowsInfo.sort((a, b) => a.position - b.position);
         const orderedExtractedTasksInfo = extractedTasksInfo.sort((a, b) => a.position - b.position);
 
-        return {
+        const result = {
             columns: KanbanBoardStorage.knownColumns,
             rows: orderedRowsInfo,
             tasks: orderedExtractedTasksInfo
+        }
+
+        return {
+            boardState: result,
+            syncChangesWereApplied: rowsThatNeedIdChange.length > 0 || tasksThatNeedIdChange.length > 0
         }
     }
 
@@ -374,7 +391,7 @@ export class KanbanBoardStorage {
     }
 
     private convertRowFileNameToRowElement(fileName: string): RowInStorage {
-        const regex = /\((\d+),\s*(.+),\s*(\d+)\)/;
+        const regex = /(\S+)\s*\((\d+),\s*(.+),\s*(\d+)\)/;
         const match = fileName.match(regex);
 
         if (match === null) {
@@ -382,14 +399,15 @@ export class KanbanBoardStorage {
         }
 
         return {
-            id: match ? parseInt(match[1]) : 0,
-            syncId: match ? match[2] : '',
-            position: match ? parseInt(match[3]) : 0
+            title: match ? match[1] : '',
+            id: match ? parseInt(match[2]) : 0,
+            syncId: match ? match[3] : '',
+            position: match ? parseInt(match[4]) : 0
         };
     }
 
     private convertTaskFileNameToTaskElement(fileName: string, knownColumnId: number, knownRowId: number): TaskInStorage {
-        const regex = /\((\d+),\s*(.+),\s*(\d+)\)/;
+        const regex = /(\S+)\s*\((\d+),\s*(.+),\s*(\d+)\)/;
         const match = fileName.match(regex);
 
         if (match === null) {
@@ -399,9 +417,10 @@ export class KanbanBoardStorage {
         return {
             columnId: knownColumnId,
             rowId: knownRowId,
-            id: match ? parseInt(match[1]) : 0,
-            syncId: match ? match[2] : '',
-            position: match ? parseInt(match[3]) : 0
+            title: match ? match[1] : '',
+            id: match ? parseInt(match[2]) : 0,
+            syncId: match ? match[3] : '',
+            position: match ? parseInt(match[4]) : 0
         };
     }
 

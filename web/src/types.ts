@@ -4,6 +4,7 @@ export type RowInStorage = {
     id: Id;
     position: number;
     syncId: string;
+    title: string;
 };
 
 export type RowViewModel = {
@@ -22,6 +23,7 @@ export type TaskInStorage = {
     rowId: Id;
     position: number;
     syncId: string;
+    title: string;
 };
 
 export type TaskViewModel = {
