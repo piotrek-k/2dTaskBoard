@@ -22,7 +22,8 @@ type TreeColumnContianer = {
 export class KanbanBoardStorage {
     private cache: KanbanDataContainer | null = null;
 
-    private synchronizationLock = new Mutex();
+    private readWriteLock = new Mutex();
+    private getKanbanStateLock = new Mutex();
 
     constructor(private storageHandler: IStorageHandler, private cardMetadataStorage: ICardStorage, private archiveStorage: IArchiveStorage) {
     }
@@ -37,40 +38,43 @@ export class KanbanBoardStorage {
         let result: KanbanDataContainer = {} as KanbanDataContainer;
         let syncChangesWereApplied = false;
 
-        await this.synchronizationLock.runExclusive(async () => {
-            if (this.cache !== null) {
-                result = this.cache;
+        await this.getKanbanStateLock.runExclusive(async () => {
+            await this.readWriteLock.runExclusive(async () => {
+                
+                if (this.cache !== null) {
+                    result = this.cache;
+                }
+
+                const resultOfGetNewState = await this.getNewKanbanState();
+                let boardState = resultOfGetNewState?.boardState;
+
+                if (boardState !== undefined) {
+                    this.cache = boardState;
+                }
+
+                syncChangesWereApplied = resultOfGetNewState?.syncChangesWereApplied ?? false;
+
+                if (boardState == undefined) {
+                    this.storageHandler.createDirectory(['board']);
+
+                    boardState = {
+                        columns: [
+                            { id: 1, title: 'To Do' },
+                            { id: 2, title: 'In Progress' },
+                            { id: 3, title: 'Done' }
+                        ],
+                        tasks: [],
+                        rows: []
+                    } as KanbanDataContainer;
+                }
+
+                result = boardState;
+            });
+
+            if (syncChangesWereApplied) {
+                await this.saveKanbanState(result);
             }
-
-            const resultOfGetNewState = await this.getNewKanbanState();
-            let boardState = resultOfGetNewState?.boardState;
-
-            if (boardState !== undefined) {
-                this.cache = boardState;
-            }
-
-            syncChangesWereApplied = resultOfGetNewState?.syncChangesWereApplied ?? false;
-
-            if (boardState == undefined) {
-                this.storageHandler.createDirectory(['board']);
-
-                boardState = {
-                    columns: [
-                        { id: 1, title: 'To Do' },
-                        { id: 2, title: 'In Progress' },
-                        { id: 3, title: 'Done' }
-                    ],
-                    tasks: [],
-                    rows: []
-                } as KanbanDataContainer;
-            }
-
-            result = boardState;
         });
-
-        if (syncChangesWereApplied) {
-            await this.saveKanbanState(result);
-        }
 
         return result;
     }
@@ -425,7 +429,7 @@ export class KanbanBoardStorage {
     }
 
     public async saveKanbanState(boardStateContainer: KanbanDataContainer) {
-        await this.synchronizationLock.runExclusive(async () => {
+        await this.readWriteLock.runExclusive(async () => {
             await this.saveNewKanbanState(boardStateContainer);
 
             this.cache = boardStateContainer;
