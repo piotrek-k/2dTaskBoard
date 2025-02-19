@@ -41,9 +41,9 @@ export class KanbanBoardStorage {
         await this.getKanbanStateLock.runExclusive(async () => {
             await this.readWriteLock.runExclusive(async () => {
 
-                // if (this.cache !== null) {
-                //     result = this.cache;
-                // }
+                if (this.cache !== null) {
+                    result = this.cache;
+                }
 
                 const resultOfGetNewState = await this.getNewKanbanState();
                 let boardState = resultOfGetNewState?.boardState;
