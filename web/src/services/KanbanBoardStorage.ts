@@ -173,7 +173,7 @@ export class KanbanBoardStorage {
             const metadata = await this.cardMetadataStorage.getTaskMetadata(task.details.id);
 
             if (metadata === undefined) {
-                throw new Error('Task metadata not found');
+                throw new Error(`Task metadata not found, task id: ${task?.details?.id}`);
             }
 
             metadata.id = task.details.id;
@@ -341,7 +341,7 @@ export class KanbanBoardStorage {
                     const taskMetadata = await this.cardMetadataStorage.getTaskMetadata(task.id);
 
                     if (taskMetadata === undefined) {
-                        throw new Error('Task metadata not found');
+                        throw new Error(`Task metadata not found, task id: ${task?.id}`);
                     }
 
                     const taskFileName = `${this.sanitizeFilename(taskMetadata.title)} (${task.id}, ${taskMetadata.syncId}, ${taskCounter}).md`;

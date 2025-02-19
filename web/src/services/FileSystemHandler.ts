@@ -4,6 +4,7 @@ import { EventWatcher } from "./EventWatcher";
 import settingsProvider, { SettingsProvider } from "./SettingsProvider";
 import { FileSystemDirectory, recursivelyLoadDirectoryTree } from "../tools/filesystemTree";
 import { ComparisionType, FolderToFollow } from "../dataTypes/FileSystemStructures";
+import { measureExecutionTimeAsync } from "../tools/measurements";
 
 class FileSystemHandler implements IStorageHandler {
     directoryHandle: FileSystemDirectoryHandle | undefined;
@@ -364,44 +365,80 @@ class FileSystemHandler implements IStorageHandler {
         }
     }
 
+
+
+    private fileSystemDirectoryHandleCache: { [key: string]: FileSystemDirectoryHandle } = {};
+
     private async followDirectoriesComplex(folderNames: FolderToFollow[], createIfNotExist: boolean = true): Promise<FileSystemDirectoryHandle | null> {
-        if (this.directoryHandle == null) {
-            this.directoryHandle = await this.restoreHandle();
-        }
+        const disableCacheBecauseOfDynamicPaths = folderNames.some(folder => folder.comparisionType == ComparisionType.Regex);
 
-        if (this.directoryHandle == null) {
-            throw new Error("Directory handle not set up");
-        }
+        return measureExecutionTimeAsync(
+            `followDirectoriesComplex, length: ${folderNames.length}, cache: ${disableCacheBecauseOfDynamicPaths ? 'off' : 'on'}`,
+            async () => {
 
-        let targetDir = this.directoryHandle;
-
-        for (const folderName of folderNames) {
-            if (folderName.comparisionType == ComparisionType.Exact) {
-                try {
-                    targetDir = await targetDir.getDirectoryHandle(folderName.name, { create: createIfNotExist });
-                } catch (error) {
-                    return null;
+                if (this.directoryHandle == null) {
+                    this.directoryHandle = await this.restoreHandle();
                 }
-            }
-            else if (folderName.comparisionType == ComparisionType.Regex) {
-                const entries = await (targetDir as any).values();
 
-                let found = false;
-                for await (const entry of entries) {
-                    if (entry.kind === 'directory' && new RegExp(folderName.name).test(entry.name)) {
-                        targetDir = await targetDir.getDirectoryHandle(entry.name, { create: createIfNotExist });
-                        found = true;
-                        break;
+                if (this.directoryHandle == undefined) {
+                    throw new Error("Directory handle not set up");
+                }
+
+                let targetDir = this.directoryHandle;
+
+                let cacheKey = '/';
+                for (const folderName of folderNames) {
+                    cacheKey += folderName.name + '/';
+
+                    if (!disableCacheBecauseOfDynamicPaths) {
+                        const cacheResult = this.fileSystemDirectoryHandleCache[cacheKey];
+                        if (cacheResult) {
+                            const isActive = await this.verifyExistingHandle(cacheResult);
+
+                            if (isActive) {
+                                console.log("Reusing cached directory handle for ", cacheKey);
+                                targetDir = cacheResult;
+                                continue;
+                            }
+                            else {
+                                console.log("Cached directory handle is not active. Requesting for permission...");
+                                delete this.fileSystemDirectoryHandleCache[cacheKey];
+                            }
+                        }
+                    }
+
+                    if (folderName.comparisionType == ComparisionType.Exact) {
+                        try {
+                            targetDir = await targetDir.getDirectoryHandle(folderName.name, { create: createIfNotExist });
+                            if (!disableCacheBecauseOfDynamicPaths) {
+                                this.fileSystemDirectoryHandleCache[cacheKey] = targetDir;
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            return null;
+                        }
+                    }
+                    else if (folderName.comparisionType == ComparisionType.Regex) {
+                        const entries = await (targetDir as any).values();
+
+                        let found = false;
+                        for await (const entry of entries) {
+                            if (entry.kind === 'directory' && new RegExp(folderName.name).test(entry.name)) {
+                                targetDir = await targetDir.getDirectoryHandle(entry.name, { create: createIfNotExist });
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            return null;
+                        }
                     }
                 }
 
-                if (!found) {
-                    return null;
-                }
+                return targetDir;
             }
-        }
-
-        return targetDir;
+        );
     }
 
     private async followDirectories(folderNames: string[], createIfNotExist: boolean = true): Promise<FileSystemDirectoryHandle | null> {
