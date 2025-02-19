@@ -405,7 +405,7 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     private async followDirectories(folderNames: string[], createIfNotExist: boolean = true): Promise<FileSystemDirectoryHandle | null> {
-        return this.followDirectoriesComplex(
+        return await this.followDirectoriesComplex(
             folderNames.map(name => (
                 {
                     name,

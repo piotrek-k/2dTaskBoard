@@ -22,6 +22,9 @@ import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import { generateSyncId } from '../../tools/syncTools';
 import MenuIcon from '../../icons/MenuIcon';
 import { debounce } from 'lodash';
+import { Mutex } from 'async-mutex';
+
+const lockForCreatingNewElements = new Mutex();
 
 function KanbanBoard() {
 
@@ -338,26 +341,34 @@ function KanbanBoard() {
     }
 
     async function createTask(columnId: Id, rowId: Id) {
-        const syncId = generateSyncId();
-        const newTitle = `Task ${tasks.length + 1}`;
+        let newTask: TaskInStorage | null = null;
 
-        const newTask: TaskInStorage = {
-            id: await generateId(),
-            columnId,
-            rowId,
-            position: getLowestPositionForTask(),
-            syncId: syncId,
-            title: newTitle
-        };
+        await lockForCreatingNewElements.runExclusive(async () => {
+            const syncId = generateSyncId();
+            const newTitle = `Task ${tasks.length + 1}`;
 
-        const newTaskMetadata: TaskStoredMetadata = {
-            id: newTask.id,
-            title: newTitle,
-            type: MetadataType.Task,
-            syncId: syncId
+            newTask = {
+                id: await kanbanBoardStorage.generateId(),
+                columnId,
+                rowId,
+                position: getLowestPositionForTask(),
+                syncId: syncId,
+                title: newTitle
+            };
+
+            const newTaskMetadata: TaskStoredMetadata = {
+                id: newTask.id,
+                title: newTitle,
+                type: MetadataType.Task,
+                syncId: syncId
+            }
+
+            await taskStorage.saveCardMetadata(newTaskMetadata);
+        });
+
+        if (newTask == null) {
+            throw new Error("Task creation failed");
         }
-
-        await taskStorage.saveCardMetadata(newTaskMetadata);
 
         setTasks([newTask, ...tasks]);
     }
@@ -446,25 +457,24 @@ function KanbanBoard() {
     }
 
     async function createNewRow() {
-        const syncId = generateSyncId();
-        const newTitle = `Row ${rows.length + 1}`;
+        await lockForCreatingNewElements.runExclusive(async () => {
+            const syncId = generateSyncId();
+            const newTitle = `Row ${rows.length + 1}`;
+            const newId = await kanbanBoardStorage.generateId();
 
-        const rowToAdd: RowInStorage = {
-            id: await generateId(),
-            position: getHighestPositionForRow(),
-            syncId: syncId,
-            title: newTitle
-        };
+            const rowToAdd: RowInStorage = {
+                id: newId,
+                position: getHighestPositionForRow(),
+                syncId: syncId,
+                title: newTitle
+            };
 
-        await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle, syncId);
+            await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle, syncId);
 
-        await kanbanBoardStorage.addRowToBoard(rowToAdd, []);
+            await kanbanBoardStorage.addRowToBoard(rowToAdd, []);
 
-        await loadBoard();
-    }
-
-    async function generateId(): Promise<number> {
-        return kanbanBoardStorage.generateId(tasks, rows);
+            await loadBoard();
+        });
     }
 
     function getLowestPositionForTask() {

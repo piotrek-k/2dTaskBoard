@@ -40,10 +40,10 @@ export class KanbanBoardStorage {
 
         await this.getKanbanStateLock.runExclusive(async () => {
             await this.readWriteLock.runExclusive(async () => {
-                
-                if (this.cache !== null) {
-                    result = this.cache;
-                }
+
+                // if (this.cache !== null) {
+                //     result = this.cache;
+                // }
 
                 const resultOfGetNewState = await this.getNewKanbanState();
                 let boardState = resultOfGetNewState?.boardState;
@@ -228,15 +228,28 @@ export class KanbanBoardStorage {
         return this.getNewId(result);
     }
 
-    public async generateId(tasks: TaskInStorage[], rows: RowInStorage[]): Promise<number> {
-        const archive = await this.archiveStorage.getArchive();
+    private lockForIdGeneration = new Mutex();
 
-        return this.getNewId([
-            ...tasks.map(task => task.id),
-            ...rows.map(row => row.id),
-            ...archive.rows.map(row => row.id),
-            ...archive.rows.flatMap(row => row.columns.flatMap(column => column.tasks)).map(taskId => taskId)
-        ]);
+    public async generateId(): Promise<number> {
+        let result: number = 0;
+
+        await this.lockForIdGeneration.runExclusive(async () => {
+            const currentBoardState = await this.getKanbanState();
+
+            const tasks = currentBoardState.tasks;
+            const rows = currentBoardState.rows;
+
+            const archive = await this.archiveStorage.getArchive();
+
+            result = this.getNewId([
+                ...tasks.map(task => task.id),
+                ...rows.map(row => row.id),
+                ...archive.rows.map(row => row.id),
+                ...archive.rows.flatMap(row => row.columns.flatMap(column => column.tasks)).map(taskId => taskId)
+            ]);
+        });
+
+        return result;
     }
 
     private getNewId(listOfReserverIds: number[]): number {
