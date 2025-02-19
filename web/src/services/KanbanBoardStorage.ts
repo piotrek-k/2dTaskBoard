@@ -34,16 +34,17 @@ export class KanbanBoardStorage {
         { id: 3, title: 'Done' }
     ];
 
-    public async getKanbanState(): Promise<KanbanDataContainer> {
+    public async getKanbanState(ignoreCache: boolean = false): Promise<KanbanDataContainer> {
+
+        if (this.cache !== null && !ignoreCache) {
+            return this.cache;
+        }
+
         let result: KanbanDataContainer = {} as KanbanDataContainer;
         let syncChangesWereApplied = false;
 
         await this.getKanbanStateLock.runExclusive(async () => {
             await this.readWriteLock.runExclusive(async () => {
-
-                if (this.cache !== null) {
-                    result = this.cache;
-                }
 
                 const resultOfGetNewState = await this.getNewKanbanState();
                 let boardState = resultOfGetNewState?.boardState;
@@ -445,7 +446,7 @@ export class KanbanBoardStorage {
         await this.readWriteLock.runExclusive(async () => {
             await this.saveNewKanbanState(boardStateContainer);
 
-            this.cache = boardStateContainer;
+            this.cache = null;
         });
     }
 
