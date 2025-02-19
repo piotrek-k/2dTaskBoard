@@ -1,24 +1,24 @@
 import { useEffect, useState } from 'react'
-import { Id } from '../../types';
 import attachmentsStorage from '../../services/AttachmentsStorage';
+import { CardStoredMetadata } from '../../dataTypes/CardMetadata';
 
 interface Props {
-    taskId: Id;
+    cardMetadata: CardStoredMetadata;
     props: any;
 }
 
-function LinkRenderer({ taskId, props }: Props) {
+function LinkRenderer({ cardMetadata, props }: Props) {
     const [customSrc, setCustomSrc] = useState<string>(props.href || '');
 
     useEffect(() => {
         const fetchCustomSrc = async () => {
-            const src = await attachmentsStorage.getLinkForAttachment(taskId, props.href);
+            const src = await attachmentsStorage.getLinkForAttachment(cardMetadata, props.href);
 
             setCustomSrc(src);
         };
 
         fetchCustomSrc();
-    }, [props.href]);
+    }, [props.href, cardMetadata]);
 
     return (
         <a

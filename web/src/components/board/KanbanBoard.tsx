@@ -21,8 +21,10 @@ import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import { generateSyncId } from '../../tools/syncTools';
 import MenuIcon from '../../icons/MenuIcon';
-import attachmentsStorage from '../../services/AttachmentsStorage';
 import { debounce } from 'lodash';
+import { Mutex } from 'async-mutex';
+
+const lockForCreatingNewElements = new Mutex();
 
 function KanbanBoard() {
 
@@ -158,7 +160,7 @@ function KanbanBoard() {
         if (dataLoaded) {
             debouncedSaveBoard();
         }
-    }, [boardState, dataLoaded, debouncedSaveBoard]); 
+    }, [boardState, dataLoaded, debouncedSaveBoard]);
 
     return (
         <div className="flex flex-col h-screen">
@@ -339,21 +341,34 @@ function KanbanBoard() {
     }
 
     async function createTask(columnId: Id, rowId: Id) {
-        const newTask: TaskInStorage = {
-            id: await generateId(),
-            columnId,
-            rowId,
-            position: getLowestPositionForTask()
-        };
+        let newTask: TaskInStorage | null = null;
 
-        const newTaskMetadata: TaskStoredMetadata = {
-            id: newTask.id,
-            title: `Task ${tasks.length + 1}`,
-            type: MetadataType.Task,
-            syncId: generateSyncId()
+        await lockForCreatingNewElements.runExclusive(async () => {
+            const syncId = generateSyncId();
+            const newTitle = `Task ${tasks.length + 1}`;
+
+            newTask = {
+                id: await kanbanBoardStorage.generateId(),
+                columnId,
+                rowId,
+                position: getLowestPositionForTask(),
+                syncId: syncId,
+                title: newTitle
+            };
+
+            const newTaskMetadata: TaskStoredMetadata = {
+                id: newTask.id,
+                title: newTitle,
+                type: MetadataType.Task,
+                syncId: syncId
+            }
+
+            await taskStorage.saveCardMetadata(newTaskMetadata);
+        });
+
+        if (newTask == null) {
+            throw new Error("Task creation failed");
         }
-
-        await taskStorage.saveCardMetadata(newTaskMetadata);
 
         setTasks([newTask, ...tasks]);
     }
@@ -362,7 +377,6 @@ function KanbanBoard() {
         setTasks(tasks.filter(task => task.id !== taskId));
 
         taskStorage.removeCard(taskId);
-        attachmentsStorage.deleteEntireContainer(taskId);
     }
 
     async function modifyTask(task: TaskInStorage) {
@@ -376,7 +390,6 @@ function KanbanBoard() {
         setRows(rows.filter(row => row.id !== rowId));
 
         taskStorage.removeCard(rowId);
-        attachmentsStorage.deleteEntireContainer(rowId);
     }
 
     function moveRowUp(rowId: Id) {
@@ -444,26 +457,24 @@ function KanbanBoard() {
     }
 
     async function createNewRow() {
-        const rowToAdd: RowInStorage = {
-            id: await generateId(),
-            position: getHighestPositionForRow()
-        };
+        await lockForCreatingNewElements.runExclusive(async () => {
+            const syncId = generateSyncId();
+            const newTitle = `Row ${rows.length + 1}`;
+            const newId = await kanbanBoardStorage.generateId();
 
-        await taskStorage.createNewRowMetadata(rowToAdd.id, `Row ${rowToAdd.id}`);
+            const rowToAdd: RowInStorage = {
+                id: newId,
+                position: getHighestPositionForRow(),
+                syncId: syncId,
+                title: newTitle
+            };
 
-        await kanbanBoardStorage.addRowToBoard(rowToAdd, []);
+            await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle, syncId);
 
-        await loadBoard();
-    }
+            await kanbanBoardStorage.addRowToBoard(rowToAdd, []);
 
-    async function generateId(): Promise<number> {
-        const archive = await archiveStorage.getArchive();
-        const maxRowIdInArchive = archive?.rows.reduce((max, row) => row.id > max ? row.id : max, 0) ?? 0;
-        const maxTaskIdInArchive = archive?.rows.reduce((max, row) => row.columns.reduce((max, column) => column.tasks.reduce((max, taskId) => taskId > max ? taskId : max, max), max), 0) ?? 0;
-        const maxTaskIdOnBoard = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
-        const maxRowIdOnBoard = rows.reduce((max, row) => row.id > max ? row.id : max, 0);
-
-        return Math.max(maxRowIdInArchive, maxTaskIdInArchive, maxTaskIdOnBoard, maxRowIdOnBoard) + 1;
+            await loadBoard();
+        });
     }
 
     function getLowestPositionForTask() {

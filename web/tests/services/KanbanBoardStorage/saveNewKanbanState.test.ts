@@ -4,11 +4,13 @@ import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMo
 import { ICardStorage } from '../../../src/services/CardStorage';
 import { KanbanDataContainer } from '../../../src/types';
 import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../../src/dataTypes/CardMetadata';
+import { IArchiveStorage } from '../../../src/services/ArchiveStorage';
 
 
 describe('KanbanBoardStorage saveNewKanbanState', () => {
 
     let mockCardMetadataStorage: ICardStorage;
+    let mockArchiveStorage: IArchiveStorage;
     let kanbanBoardStorage: KanbanBoardStorage;
     const knownColumns = KanbanBoardStorage.knownColumns;
 
@@ -24,9 +26,15 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
             saveCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             createNewRowMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
             removeCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+            getSearchPathToCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+            getReadPathToCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
         } as ICardStorage;
 
-        kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, mockCardMetadataStorage);
+        mockArchiveStorage = {
+            getArchive: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        } as IArchiveStorage;
+
+        kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, mockCardMetadataStorage, mockArchiveStorage);
     });
 
     it('should correctly save state of board to filesystem', async () => {
@@ -65,7 +73,7 @@ describe('KanbanBoardStorage saveNewKanbanState', () => {
         const newBoardState = {
             columns: knownColumns,
             rows: [
-                { id: 1, position: 1 }
+                { id: 1, position: 1, syncId: 'abc123' }
             ],
             tasks: []
         } as KanbanDataContainer;

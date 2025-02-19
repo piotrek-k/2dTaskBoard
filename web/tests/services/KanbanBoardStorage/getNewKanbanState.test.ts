@@ -1,16 +1,46 @@
-import { describe, it, expect, Mock } from 'vitest';
+import { describe, it, expect, Mock, vi, beforeEach } from 'vitest';
 import { KanbanBoardStorage } from '../../../src/services/KanbanBoardStorage';
 import { mockFileSystemTree, mockStorageHandler } from '../../mocks/FileSystemMock';
-import taskStorage from '../../../src/services/CardStorage';
+import { ICardStorage } from '../../../src/services/CardStorage';
 import { FileSystemDirectory } from '../../../src/tools/filesystemTree';
+import { IArchiveStorage } from '../../../src/services/ArchiveStorage';
+import { ComparisionType } from '../../../src/dataTypes/FileSystemStructures';
+import { MetadataType, RowStoredMetadata, TaskStoredMetadata } from '../../../src/dataTypes/CardMetadata';
 
 describe('KanbanBoardStorage getNewKanbanState', () => {
-    const kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorage);
+    const archiveStorageMock: IArchiveStorage = {
+        getArchive: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    };
+
+    const taskStorageMock: ICardStorage = {
+        getTaskMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        saveCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getRowMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        createNewRowMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        removeCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getSearchPathToCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getReadPathToCard: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        getCardMetadata: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+        saveCardContent: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); })
+    };
+
+    let kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorageMock, archiveStorageMock);
+
+    beforeEach(() => {
+        vi.resetAllMocks();
+
+        taskStorageMock.getReadPathToCard = vi.fn().mockImplementation((id: number, syncId: string) => {
+            return [`tasks`, `${id} (${syncId})`];
+        });
+
+        kanbanBoardStorage = new KanbanBoardStorage(mockStorageHandler, taskStorageMock, archiveStorageMock);
+    });
 
     it('should return undefined when directory is empty', async () => {
         (mockStorageHandler.listDirectoriesInDirectory as Mock).mockResolvedValue([]);
         (mockStorageHandler.loadEntireTree as Mock).mockResolvedValue(new FileSystemDirectory(''));
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
         expect(result).toBeUndefined();
     });
 
@@ -25,14 +55,14 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
                 [`row1 (${exprectedRowId}, abc123, ${expectedRowPosition})`]: {
                     'To Do': {
                         '[files]': [
-                            `task2 (${expectedTaskId}, abc123, ${expectedTaskPosition})`
+                            `task2 (${expectedTaskId}, def345, ${expectedTaskPosition})`
                         ]
                     }
                 }
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result).toEqual({
             columns: [
@@ -40,8 +70,8 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
                 { id: 2, title: 'In Progress' },
                 { id: 3, title: 'Done' }
             ],
-            rows: [{ id: exprectedRowId, position: expectedRowPosition }],
-            tasks: [{ id: expectedTaskId, position: expectedTaskPosition, columnId: 1, rowId: exprectedRowId }]
+            rows: [{ id: exprectedRowId, position: expectedRowPosition, syncId: 'abc123', title: 'row1' }],
+            tasks: [{ id: expectedTaskId, position: expectedTaskPosition, columnId: 1, rowId: exprectedRowId, syncId: 'def345', title: 'task2' }]
         });
     });
 
@@ -60,7 +90,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result).not.toBeUndefined();
         expect(result?.rows).toHaveLength(2);
@@ -83,17 +113,245 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
                     'To Do': {
                         '[files]': [
                             `task2 (${firstTaskId}, abc123, 1)`,
-                            `task1 (${secondTaskId}, abc123, 2)`
+                            `task1 (${secondTaskId}, def345, 2)`
                         ]
                     }
                 }
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: firstTaskId }));
         expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: secondTaskId }));
+    });
+
+    it('should remove duplicate tasks with the same syncId', async () => {
+
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`row1 (1, aaaaaa, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task1 (2, bbbbbb, 1)`,
+                            `task1 (2, bbbbbb, 2)`
+                        ]
+                    }
+                }
+            }
+        });
+
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
+
+        expect(result?.tasks).toHaveLength(1);
+        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 2 }));
+    });
+
+    it('should assign different id to task if conflict happens', async () => {
+
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`row1 (1, aaaaaa, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task1 (3, cccccc, 1)`
+                        ]
+                    }
+                },
+                [`row2 (2, bbbbbb, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task2 (3, dddddd, 1)`
+                        ]
+                    }
+                }
+            }
+        });
+
+        (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+        (taskStorageMock.getTaskMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 3) {
+                return Promise.resolve({ id: 3, title: 'Task 1', type: MetadataType.Task, syncId: 'cccccc' } as TaskStoredMetadata);
+            }
+            if (id === 4) {
+                return Promise.resolve({ id: 4, title: 'Task 2', type: MetadataType.Task, syncId: 'dddddd' } as TaskStoredMetadata);
+            }
+        })
+
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
+
+        expect(result?.tasks).toHaveLength(2);
+        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 3, syncId: 'cccccc' }));
+        expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 4, syncId: 'dddddd' }));
+
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledTimes(1);
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
+            [
+                {
+                    name: 'tasks',
+                    comparisionType: ComparisionType.Exact
+                },
+                {
+                    name: '3 (dddddd)',
+                    comparisionType: ComparisionType.Exact
+                }
+            ],
+            '4 (dddddd)'
+        );
+
+    });
+
+    it('should assign different id to one of rows if conflict happens between rows', async () => {
+
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`row1 (1, aaaaaa, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task1 (2, cccccc, 1)`
+                        ]
+                    }
+                },
+                [`row1 (1, bbbbbb, 2)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `task2 (3, dddddd, 1)`
+                        ]
+                    }
+                }
+            }
+        });
+
+        (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+        (taskStorageMock.getReadPathToCard as Mock).mockImplementation((id: number, syncId: string) => {
+            return [`tasks`, `${id} (${syncId})`];
+        });
+        (taskStorageMock.getRowMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 1) {
+                return Promise.resolve({ id: 1, title: 'Row 1', type: MetadataType.Row, syncId: 'aaaaaa' } as RowStoredMetadata);
+            }
+            if (id === 4) {
+                return Promise.resolve({ id: 1, title: 'Row 2', type: MetadataType.Row, syncId: 'bbbbbb' } as RowStoredMetadata);
+            }
+        });
+
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
+
+        expect(result?.rows).toHaveLength(2);
+        expect(result?.rows[0]).toEqual(expect.objectContaining({ id: 1, syncId: 'aaaaaa' }));
+        expect(result?.rows[1]).toEqual(expect.objectContaining({ id: 4, syncId: 'bbbbbb' }));
+        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 2, syncId: 'cccccc', rowId: 1 }));
+        expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 3, syncId: 'dddddd', rowId: 4 }));
+
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
+            [
+                {
+                    name: 'tasks',
+                    comparisionType: ComparisionType.Exact
+                },
+                {
+                    name: '1 (bbbbbb)',
+                    comparisionType: ComparisionType.Exact
+                }
+            ],
+            '4 (bbbbbb)'
+        );
+    });
+
+    it('should assign different id to one of tasks if two tasks have the same id', async () => {
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`Row_1 (1, 345118, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `Task_1 (2, f3bf29, 2).md`,
+                            `Task_2 (2, 973348, 1).md`
+                        ]
+                    }
+                }
+            }
+        });
+
+        (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+        (taskStorageMock.getTaskMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 2) {
+                return Promise.resolve({ id: 2, title: 'Task 1', type: MetadataType.Task, syncId: 'f3bf29' } as TaskStoredMetadata);
+            }
+            if (id == 3) {
+                return Promise.resolve({ id: 2, title: 'Task 2', type: MetadataType.Task, syncId: '973348' } as TaskStoredMetadata);
+            }
+        });
+
+
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
+
+        expect(result?.tasks).toHaveLength(2);
+        expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 2, syncId: 'f3bf29' }));
+        expect(result?.tasks[0]).toEqual(expect.objectContaining({ id: 3, syncId: '973348' }));
+
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledTimes(1);
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
+            [
+                {
+                    name: 'tasks',
+                    comparisionType: ComparisionType.Exact
+                },
+                {
+                    name: '2 (973348)',
+                    comparisionType: ComparisionType.Exact
+                }
+            ],
+            '3 (973348)'
+        );
+        expect(taskStorageMock.saveCardMetadata).toHaveBeenCalledWith(expect.objectContaining({ id: 3, syncId: '973348' }));
+    });
+
+    it('should assign different id to task if conflict happens between rows and tasks', async () => {
+
+        mockFileSystemTree(mockStorageHandler, {
+            'board': {
+                [`row1 (1, aaaaaa, 1)`]: {
+                    'To Do': {
+                        '[files]': [
+                            `taskX (2, cccccc, 1)`,
+                            `task1 (1, bbbbbb, 1)`
+                        ]
+                    }
+                }
+            }
+        });
+
+        (archiveStorageMock.getArchive as Mock).mockResolvedValue(undefined);
+        (taskStorageMock.getTaskMetadata as Mock).mockImplementation((id: number) => {
+            if (id === 2) {
+                return Promise.resolve({ id: 2, title: 'Task X', type: MetadataType.Task, syncId: 'cccccc' } as TaskStoredMetadata);
+            }
+            if (id === 3) {
+                return Promise.resolve({ id: 3, title: 'Task 1', type: MetadataType.Task, syncId: 'bbbbbb' } as TaskStoredMetadata);
+            }
+        })
+
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
+
+        expect(result?.tasks).toHaveLength(2);
+        expect(result?.tasks[1]).toEqual(expect.objectContaining({ id: 3, syncId: 'bbbbbb', rowId: 1 }));
+        expect(result?.rows).toHaveLength(1);
+        expect(result?.rows[0]).toEqual(expect.objectContaining({ id: 1, syncId: 'aaaaaa' }));
+
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledTimes(1);
+        expect(mockStorageHandler.renameDirectory).toHaveBeenCalledWith(
+            [
+                {
+                    name: 'tasks',
+                    comparisionType: ComparisionType.Exact
+                },
+                {
+                    name: '1 (bbbbbb)',
+                    comparisionType: ComparisionType.Exact
+                }
+            ],
+            '3 (bbbbbb)'
+        );
     });
 
     it('should sort rows by position', async () => {
@@ -111,7 +369,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.rows[0]).toEqual(expect.objectContaining({ id: firstRowId }));
         expect(result?.rows[1]).toEqual(expect.objectContaining({ id: secondRowId }));
@@ -139,7 +397,7 @@ describe('KanbanBoardStorage getNewKanbanState', () => {
             }
         });
 
-        const result = await kanbanBoardStorage.getNewKanbanState();
+        const result = (await kanbanBoardStorage.getNewKanbanState())?.boardState;
 
         expect(result?.rows).toHaveLength(2);
         expect(result?.rows).toEqual(

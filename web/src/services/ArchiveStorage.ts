@@ -8,7 +8,11 @@ export interface RowWithTasks {
     tasks: TaskInStorage[];
 }
 
-class ArchiveStorage {
+export interface IArchiveStorage {
+    getArchive(): Promise<ArchiveStored>;
+}
+
+class ArchiveStorage implements IArchiveStorage {
     constructor(private storageHandler: IStorageHandler) {
     }
 

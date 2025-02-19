@@ -18,7 +18,8 @@ export const mockStorageHandler: IStorageHandler = {
     removeDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
     createEmptyFiles: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
     createDirectory: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
-    getNameOfStorage: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); })
+    getNameOfStorage: vi.fn().mockImplementation(() => { throw new Error('Not implemented'); }),
+    renameDirectory: vi.fn()
 };
 
 // const exampleFileSystemTree = {

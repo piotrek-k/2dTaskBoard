@@ -3,6 +3,7 @@ import { IStorageHandler } from "./IStorageHandler";
 import { EventWatcher } from "./EventWatcher";
 import settingsProvider, { SettingsProvider } from "./SettingsProvider";
 import { FileSystemDirectory, recursivelyLoadDirectoryTree } from "../tools/filesystemTree";
+import { ComparisionType, FolderToFollow } from "../dataTypes/FileSystemStructures";
 
 class FileSystemHandler implements IStorageHandler {
     directoryHandle: FileSystemDirectoryHandle | undefined;
@@ -143,6 +144,18 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string> {
+        return this.getContentFromDirectoryComplexFolderPath(
+            dataContainerName,
+            folderNames.map(name => (
+                {
+                    name,
+                    comparisionType: ComparisionType.Exact
+                }
+            ))
+        );
+    }
+
+    public async getContentFromDirectoryComplexFolderPath(dataContainerName: string, folderNames: FolderToFollow[]): Promise<string> {
         if (this.settings.debugModeEnabled) {
             console.log("Getting content from: ", dataContainerName, folderNames);
         }
@@ -155,7 +168,7 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        const targetDir = await this.followDirectories(folderNames);
+        const targetDir = await this.followDirectoriesComplex(folderNames);
 
         if (targetDir == null) {
             throw new Error("Directory not found");
@@ -168,12 +181,30 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async saveJsonContentToDirectory<Type>(dataContainerName: string, dataContainer: Type, folderNames: string[]): Promise<void> {
-        const dataToSave = JSON.stringify(dataContainer);
-
-        await this.saveTextContentToDirectory(dataContainerName, dataToSave, folderNames);
+        await this.saveJsonContentToDirectoryWithDynamicPath(dataContainerName, dataContainer, folderNames.map(name => (
+            {
+                name,
+                comparisionType: ComparisionType.Exact
+            }
+        )));
     }
 
-    public async saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]) {
+    public async saveJsonContentToDirectoryWithDynamicPath<Type>(dataContainerName: string, dataContainer: Type, folderNames: FolderToFollow[]): Promise<void> {
+        const dataToSave = JSON.stringify(dataContainer);
+
+        await this.saveTextContentToDirectoryWithDynamicPath(dataContainerName, dataToSave, folderNames);
+    }
+
+    public async saveTextContentToDirectory(dataContainerName: string, dataContainer: string, folderNames: string[]): Promise<void> {
+        await this.saveTextContentToDirectoryWithDynamicPath(dataContainerName, dataContainer, folderNames.map(name => (
+            {
+                name,
+                comparisionType: ComparisionType.Exact
+            }
+        )));
+    }
+
+    public async saveTextContentToDirectoryWithDynamicPath(dataContainerName: string, dataContainer: string, folderNames: FolderToFollow[]) {
         if (this.settings.debugModeEnabled) {
             console.log("Saving content to ", dataContainerName, folderNames);
         }
@@ -186,7 +217,7 @@ class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        const targetDir = await this.followDirectories(folderNames);
+        const targetDir = await this.followDirectoriesComplex(folderNames);
 
         if (targetDir == null) {
             throw new Error("Directory not found");
@@ -333,7 +364,7 @@ class FileSystemHandler implements IStorageHandler {
         }
     }
 
-    private async followDirectories(folderNames: string[], createIfNotExist: boolean = true): Promise<FileSystemDirectoryHandle | null> {
+    private async followDirectoriesComplex(folderNames: FolderToFollow[], createIfNotExist: boolean = true): Promise<FileSystemDirectoryHandle | null> {
         if (this.directoryHandle == null) {
             this.directoryHandle = await this.restoreHandle();
         }
@@ -345,14 +376,43 @@ class FileSystemHandler implements IStorageHandler {
         let targetDir = this.directoryHandle;
 
         for (const folderName of folderNames) {
-            try {
-                targetDir = await targetDir.getDirectoryHandle(folderName, { create: createIfNotExist });
-            } catch (error) {
-                return null;
+            if (folderName.comparisionType == ComparisionType.Exact) {
+                try {
+                    targetDir = await targetDir.getDirectoryHandle(folderName.name, { create: createIfNotExist });
+                } catch (error) {
+                    return null;
+                }
+            }
+            else if (folderName.comparisionType == ComparisionType.Regex) {
+                const entries = await (targetDir as any).values();
+
+                let found = false;
+                for await (const entry of entries) {
+                    if (entry.kind === 'directory' && new RegExp(folderName.name).test(entry.name)) {
+                        targetDir = await targetDir.getDirectoryHandle(entry.name, { create: createIfNotExist });
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    return null;
+                }
             }
         }
 
         return targetDir;
+    }
+
+    private async followDirectories(folderNames: string[], createIfNotExist: boolean = true): Promise<FileSystemDirectoryHandle | null> {
+        return await this.followDirectoriesComplex(
+            folderNames.map(name => (
+                {
+                    name,
+                    comparisionType: ComparisionType.Exact
+                })),
+            createIfNotExist
+        );
     }
 
     public async createDirectory(folderNames: string[]): Promise<void> {
@@ -360,7 +420,7 @@ class FileSystemHandler implements IStorageHandler {
             console.log('Creating directory: ', folderNames);
         }
 
-        await this.followDirectories(folderNames);
+        await this.followDirectories(folderNames, true);
     }
 
     public async getLinkToFile(fileName: string, folderNames: string[]): Promise<string> {
@@ -390,7 +450,48 @@ class FileSystemHandler implements IStorageHandler {
         }
     }
 
+    public async renameDirectory(pathToDirectory: FolderToFollow[], newName: string): Promise<void> {
 
+        const parentDirectory = await this.followDirectoriesComplex(pathToDirectory.slice(0, -1), false);
+        const oldDirectory = await this.followDirectoriesComplex(pathToDirectory, false);
+        const newDirectory = await parentDirectory?.getDirectoryHandle(newName, { create: true });
+        const oldDirectoryName = oldDirectory?.name;
+
+        if (oldDirectory == null) {
+            throw new Error(`Couldn't find old directory`);
+        }
+
+        if (newDirectory == null) {
+            throw new Error(`Couldn't create new directory`);
+        }
+
+        if (parentDirectory == null) {
+            throw new Error(`Couldn't find parent directory`);
+        }
+
+        if (oldDirectoryName == null) {
+            throw new Error(`Couldn't find old directory name`);
+        }
+
+        await this.copyDirectory(oldDirectory, newDirectory);
+
+        await parentDirectory.removeEntry(oldDirectoryName, { recursive: true });
+    }
+
+    private async copyDirectory(sourceHandle: FileSystemDirectoryHandle, targetHandle: FileSystemDirectoryHandle) {
+        for await (const entry of (sourceHandle as any).values()) {
+            if (entry.kind === 'file') {
+                const file = await entry.getFile();
+                const newFileHandle = await targetHandle.getFileHandle(entry.name, { create: true });
+                const writable = await newFileHandle.createWritable();
+                await writable.write(await file.arrayBuffer());
+                await writable.close();
+            } else if (entry.kind === 'directory') {
+                const newSubDir = await targetHandle.getDirectoryHandle(entry.name, { create: true });
+                await this.copyDirectory(entry, newSubDir);
+            }
+        }
+    }
 }
 
 const fileSystemHandler = new FileSystemHandler(settingsProvider);

@@ -1,6 +1,7 @@
 import { TASKS_DIRECTORY_NAME } from "../constants";
 import { ContentMdFile } from "../converters/ContentMdFile";
 import { CardStoredMetadata, TaskStoredMetadata, RowStoredMetadata, MetadataType } from "../dataTypes/CardMetadata";
+import { ComparisionType, FolderToFollow } from "../dataTypes/FileSystemStructures";
 import { generateSyncId } from "../tools/syncTools";
 import { Id } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
@@ -14,8 +15,10 @@ export interface ICardStorage {
     getTaskMetadata(taskId: Id): Promise<TaskStoredMetadata | undefined>;
     saveCardContent(cardId: Id, contentWithoutProperties: string, cardStoredMetadata: CardStoredMetadata): Promise<void>;
     saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void>;
-    createNewRowMetadata(id: Id, title: string): Promise<void>;
+    createNewRowMetadata(id: Id, title: string, syncId: string): Promise<void>;
     removeCard(cardId: Id): Promise<void>;
+    getSearchPathToCard(cardId: Id): FolderToFollow[];
+    getReadPathToCard(cardId: Id, syncId: string): string[];
 }
 
 export class CardStorage implements ICardStorage {
@@ -25,9 +28,38 @@ export class CardStorage implements ICardStorage {
     }
 
     public async getCardContent(cardId: Id): Promise<ContentMdFile> {
-        const fileContents = await this.storageHandler.getContentFromDirectory('content.md', [TASKS_DIRECTORY_NAME, `${cardId}`]);
+        let fileContents = '';
+
+        try {
+            fileContents = await this.storageHandler.getContentFromDirectoryComplexFolderPath(
+                'content.md',
+                this.getSearchPathToCard(cardId)
+            );
+        } catch (e) {
+            console.log("couldn't find content for ", cardId);
+
+            fileContents = await this.storageHandler.getContentFromDirectory(
+                'content.md',
+                [TASKS_DIRECTORY_NAME, `${cardId}`]
+            );
+        }
 
         return new ContentMdFile(fileContents);
+    }
+
+    public getSearchPathToCard(cardId: Id): FolderToFollow[] {
+        return [{
+            name: TASKS_DIRECTORY_NAME,
+            comparisionType: ComparisionType.Exact
+        },
+        {
+            name: `${cardId}` + '\\s+\\((.*)\\)',
+            comparisionType: ComparisionType.Regex
+        }];
+    }
+
+    public getReadPathToCard(cardId: Id, syncId: string): string[] {
+        return [TASKS_DIRECTORY_NAME, `${cardId} (${syncId})`];
     }
 
     public async removeCard(cardId: Id): Promise<void> {
@@ -44,7 +76,24 @@ export class CardStorage implements ICardStorage {
             return this.cache[cardId] as T;
         }
 
-        const content = await this.storageHandler.getContentFromDirectory('metadata.md', [TASKS_DIRECTORY_NAME, `${cardId}`]);
+        let content = '';
+
+        try {
+            content = await this.storageHandler.getContentFromDirectoryComplexFolderPath(
+                'metadata.md',
+                this.getSearchPathToCard(cardId)
+            );
+        }
+        catch (e) {
+            console.log("couldn't find medatada for ", cardId);
+        }
+
+        if (content.length == 0 || content == undefined) {
+            content = await this.storageHandler.getContentFromDirectory(
+                'metadata.md',
+                [TASKS_DIRECTORY_NAME, `${cardId}`]
+            );
+        }
 
         if (content.length === 0) {
             return undefined;
@@ -77,21 +126,25 @@ export class CardStorage implements ICardStorage {
 
         const content = contentMdFile.getRawContentMdFileReadyToSave(cardStoredMetadata);
 
-        await this.storageHandler.saveTextContentToDirectory('content.md', content, [TASKS_DIRECTORY_NAME, `${cardId}`]);
+        await this.storageHandler.createDirectory(this.getReadPathToCard(cardId, cardStoredMetadata.syncId));
+
+        await this.storageHandler.saveTextContentToDirectoryWithDynamicPath('content.md', content, this.getSearchPathToCard(cardId));
     }
 
     public async saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void> {
         delete this.cache[card.id];
 
-        await this.storageHandler.saveJsonContentToDirectory<T>('metadata.md', card, [TASKS_DIRECTORY_NAME, `${card.id}`]);
+        await this.storageHandler.createDirectory(this.getReadPathToCard(card.id, card.syncId));
+
+        await this.storageHandler.saveJsonContentToDirectoryWithDynamicPath<T>('metadata.md', card, this.getSearchPathToCard(card.id));
     }
 
-    public async createNewRowMetadata(id: Id, title: string) {
+    public async createNewRowMetadata(id: Id, title: string, syncId: string) {
         const rowMetadata: RowStoredMetadata = {
             id: id,
             title: title,
             type: MetadataType.Row,
-            syncId: generateSyncId()
+            syncId: syncId
         }
 
         await taskStorage.saveCardMetadata(rowMetadata);
