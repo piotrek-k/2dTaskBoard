@@ -1,7 +1,6 @@
 import { RowMetadataViewModel, MetadataType, RowStoredMetadata, TaskMetadataViewModel, TaskStoredMetadata, CardStoredMetadata } from "../dataTypes/CardMetadata";
 import taskStorage, { ICardStorage } from "../services/CardStorage";
 import boardStorage, { NewBoardStorage } from "../services/NewBoardStorage";
-import { generateSyncId } from "../tools/syncTools";
 import { Id, KanbanDataContainer } from "../types";
 
 export class CardMetadataViewModels {
@@ -16,8 +15,7 @@ export class CardMetadataViewModels {
             return {
                 id: rowId,
                 title: 'Row ' + rowId,
-                type: MetadataType.Row,
-                syncId: generateSyncId()
+                type: MetadataType.Row
             };
         }
 
@@ -57,8 +55,7 @@ export class CardMetadataViewModels {
                 title: 'Task ' + taskId,
                 columnId: undefined,
                 rowId: undefined,
-                type: MetadataType.Task,
-                syncId: generateSyncId()
+                type: MetadataType.Task
             };
         }
 

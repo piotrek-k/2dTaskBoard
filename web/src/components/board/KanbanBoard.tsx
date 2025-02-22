@@ -18,7 +18,6 @@ import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
-import { generateSyncId } from '../../tools/syncTools';
 import MenuIcon from '../../icons/MenuIcon';
 import { debounce } from 'lodash';
 import { Mutex } from 'async-mutex';
@@ -344,7 +343,6 @@ function KanbanBoard() {
         let newTask: TaskInStorage | null = null;
 
         await lockForCreatingNewElements.runExclusive(async () => {
-            const syncId = generateSyncId();
             const newTitle = `Task ${tasks.length + 1}`;
 
             newTask = {
@@ -352,15 +350,13 @@ function KanbanBoard() {
                 columnId,
                 rowId,
                 position: getLowestPositionForTask(),
-                syncId: syncId,
                 title: newTitle
             };
 
             const newTaskMetadata: TaskStoredMetadata = {
                 id: newTask.id,
                 title: newTitle,
-                type: MetadataType.Task,
-                syncId: syncId
+                type: MetadataType.Task
             }
 
             await taskStorage.saveCardMetadata(newTaskMetadata);
@@ -458,18 +454,16 @@ function KanbanBoard() {
 
     async function createNewRow() {
         await lockForCreatingNewElements.runExclusive(async () => {
-            const syncId = generateSyncId();
             const newTitle = `Row ${rows.length + 1}`;
             const newId = await boardStorage.generateId();
 
             const rowToAdd: RowInStorage = {
                 id: newId,
                 position: getHighestPositionForRow(),
-                syncId: syncId,
                 title: newTitle
             };
 
-            await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle, syncId);
+            await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle);
 
             await boardStorage.addRowToBoard(rowToAdd, []);
 

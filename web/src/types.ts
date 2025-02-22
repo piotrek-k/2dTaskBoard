@@ -1,13 +1,12 @@
-export type Id = number;
+export type Id = string;
 
 export interface ISynchronizable {
-    syncId: string;
+    id: Id;
 }
 
 export type RowInStorage = ISynchronizable & {
     id: Id;
     position: number;
-    syncId: string;
     title: string;
 };
 
@@ -26,7 +25,6 @@ export type TaskInStorage = ISynchronizable & {
     columnId: Id;
     rowId: Id;
     position: number;
-    syncId: string;
     title: string;
 };
 

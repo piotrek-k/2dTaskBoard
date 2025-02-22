@@ -1,11 +1,12 @@
 import { RowMetadataViewModel } from "../../dataTypes/CardMetadata";
+import { Id } from "../../types";
 import SharedCardDetailsEditorComponent from "./SharedCardDetailsEditorComponent";
 
 interface Props {
   row: RowMetadataViewModel;
   requestSavingDataToStorage: () => Promise<void>;
   isReadOnly: boolean;
-  requestRemovingCard: (cardId: number) => void;
+  requestRemovingCard: (cardId: Id) => void;
   allowDelete: boolean;
 }
 

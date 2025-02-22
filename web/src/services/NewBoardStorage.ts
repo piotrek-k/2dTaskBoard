@@ -1,4 +1,4 @@
-import { ISynchronizable, KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
+import { ColumnInStorage, ISynchronizable, KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
@@ -7,10 +7,10 @@ export class NewBoardStorage {
     private readonly pathToStorage = ['board'];
 
     private readonly defaultColumns = [
-        { id: 1, title: 'To Do' },
-        { id: 2, title: 'In Progress' },
-        { id: 3, title: 'Done' }
-    ];
+        { id: "1", title: 'To Do' },
+        { id: "2", title: 'In Progress' },
+        { id: "3", title: 'Done' }
+    ] as ColumnInStorage[];
 
     constructor(private storageHandler: IStorageHandler) {
     }
@@ -58,7 +58,7 @@ export class NewBoardStorage {
 
     private removeDuplicateValues(array: ISynchronizable[]): ISynchronizable[] {
         return array.filter((value, index, self) => {
-            return self.findIndex(v => v.syncId === value.syncId) === index;
+            return self.findIndex(v => v.id === value.id) === index;
         });
     }
 
@@ -79,8 +79,8 @@ export class NewBoardStorage {
         await this.saveKanbanState(currentBoardState);
     }
 
-    public async generateId(): Promise<number> {
-        return 0;
+    public async generateId(): Promise<string> {
+        return "dddddddd-dddd-dddd-dddd-dddddddddddd";
     }
 }
 

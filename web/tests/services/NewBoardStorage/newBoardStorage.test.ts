@@ -16,9 +16,9 @@ describe('NewBoardStorage', () => {
 
         expect(result).toEqual({
             columns: [
-                { id: 1, title: 'To Do' },
-                { id: 2, title: 'In Progress' },
-                { id: 3, title: 'Done' }
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
             ],
             rows: [],
             tasks: []
@@ -28,15 +28,15 @@ describe('NewBoardStorage', () => {
     it('should return state from file if file is found', async () => {
         const boardState = {
             columns: [
-                { id: 1, title: 'To Do' },
-                { id: 2, title: 'In Progress' },
-                { id: 3, title: 'Done' }
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
             ],
             rows: [
-                { id: 1, title: 'Row 1' } as RowInStorage
+                { id: '1', title: 'Row 1' } as RowInStorage
             ],
             tasks: [
-                { id: 1, title: 'Task 1', columnId: 1, rowId: 1 } as TaskInStorage
+                { id: '1', title: 'Task 1', columnId: '1', rowId: '1' } as TaskInStorage
             ]
         };
 
@@ -58,29 +58,29 @@ describe('NewBoardStorage', () => {
     it('should remove duplicate values when merging state from multiple files', async () => {
         const boardState1 = {
             columns: [
-                { id: 1, title: 'To Do' },
-                { id: 2, title: 'In Progress' },
-                { id: 3, title: 'Done' }
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
             ],
             rows: [
-                { id: 1, title: 'Row 1', syncId: 'abc123' } as RowInStorage
+                { id: 'abc123', title: 'Row 1' } as RowInStorage
             ],
             tasks: [
-                { id: 1, title: 'Task 1', columnId: 1, rowId: 1, syncId: 'ddd123' } as TaskInStorage
+                { id: 'ddd123', title: 'Task 1', columnId: '1', rowId: 'abc123' } as TaskInStorage
             ]
         };
 
         const boardState2 = {
             columns: [
-                { id: 1, title: 'To Do' },
-                { id: 2, title: 'In Progress' },
-                { id: 3, title: 'Done' }
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
             ],
             rows: [
-                { id: 1, title: 'Row 1', syncId: 'abc123' } as RowInStorage
+                { id: 'abc123', title: 'Row 1' } as RowInStorage
             ],
             tasks: [
-                { id: 1, title: 'Task 1', columnId: 1, rowId: 1, syncId: 'ddd123' } as TaskInStorage
+                { id: 'ddd123', title: 'Task 1', columnId: '1', rowId: 'abc123' } as TaskInStorage
             ]
         };
 
