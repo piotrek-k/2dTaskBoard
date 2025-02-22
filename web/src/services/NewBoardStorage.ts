@@ -19,7 +19,11 @@ export class NewBoardStorage {
         };
 
         for (const fileName of allFilesInDirectory) {
-            const fileContents = await this.storageHandler.getContent(fileName);
+            const fileContents = await this.storageHandler.getContentFromDirectory(fileName, this.pathToStorage);
+
+            if (!fileContents) {
+                continue;
+            }
 
             const parsedFileContents = JSON.parse(fileContents) as KanbanDataContainer;
 
