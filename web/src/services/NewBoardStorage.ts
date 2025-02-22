@@ -69,6 +69,19 @@ export class NewBoardStorage {
             this.pathToStorage
         );
     }
+
+    public async addRowToBoard(row: RowInStorage, tasks: TaskInStorage[]) {
+        const currentBoardState = await this.getKanbanState();
+
+        currentBoardState?.rows.unshift(row);
+        currentBoardState?.tasks.push(...tasks);
+
+        await this.saveKanbanState(currentBoardState);
+    }
+
+    public async generateId(): Promise<number> {
+        return 0;
+    }
 }
 
 const boardStorage = new NewBoardStorage(fileSystemHandler);

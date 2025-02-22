@@ -3,8 +3,8 @@ import { Id } from '../../types';
 import archiveStorage, { RowWithTasks } from '../../services/ArchiveStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import RowArchiveView from './RowArchiveView';
-import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 import { ArchiveStored } from '../../dataTypes/ArchiveStructures';
+import boardStorage from '../../services/NewBoardStorage';
 
 function ArchiveView() {
    
@@ -30,7 +30,7 @@ function ArchiveView() {
 
         const convertedData : RowWithTasks = archiveStorage.convertArchivedRowToBoardRow(archivedRow);
 
-        kanbanBoardStorage.addRowToBoard(convertedData.row, convertedData.tasks);
+        boardStorage.addRowToBoard(convertedData.row, convertedData.tasks);
 
         await archiveStorage.removeFromArchive(rowId);
 

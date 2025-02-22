@@ -1,6 +1,10 @@
 export type Id = number;
 
-export type RowInStorage = {
+export interface ISynchronizable {
+    syncId: string;
+}
+
+export type RowInStorage = ISynchronizable & {
     id: Id;
     position: number;
     syncId: string;
@@ -17,7 +21,7 @@ export type ColumnInStorage = {
     title: string;
 }
 
-export type TaskInStorage = {
+export type TaskInStorage = ISynchronizable & {
     id: Id;
     columnId: Id;
     rowId: Id;
