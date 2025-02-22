@@ -54,4 +54,53 @@ describe('NewBoardStorage', () => {
 
         expect(result).toEqual(boardState);
     });
+
+    it('should remove duplicate values when merging state from multiple files', async () => {
+        const boardState1 = {
+            columns: [
+                { id: 1, title: 'To Do' },
+                { id: 2, title: 'In Progress' },
+                { id: 3, title: 'Done' }
+            ],
+            rows: [
+                { id: 1, title: 'Row 1', syncId: 'abc123' } as RowInStorage
+            ],
+            tasks: [
+                { id: 1, title: 'Task 1', columnId: 1, rowId: 1, syncId: 'ddd123' } as TaskInStorage
+            ]
+        };
+
+        const boardState2 = {
+            columns: [
+                { id: 1, title: 'To Do' },
+                { id: 2, title: 'In Progress' },
+                { id: 3, title: 'Done' }
+            ],
+            rows: [
+                { id: 1, title: 'Row 1', syncId: 'abc123' } as RowInStorage
+            ],
+            tasks: [
+                { id: 1, title: 'Task 1', columnId: 1, rowId: 1, syncId: 'ddd123' } as TaskInStorage
+            ]
+        };
+
+        const storageHandlerMock = mock<IStorageHandler>();
+        storageHandlerMock.listFilesInDirectory.mockResolvedValue(['board1.json', 'board2.json']);
+        storageHandlerMock.getContentFromDirectory.calledWith('board1.json', anyArray()).mockReturnValue(
+            Promise.resolve(
+                JSON.stringify(boardState1)
+            )
+        );
+        storageHandlerMock.getContentFromDirectory.calledWith('board2.json', anyArray()).mockReturnValue(
+            Promise.resolve(
+                JSON.stringify(boardState2)
+            )
+        );
+
+        const boardStorage = new NewBoardStorage(storageHandlerMock);
+
+        const result = await boardStorage.getKanbanState();
+
+        expect(result).toEqual(boardState1);
+    });
 });

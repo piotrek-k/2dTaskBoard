@@ -1,10 +1,16 @@
-import { KanbanDataContainer } from "../types";
+import { ISynchronizable, KanbanDataContainer, RowInStorage, TaskInStorage } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
 export class NewBoardStorage {
     private readonly defaultFileName = 'board.json';
     private readonly pathToStorage = ['board'];
+
+    private readonly defaultColumns = [
+        { id: 1, title: 'To Do' },
+        { id: 2, title: 'In Progress' },
+        { id: 3, title: 'Done' }
+    ];
 
     constructor(private storageHandler: IStorageHandler) {
     }
@@ -27,18 +33,13 @@ export class NewBoardStorage {
 
             const parsedFileContents = JSON.parse(fileContents) as KanbanDataContainer;
 
-            result.columns = [...result.columns, ...parsedFileContents.columns];
             result.rows = [...result.rows, ...parsedFileContents.rows];
             result.tasks = [...result.tasks, ...parsedFileContents.tasks];
         }
 
         if (result.columns.length === 0 && result.rows.length === 0 && result.tasks.length === 0) {
             const newKanbanState = {
-                columns: [
-                    { id: 1, title: 'To Do' },
-                    { id: 2, title: 'In Progress' },
-                    { id: 3, title: 'Done' }
-                ],
+                columns: this.defaultColumns,
                 rows: [],
                 tasks: []
             } as KanbanDataContainer;
@@ -48,7 +49,17 @@ export class NewBoardStorage {
             return newKanbanState
         }
 
+        result.columns = this.defaultColumns;
+        result.rows = this.removeDuplicateValues(result.rows) as RowInStorage[];
+        result.tasks = this.removeDuplicateValues(result.tasks) as TaskInStorage[];
+
         return result;
+    }
+
+    private removeDuplicateValues(array: ISynchronizable[]): ISynchronizable[] {
+        return array.filter((value, index, self) => {
+            return self.findIndex(v => v.syncId === value.syncId) === index;
+        });
     }
 
     public async saveKanbanState(boardStateContainer: KanbanDataContainer) {
