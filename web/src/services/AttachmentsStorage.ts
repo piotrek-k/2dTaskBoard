@@ -9,8 +9,8 @@ class AttachmentsStorage {
     constructor(private storageHandler: IStorageHandler) {
     }
 
-    private getAttachmentsPath(cardId: Id, syncId: string): string[] {
-        const pathToCard = taskStorage.getReadPathToCard(cardId, syncId);
+    private getAttachmentsPath(cardId: Id): string[] {
+        const pathToCard = taskStorage.getReadPathToCard(cardId);
 
         pathToCard.push(ATTACHMENTS_DIRECTORY_NAME);
 
@@ -21,7 +21,7 @@ class AttachmentsStorage {
         const fileName = await this.storageHandler.uploadFile(
             file,
             file.name,
-            this.getAttachmentsPath(cardStoredMetadata.id, cardStoredMetadata.syncId)
+            this.getAttachmentsPath(cardStoredMetadata.id)
         );
 
         return fileName;
@@ -30,20 +30,20 @@ class AttachmentsStorage {
     async deleteFileForTask(cardStoredMetadata: CardStoredMetadata, fileName: string): Promise<void> {
         await this.storageHandler.deleteFile(
             fileName,
-            this.getAttachmentsPath(cardStoredMetadata.id, cardStoredMetadata.syncId)
+            this.getAttachmentsPath(cardStoredMetadata.id)
         );
     }
 
     public async getFileNamesForTask(cardStoredMetadata: CardStoredMetadata): Promise<string[]> {
         return await this.storageHandler.listFilesInDirectory(
-            this.getAttachmentsPath(cardStoredMetadata.id, cardStoredMetadata.syncId)
+            this.getAttachmentsPath(cardStoredMetadata.id)
         );
     }
 
     public async getLinkForAttachment(cardStoredMetadata: CardStoredMetadata, fileName: string): Promise<string> {
         return await this.storageHandler.getLinkToFile(
             fileName,
-            this.getAttachmentsPath(cardStoredMetadata.id, cardStoredMetadata.syncId)
+            this.getAttachmentsPath(cardStoredMetadata.id)
         );
     }
 }

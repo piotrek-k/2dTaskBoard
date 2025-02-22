@@ -1,0 +1,106 @@
+import { describe, it, expect } from 'vitest';
+import { BoardStorage } from '../../../src/services/BoardStorage';
+import { IStorageHandler } from '../../../src/services/IStorageHandler';
+import { anyArray, mock } from 'vitest-mock-extended';
+import { RowInStorage, TaskInStorage } from '../../../src/types';
+
+describe('NewBoardStorage', () => {
+
+    it('should return default state if no files are found', async () => {
+        const storageHandlerMock = mock<IStorageHandler>();
+        storageHandlerMock.listFilesInDirectory.mockResolvedValue([]);
+
+        const boardStorage = new BoardStorage(storageHandlerMock);
+
+        const result = await boardStorage.getKanbanState();
+
+        expect(result).toEqual({
+            columns: [
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
+            ],
+            rows: [],
+            tasks: []
+        });
+    });
+
+    it('should return state from file if file is found', async () => {
+        const boardState = {
+            columns: [
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
+            ],
+            rows: [
+                { id: '1', title: 'Row 1' } as RowInStorage
+            ],
+            tasks: [
+                { id: '1', title: 'Task 1', columnId: '1', rowId: '1' } as TaskInStorage
+            ]
+        };
+
+        const storageHandlerMock = mock<IStorageHandler>();
+        storageHandlerMock.listFilesInDirectory.mockResolvedValue(['board.json']);
+        storageHandlerMock.getContentFromDirectory.calledWith('board.json', anyArray()).mockReturnValue(
+            Promise.resolve(
+                JSON.stringify(boardState)
+            )
+        );
+
+        const boardStorage = new BoardStorage(storageHandlerMock);
+
+        const result = await boardStorage.getKanbanState();
+
+        expect(result).toEqual(boardState);
+    });
+
+    it('should remove duplicate values when merging state from multiple files', async () => {
+        const boardState1 = {
+            columns: [
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
+            ],
+            rows: [
+                { id: 'abc123', title: 'Row 1' } as RowInStorage
+            ],
+            tasks: [
+                { id: 'ddd123', title: 'Task 1', columnId: '1', rowId: 'abc123' } as TaskInStorage
+            ]
+        };
+
+        const boardState2 = {
+            columns: [
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
+            ],
+            rows: [
+                { id: 'abc123', title: 'Row 1' } as RowInStorage
+            ],
+            tasks: [
+                { id: 'ddd123', title: 'Task 1', columnId: '1', rowId: 'abc123' } as TaskInStorage
+            ]
+        };
+
+        const storageHandlerMock = mock<IStorageHandler>();
+        storageHandlerMock.listFilesInDirectory.mockResolvedValue(['board1.json', 'board2.json']);
+        storageHandlerMock.getContentFromDirectory.calledWith('board1.json', anyArray()).mockReturnValue(
+            Promise.resolve(
+                JSON.stringify(boardState1)
+            )
+        );
+        storageHandlerMock.getContentFromDirectory.calledWith('board2.json', anyArray()).mockReturnValue(
+            Promise.resolve(
+                JSON.stringify(boardState2)
+            )
+        );
+
+        const boardStorage = new BoardStorage(storageHandlerMock);
+
+        const result = await boardStorage.getKanbanState();
+
+        expect(result).toEqual(boardState1);
+    });
+});

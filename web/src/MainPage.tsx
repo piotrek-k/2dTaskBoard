@@ -14,7 +14,7 @@ function MainPage() {
                     className="absolute inset-0 w-full h-full object-cover filter blur-sm"
                 />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                    <h1 className="text-5xl font-bold text-center mb-12 drop-shadow-lg">2D Kanban Board</h1>
+                    <h1 className="text-5xl font-bold text-center mb-12 drop-shadow-lg">2dTaskBoard</h1>
                     <Link
                         to="/board"
                         className="animate-bounce bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-600 text-lg shadow-lg"
@@ -53,12 +53,12 @@ function MainPage() {
                 <FeatureSection
                     icon={<FaDollarSign className="text-4xl text-green-500" />}
                     title="Free of Charge"
-                    description="Enjoy all the features of this powerful Kanban board application completely free, with no hidden costs or premium tiers."
+                    description="Enjoy all the features of this powerful task board application completely free, with no hidden costs or premium tiers."
                 />
             </div>
 
             <footer className="mt-12 text-center text-gray-800 text-sm">
-                <p>&copy; 2024 - {new Date().getFullYear()} "2D Kanban Board" Piotr Kozerski</p>
+                <p>&copy; 2024 - {new Date().getFullYear()} "2dTaskBoard" Piotr Kozerski</p>
             </footer>
         </div>
     )

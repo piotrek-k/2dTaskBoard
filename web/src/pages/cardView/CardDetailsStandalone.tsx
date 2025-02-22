@@ -11,7 +11,7 @@ import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataV
 function CardDetailsStandalone() {
 
     const { cardIdProp } = useParams();
-    const [cardId] = useState<Id>(Number(cardIdProp));
+    const [cardId] = useState<Id>(cardIdProp ?? "");
 
     const [task, setTask] = useState<TaskMetadataViewModel | undefined>(undefined);
     const [row, setRow] = useState<RowMetadataViewModel | undefined>(undefined);
@@ -20,7 +20,7 @@ function CardDetailsStandalone() {
 
     const fetchTask = useCallback(async () => {
         try {
-            if (!storageIsReady) {
+            if (!storageIsReady || cardId === "") {
                 return;
             }
 

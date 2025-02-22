@@ -11,12 +11,13 @@ import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { CardStoredMetadata } from '../../dataTypes/CardMetadata';
 import CustomMDEditor from '../customMarkdownRenderers/CustomMDEditor';
 import TrashIcon from '../../icons/TrashIcon';
+import { Id } from '../../types';
 
 interface Props {
     card: CardStoredMetadata;
     requestSavingDataToStorage: () => Promise<void>;
     isReadOnly: boolean;
-    requestRemovingCard: (cardId: number) => void;
+    requestRemovingCard: (cardId: Id) => void;
     allowDelete: boolean;
 }
 

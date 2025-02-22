@@ -1,8 +1,9 @@
+import { Id } from "../types";
+
 export type CardStoredMetadata = {
-    id: number;
+    id: Id;
     title: string;
     type: MetadataType;
-    syncId: string;
 }
 
 export enum MetadataType {
@@ -14,8 +15,8 @@ export enum MetadataType {
 export type TaskStoredMetadata = CardStoredMetadata;
 
 export type TaskMetadataViewModel = TaskStoredMetadata & {
-    columnId: number | undefined;
-    rowId: number | undefined;
+    columnId: Id | undefined;
+    rowId: Id | undefined;
 }
 
 export type RowStoredMetadata = CardStoredMetadata;

@@ -2,7 +2,6 @@ import { TASKS_DIRECTORY_NAME } from "../constants";
 import { ContentMdFile } from "../converters/ContentMdFile";
 import { CardStoredMetadata, TaskStoredMetadata, RowStoredMetadata, MetadataType } from "../dataTypes/CardMetadata";
 import { ComparisionType, FolderToFollow } from "../dataTypes/FileSystemStructures";
-import { generateSyncId } from "../tools/syncTools";
 import { Id } from "../types";
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
@@ -53,13 +52,13 @@ export class CardStorage implements ICardStorage {
             comparisionType: ComparisionType.Exact
         },
         {
-            name: `${cardId}` + '\\s+\\((.*)\\)',
-            comparisionType: ComparisionType.Regex
+            name: `${cardId}`,
+            comparisionType: ComparisionType.Exact
         }];
     }
 
-    public getReadPathToCard(cardId: Id, syncId: string): string[] {
-        return [TASKS_DIRECTORY_NAME, `${cardId} (${syncId})`];
+    public getReadPathToCard(cardId: Id): string[] {
+        return [TASKS_DIRECTORY_NAME, `${cardId}`];
     }
 
     public async removeCard(cardId: Id): Promise<void> {
@@ -85,7 +84,7 @@ export class CardStorage implements ICardStorage {
             );
         }
         catch (e) {
-            console.log("couldn't find medatada for ", cardId);
+            console.log("couldn't find metadata for ", cardId);
         }
 
         if (content.length == 0 || content == undefined) {
@@ -100,12 +99,6 @@ export class CardStorage implements ICardStorage {
         }
 
         const parsedContent = JSON.parse(content) as T;
-
-        if (parsedContent.syncId === undefined) {
-            parsedContent.syncId = generateSyncId();
-
-            this.saveCardMetadata(parsedContent);
-        }
 
         this.cache[cardId] = parsedContent;
 
@@ -126,7 +119,7 @@ export class CardStorage implements ICardStorage {
 
         const content = contentMdFile.getRawContentMdFileReadyToSave(cardStoredMetadata);
 
-        await this.storageHandler.createDirectory(this.getReadPathToCard(cardId, cardStoredMetadata.syncId));
+        await this.storageHandler.createDirectory(this.getReadPathToCard(cardId));
 
         await this.storageHandler.saveTextContentToDirectoryWithDynamicPath('content.md', content, this.getSearchPathToCard(cardId));
     }
@@ -134,17 +127,16 @@ export class CardStorage implements ICardStorage {
     public async saveCardMetadata<T extends CardStoredMetadata>(card: T): Promise<void> {
         delete this.cache[card.id];
 
-        await this.storageHandler.createDirectory(this.getReadPathToCard(card.id, card.syncId));
+        await this.storageHandler.createDirectory(this.getReadPathToCard(card.id));
 
         await this.storageHandler.saveJsonContentToDirectoryWithDynamicPath<T>('metadata.md', card, this.getSearchPathToCard(card.id));
     }
 
-    public async createNewRowMetadata(id: Id, title: string, syncId: string) {
+    public async createNewRowMetadata(id: Id, title: string) {
         const rowMetadata: RowStoredMetadata = {
             id: id,
             title: title,
-            type: MetadataType.Row,
-            syncId: syncId
+            type: MetadataType.Row
         }
 
         await taskStorage.saveCardMetadata(rowMetadata);

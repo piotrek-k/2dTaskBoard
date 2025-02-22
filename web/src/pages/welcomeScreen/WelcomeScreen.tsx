@@ -31,10 +31,10 @@ function WelcomeScreen() {
                     }
                 }}
             >
-                <h1 className="text-3xl font-bold text-center text-white mb-4">2D Kanban Board</h1>
+                <h1 className="text-3xl font-bold text-center text-white mb-4">2dTaskBoard</h1>
 
                 <p className="text-lg text-gray-300 text-center mb-6">
-                    Welcome to <span className="font-semibold">2D Kanban Board</span>!
+                    Welcome to <span className="font-semibold">2dTaskBoard</span>!
                 </p>
 
                 <div className="text-gray-300 mb-6">

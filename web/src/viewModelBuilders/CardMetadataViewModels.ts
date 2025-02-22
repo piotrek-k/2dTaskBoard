@@ -1,12 +1,11 @@
 import { RowMetadataViewModel, MetadataType, RowStoredMetadata, TaskMetadataViewModel, TaskStoredMetadata, CardStoredMetadata } from "../dataTypes/CardMetadata";
 import taskStorage, { ICardStorage } from "../services/CardStorage";
-import kanbanBoardStorage, { KanbanBoardStorage } from "../services/KanbanBoardStorage";
-import { generateSyncId } from "../tools/syncTools";
+import boardStorage, { BoardStorage } from "../services/BoardStorage";
 import { Id, KanbanDataContainer } from "../types";
 
 export class CardMetadataViewModels {
 
-    constructor(private boardStorage: KanbanBoardStorage, private cardStorage: ICardStorage) {
+    constructor(private boardStorage: BoardStorage, private cardStorage: ICardStorage) {
     }
 
     public async getRowMetadataViewModel(rowId: Id): Promise<RowMetadataViewModel | undefined> {
@@ -16,8 +15,7 @@ export class CardMetadataViewModels {
             return {
                 id: rowId,
                 title: 'Row ' + rowId,
-                type: MetadataType.Row,
-                syncId: generateSyncId()
+                type: MetadataType.Row
             };
         }
 
@@ -57,12 +55,11 @@ export class CardMetadataViewModels {
                 title: 'Task ' + taskId,
                 columnId: undefined,
                 rowId: undefined,
-                type: MetadataType.Task,
-                syncId: generateSyncId()
+                type: MetadataType.Task
             };
         }
 
-        const boardState = await kanbanBoardStorage.getKanbanState();
+        const boardState = await boardStorage.getKanbanState();
         const extendedTask = this.addBoardContextToTask(metadata, boardState);
 
         return extendedTask;
@@ -102,6 +99,6 @@ export class CardMetadataViewModels {
     }
 }
 
-const cardMetadataViewModelsBuilder = new CardMetadataViewModels(kanbanBoardStorage, taskStorage);
+const cardMetadataViewModelsBuilder = new CardMetadataViewModels(boardStorage, taskStorage);
 
 export default cardMetadataViewModelsBuilder;

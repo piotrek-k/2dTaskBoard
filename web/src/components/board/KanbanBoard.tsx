@@ -10,7 +10,6 @@ import { createPortal } from 'react-dom';
 import TaskCard from './TaskCard';
 import ArchiveIcon from '../../icons/ArchiveIcon';
 import ArchiveView from '../archive/ArchiveView';
-import kanbanBoardStorage from '../../services/KanbanBoardStorage';
 import taskStorage from '../../services/CardStorage';
 import archiveStorage from '../../services/ArchiveStorage';
 import fileSystemHandler from '../../services/FileSystemHandler';
@@ -19,10 +18,10 @@ import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
-import { generateSyncId } from '../../tools/syncTools';
 import MenuIcon from '../../icons/MenuIcon';
 import { debounce } from 'lodash';
 import { Mutex } from 'async-mutex';
+import boardStorage from '../../services/BoardStorage';
 
 const lockForCreatingNewElements = new Mutex();
 
@@ -94,7 +93,7 @@ function KanbanBoard() {
     }, [storageIsReady]);
 
     async function loadBoard() {
-        const dataContainer = await kanbanBoardStorage.getKanbanState();
+        const dataContainer = await boardStorage.getKanbanState();
 
         if (dataContainer == undefined) {
             throw new Error("Data storage not set");
@@ -133,7 +132,7 @@ function KanbanBoard() {
 
     const saveBoard = useCallback(async () => {
         console.log("Saving board state");
-        await kanbanBoardStorage.saveKanbanState(boardState);
+        await boardStorage.saveKanbanState(boardState);
     }, [boardState]);
 
     const debouncedSaveBoard = useMemo(() => debounce(saveBoard, 500), [saveBoard]);
@@ -167,7 +166,7 @@ function KanbanBoard() {
 
             <nav className="bg-gray-800 py-2 px-4">
                 <div className="container mx-auto flex justify-between items-center">
-                    <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
+                    <h1 className="text-white text-lg font-semibold">2dTaskBoard</h1>
                     <div className="hidden md:flex space-x-3">
                         <button
                             onClick={() => { switchArchiveView() }}
@@ -344,23 +343,20 @@ function KanbanBoard() {
         let newTask: TaskInStorage | null = null;
 
         await lockForCreatingNewElements.runExclusive(async () => {
-            const syncId = generateSyncId();
             const newTitle = `Task ${tasks.length + 1}`;
 
             newTask = {
-                id: await kanbanBoardStorage.generateId(),
+                id: await boardStorage.generateId(),
                 columnId,
                 rowId,
                 position: getLowestPositionForTask(),
-                syncId: syncId,
                 title: newTitle
             };
 
             const newTaskMetadata: TaskStoredMetadata = {
                 id: newTask.id,
                 title: newTitle,
-                type: MetadataType.Task,
-                syncId: syncId
+                type: MetadataType.Task
             }
 
             await taskStorage.saveCardMetadata(newTaskMetadata);
@@ -458,20 +454,18 @@ function KanbanBoard() {
 
     async function createNewRow() {
         await lockForCreatingNewElements.runExclusive(async () => {
-            const syncId = generateSyncId();
             const newTitle = `Row ${rows.length + 1}`;
-            const newId = await kanbanBoardStorage.generateId();
+            const newId = await boardStorage.generateId();
 
             const rowToAdd: RowInStorage = {
                 id: newId,
                 position: getHighestPositionForRow(),
-                syncId: syncId,
                 title: newTitle
             };
 
-            await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle, syncId);
+            await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle);
 
-            await kanbanBoardStorage.addRowToBoard(rowToAdd, []);
+            await boardStorage.addRowToBoard(rowToAdd, []);
 
             await loadBoard();
         });
