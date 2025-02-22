@@ -166,7 +166,7 @@ function KanbanBoard() {
 
             <nav className="bg-gray-800 py-2 px-4">
                 <div className="container mx-auto flex justify-between items-center">
-                    <h1 className="text-white text-lg font-semibold">Kanban Board</h1>
+                    <h1 className="text-white text-lg font-semibold">2dTaskBoard</h1>
                     <div className="hidden md:flex space-x-3">
                         <button
                             onClick={() => { switchArchiveView() }}
