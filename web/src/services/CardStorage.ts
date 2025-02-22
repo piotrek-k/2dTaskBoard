@@ -52,8 +52,8 @@ export class CardStorage implements ICardStorage {
             comparisionType: ComparisionType.Exact
         },
         {
-            name: `${cardId}` + '\\s+\\((.*)\\)',
-            comparisionType: ComparisionType.Regex
+            name: `${cardId}`,
+            comparisionType: ComparisionType.Exact
         }];
     }
 

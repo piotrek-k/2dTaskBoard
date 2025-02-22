@@ -80,7 +80,7 @@ export class NewBoardStorage {
     }
 
     public async generateId(): Promise<string> {
-        return "dddddddd-dddd-dddd-dddd-dddddddddddd";
+        return crypto.randomUUID();
     }
 }
 
