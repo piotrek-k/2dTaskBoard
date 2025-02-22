@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import PlusIcon from '../../icons/PlusIcon';
 import FolderIcon from '../../icons/FolderIcon'; // Assuming you have this icon, if not, you can use another appropriate icon
 import { ColumnInStorage, Id, KanbanDataContainer, RowInStorage, TaskInStorage } from '../../types';
-import { DndContext, DragOverEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragOverEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext } from '@dnd-kit/sortable';
 import RowContainer from './RowContainer';
 import ColumnHeaderContainer from './ColumnHeaderContainer';
@@ -74,13 +74,21 @@ function KanbanBoard() {
 
 
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
+    const mouseSensor = useSensor(MouseSensor, {
+        activationConstraint: {
+            distance: 3
+        }
+    });
+    const touchSensor = useSensor(TouchSensor, {
+        activationConstraint: {
+            delay: 250,
+            tolerance: 5
+        }
+    });
     const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 3
-            }
-        })
-    )
+        mouseSensor,
+        touchSensor
+    );
 
     useEffect(() => {
         const startFetch = async () => {
