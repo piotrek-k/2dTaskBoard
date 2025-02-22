@@ -107,24 +107,6 @@ function KanbanBoard() {
             throw new Error("Data storage not set");
         }
 
-        // TODO: fix! This replaces board state with old data
-
-        // for (const taskIndex in dataContainer.tasks) {
-        //     const metadata = await taskStorage.getCardMetadata(dataContainer.tasks[taskIndex].id);
-
-        //     if (metadata) {
-        //         Object.assign(dataContainer.tasks[taskIndex], metadata);
-        //     }
-        // }
-
-        // for (const taskIndex in dataContainer.rows) {
-        //     const metadata = await taskStorage.getCardMetadata(dataContainer.rows[taskIndex].id);
-
-        //     if (metadata) {
-        //         Object.assign(dataContainer.rows[taskIndex], metadata);
-        //     }
-        // }
-
         setTasks([...dataContainer.tasks]);
         setRows([...dataContainer.rows]);
         setColumns(dataContainer.columns ?? []);
@@ -139,9 +121,14 @@ function KanbanBoard() {
     }
 
     const saveBoard = useCallback(async () => {
-        console.log("Saving board state");
-        await boardStorage.saveKanbanState(boardState);
-    }, [boardState]);
+        if (activeTask) {
+            console.log("Preventing board save as one of tasks is active");
+        }
+        else {
+            console.log("Saving board state");
+            await boardStorage.saveKanbanState(boardState);
+        }
+    }, [boardState, activeTask]);
 
     const debouncedSaveBoard = useMemo(() => debounce(saveBoard, 500), [saveBoard]);
 
