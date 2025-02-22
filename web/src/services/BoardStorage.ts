@@ -12,10 +12,19 @@ export class BoardStorage {
         { id: "3", title: 'Done' }
     ] as ColumnInStorage[];
 
+    private boardStateCache: KanbanDataContainer | null = null;
+    private timeOfLastCacheSet: number = 0;
+    private cacheTimeout = 1000 * 30; // 30 sec
+
     constructor(private storageHandler: IStorageHandler) {
     }
 
-    public async getKanbanState(): Promise<KanbanDataContainer> {
+    public async getKanbanState(disableCache: boolean = false): Promise<KanbanDataContainer> {
+        if (this.boardStateCache && !disableCache && Date.now() - this.timeOfLastCacheSet < this.cacheTimeout) {
+            console.log("Loading board state from cache");
+            return this.boardStateCache;
+        }
+
         const allFilesInDirectory = await this.storageHandler.listFilesInDirectory(this.pathToStorage);
 
         const result: KanbanDataContainer = {
@@ -53,6 +62,8 @@ export class BoardStorage {
         result.rows = this.removeDuplicateValues(result.rows) as RowInStorage[];
         result.tasks = this.removeDuplicateValues(result.tasks) as TaskInStorage[];
 
+        this.saveBoardToCache(result);
+
         return result;
     }
 
@@ -68,10 +79,17 @@ export class BoardStorage {
             boardStateContainer,
             this.pathToStorage
         );
+
+        this.saveBoardToCache(boardStateContainer);
+    }
+
+    private saveBoardToCache(boardStateContainer: KanbanDataContainer) {
+        this.boardStateCache = boardStateContainer;
+        this.timeOfLastCacheSet = Date.now();
     }
 
     public async addRowToBoard(row: RowInStorage, tasks: TaskInStorage[]) {
-        const currentBoardState = await this.getKanbanState();
+        const currentBoardState = await this.getKanbanState(true);
 
         currentBoardState?.rows.unshift(row);
         currentBoardState?.tasks.push(...tasks);
