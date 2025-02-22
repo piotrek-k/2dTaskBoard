@@ -2,7 +2,7 @@ import { ColumnInStorage, ISynchronizable, KanbanDataContainer, RowInStorage, Ta
 import fileSystemHandler from "./FileSystemHandler";
 import { IStorageHandler } from "./IStorageHandler";
 
-export class NewBoardStorage {
+export class BoardStorage {
     private readonly defaultFileName = 'board.json';
     private readonly pathToStorage = ['board'];
 
@@ -84,6 +84,6 @@ export class NewBoardStorage {
     }
 }
 
-const boardStorage = new NewBoardStorage(fileSystemHandler);
+const boardStorage = new BoardStorage(fileSystemHandler);
 
 export default boardStorage;

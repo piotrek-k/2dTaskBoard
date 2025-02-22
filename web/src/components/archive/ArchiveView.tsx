@@ -4,7 +4,7 @@ import archiveStorage, { RowWithTasks } from '../../services/ArchiveStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import RowArchiveView from './RowArchiveView';
 import { ArchiveStored } from '../../dataTypes/ArchiveStructures';
-import boardStorage from '../../services/NewBoardStorage';
+import boardStorage from '../../services/BoardStorage';
 
 function ArchiveView() {
    

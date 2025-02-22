@@ -21,7 +21,7 @@ import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import MenuIcon from '../../icons/MenuIcon';
 import { debounce } from 'lodash';
 import { Mutex } from 'async-mutex';
-import boardStorage from '../../services/NewBoardStorage';
+import boardStorage from '../../services/BoardStorage';
 
 const lockForCreatingNewElements = new Mutex();
 

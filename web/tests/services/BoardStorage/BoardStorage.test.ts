@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi, should, TaskContext } from 'vitest';
-import { NewBoardStorage } from '../../../src/services/NewBoardStorage';
+import { describe, it, expect } from 'vitest';
+import { BoardStorage } from '../../../src/services/BoardStorage';
 import { IStorageHandler } from '../../../src/services/IStorageHandler';
 import { anyArray, mock } from 'vitest-mock-extended';
 import { RowInStorage, TaskInStorage } from '../../../src/types';
@@ -10,7 +10,7 @@ describe('NewBoardStorage', () => {
         const storageHandlerMock = mock<IStorageHandler>();
         storageHandlerMock.listFilesInDirectory.mockResolvedValue([]);
 
-        const boardStorage = new NewBoardStorage(storageHandlerMock);
+        const boardStorage = new BoardStorage(storageHandlerMock);
 
         const result = await boardStorage.getKanbanState();
 
@@ -48,7 +48,7 @@ describe('NewBoardStorage', () => {
             )
         );
 
-        const boardStorage = new NewBoardStorage(storageHandlerMock);
+        const boardStorage = new BoardStorage(storageHandlerMock);
 
         const result = await boardStorage.getKanbanState();
 
@@ -97,7 +97,7 @@ describe('NewBoardStorage', () => {
             )
         );
 
-        const boardStorage = new NewBoardStorage(storageHandlerMock);
+        const boardStorage = new BoardStorage(storageHandlerMock);
 
         const result = await boardStorage.getKanbanState();
 
