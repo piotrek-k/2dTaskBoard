@@ -20,8 +20,8 @@ interface Props {
     row: RowInStorage;
     columns: ColumnInStorage[];
     createTask: (columnId: Id, rowId: Id) => void;
-    removeTask: (cardId: Id) => void;
     removeRow: (rowId: Id) => void;
+    openCardDetails: (cardId: Id) => void;
     requestSavingDataToStorage: () => Promise<void>;
     rowNavigation: RowNavigation;
     handleRowFocusChange: (rowId?: Id) => void;
@@ -29,9 +29,10 @@ interface Props {
     setFocusRequest: (focusRequest: FocusRequest) => void;
     tasks: TaskInStorage[];
     modifyTask: (task: TaskInStorage) => void;
+    requestRemovingCard: (cardId: Id) => void;
 }
 
-function RowContainer({ row, columns, createTask, removeTask, removeRow, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, setFocusRequest, tasks, modifyTask }: Props) {
+function RowContainer({ row, columns, createTask, removeRow, openCardDetails, requestSavingDataToStorage, rowNavigation, handleRowFocusChange, focusRequest, setFocusRequest, tasks, modifyTask, requestRemovingCard }: Props) {
 
     const elementRef = useRef<HTMLDivElement>(null);
 
@@ -162,12 +163,13 @@ function RowContainer({ row, columns, createTask, removeTask, removeRow, request
                                 column={col}
                                 row={row}
                                 createTask={createTask}
-                                removeTask={removeTask}
+                                openCardDetails={openCardDetails}
                                 tasks={tasks.filter((task) => task.columnId === col.id && task.rowId === row.id)}
                                 requestSavingDataToStorage={requestSavingDataToStorage}
                                 isFirstColumn={col.id === columns[0].id}
                                 focusRequest={focusRequest}
                                 moveTaskToNextColumn={moveTaskToNextColumn}
+                                requestRemovingCard={requestRemovingCard}
                             />
                         ))}
                     </div>

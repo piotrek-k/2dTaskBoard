@@ -17,11 +17,14 @@ import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import { useBoardFocusManager } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
-import { MetadataType, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
+import { MetadataType, TaskMetadataViewModel, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import MenuIcon from '../../icons/MenuIcon';
 import { debounce } from 'lodash';
 import { Mutex } from 'async-mutex';
 import boardStorage from '../../services/BoardStorage';
+import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
+import TaskDetails from '../cardDetails/TaskDetails';
+import ConfirmationDialogContext, { ConfirmationDialogContextProps } from '../../context/ConfirmationDialogContext';
 
 const lockForCreatingNewElements = new Mutex();
 
@@ -41,11 +44,14 @@ function KanbanBoard() {
     const rowsId = useMemo(() => rows.map((row) => row.id), [rows]);
     const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
-    const { modalOpen } = useContext(ModalContext) as ModalContextProps;
+    const { modalOpen, setModalContent, setModalOpen } = useContext(ModalContext) as ModalContextProps;
+    const { setConfirmationDialogOpen, setSettings } = useContext(ConfirmationDialogContext) as ConfirmationDialogContextProps;
 
     const [navMenuOpened, setNavMenuOpened] = useState(false);
 
     const storageIsReady = useStorageHandlerStatus();
+
+    const [cardDetailsToBeOpened, setCardDetailsToBeOpened] = useState<Id | null>(null);
 
     const [
         handleRowFocusChange,
@@ -90,17 +96,7 @@ function KanbanBoard() {
         touchSensor
     );
 
-    useEffect(() => {
-        const startFetch = async () => {
-            if (storageIsReady) {
-                await loadBoard();
-            }
-        };
-
-        startFetch();
-    }, [storageIsReady]);
-
-    async function loadBoard() {
+    const loadBoard = useCallback(async () => {
         const dataContainer = await boardStorage.getKanbanState();
 
         if (dataContainer == undefined) {
@@ -112,7 +108,17 @@ function KanbanBoard() {
         setColumns(dataContainer.columns ?? []);
 
         setDataLoaded(true);
-    }
+    }, []);
+
+    useEffect(() => {
+        const startFetch = async () => {
+            if (storageIsReady) {
+                await loadBoard();
+            }
+        };
+
+        startFetch();
+    }, [storageIsReady, loadBoard]);
 
     async function loadFromDifferentSource() {
         await fileSystemHandler.chooseDifferentSource();
@@ -138,11 +144,11 @@ function KanbanBoard() {
         };
     }, [debouncedSaveBoard]);
 
-    async function saveBoardAndReload() {
+    const saveBoardAndReload = useCallback(async () => {
         await saveBoard();
 
         await loadBoard();
-    }
+    }, [saveBoard, loadBoard]);
 
     async function switchArchiveView() {
         await loadBoard();
@@ -155,6 +161,47 @@ function KanbanBoard() {
             debouncedSaveBoard();
         }
     }, [boardState, dataLoaded, debouncedSaveBoard]);
+
+    const removeTask = useCallback(async (taskId: Id) => {
+        setTasks(tasks => tasks.filter(task => task.id !== taskId));
+
+        await taskStorage.removeCard(taskId);
+    }, []);
+
+    const requestRemovingCard = useCallback((cardId: Id) => {
+        setSettings({
+            question: "Are you sure you want to remove this card?",
+            acceptCallback: () => {
+                console.log("Removing card with id: ", cardId);
+
+                removeTask(cardId);
+
+                setConfirmationDialogOpen(false);
+                setModalOpen(false);
+            }
+        });
+        setConfirmationDialogOpen(true);
+    }, [setSettings, removeTask, setConfirmationDialogOpen, setModalOpen]);
+
+    const openCardDetails = useCallback(async (cardId: Id) => {
+        const taskMetadata = await cardMetadataViewModelsBuilder.getTaskMetadataViewModel(cardId) as TaskMetadataViewModel;
+
+        setModalContent(<TaskDetails
+            task={taskMetadata}
+            requestSavingDataToStorage={saveBoardAndReload}
+            isReadOnly={false}
+            requestRemovingCard={requestRemovingCard}
+            allowDelete={true}
+        />);
+        setModalOpen(true);
+    }, [setModalContent, saveBoardAndReload, setModalOpen, requestRemovingCard]);
+
+    useEffect(() => {
+        if (cardDetailsToBeOpened) {
+            openCardDetails(cardDetailsToBeOpened);
+            setCardDetailsToBeOpened(null);
+        }
+    }, [cardDetailsToBeOpened, openCardDetails]);
 
     return (
         <div className="flex flex-col h-screen">
@@ -239,7 +286,6 @@ function KanbanBoard() {
                                             row={row}
                                             columns={columns}
                                             createTask={createTask}
-                                            removeTask={removeTask}
                                             removeRow={removeRow}
                                             tasks={tasks.filter((task) => task.rowId === row.id)}
                                             requestSavingDataToStorage={saveBoardAndReload}
@@ -254,6 +300,8 @@ function KanbanBoard() {
                                             focusRequest={focusRequest}
                                             setFocusRequest={setFocusRequest}
                                             modifyTask={modifyTask}
+                                            openCardDetails={openCardDetails}
+                                            requestRemovingCard={requestRemovingCard}
                                         />
                                     </div>
                                 ))}
@@ -268,6 +316,7 @@ function KanbanBoard() {
                                             removeFocusRequest={() => { }}
                                             moveTaskToNextColumn={() => { }}
                                             requestRemovingCard={() => { }}
+                                            openCardDetails={() => { }}
                                         />
                                     }
                                 </DragOverlay>,
@@ -337,7 +386,7 @@ function KanbanBoard() {
     }
 
     async function createTask(columnId: Id, rowId: Id) {
-        let newTask: TaskInStorage | null = null;
+        let newTask: TaskInStorage | null = {} as TaskInStorage;
 
         await lockForCreatingNewElements.runExclusive(async () => {
             const newTitle = `Task ${tasks.length + 1}`;
@@ -365,12 +414,8 @@ function KanbanBoard() {
         }
 
         setTasks([newTask, ...tasks]);
-    }
 
-    async function removeTask(taskId: Id) {
-        setTasks(tasks.filter(task => task.id !== taskId));
-
-        taskStorage.removeCard(taskId);
+        setCardDetailsToBeOpened(newTask.id);
     }
 
     async function modifyTask(task: TaskInStorage) {

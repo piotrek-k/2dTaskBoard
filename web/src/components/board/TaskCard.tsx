@@ -1,9 +1,7 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Id, TaskInStorage } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import ModalContext, { ModalContextProps } from '../../context/ModalContext';
-import TaskDetails from '../cardDetails/TaskDetails';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
 import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
@@ -15,11 +13,11 @@ interface Props {
     removeFocusRequest: () => void;
     moveTaskToNextColumn: (task: TaskInStorage, direction: number) => void;
     requestRemovingCard: (cardId: Id) => void;
+    openCardDetails: (taskId: Id) => void;
 }
 
-function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn, requestRemovingCard }: Props) {
+function TaskCard({ task, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn, openCardDetails }: Props) {
 
-    const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
 
     const [taskViewModel, setTaskViewModel] = useState<TaskMetadataViewModel | null>(null);
 
@@ -33,22 +31,9 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
         fetchTaskMetadata();
     }, [task]);
 
-    const setHotkeyRef = useHotkeys('enter', () => handleClickOnTask(task.id));
+    const setHotkeyRef = useHotkeys('enter', () => openCardDetails(task.id));
     const setHotkeyMoveRightRef = useHotkeys('m', () => moveTaskToNextColumn(task, 1));
     const setHotkeyMoveLeftRef = useHotkeys('n', () => moveTaskToNextColumn(task, -1));
-
-    const handleClickOnTask = useCallback(async (taskId: Id) => {
-        const taskMetadata = await cardMetadataViewModelsBuilder.getTaskMetadataViewModel(taskId) as TaskMetadataViewModel;
-
-        setModalContent(<TaskDetails
-            task={taskMetadata}
-            requestSavingDataToStorage={requestSavingDataToStorage}
-            isReadOnly={false}
-            requestRemovingCard={requestRemovingCard}
-            allowDelete={true}
-        />);
-        setModalOpen(true);
-    }, [requestSavingDataToStorage, setModalContent, setModalOpen, requestRemovingCard]);
 
     const { setNodeRef, node, attributes, listeners, transform, transition, isDragging } = useSortable({
         id: task.id,
@@ -96,7 +81,7 @@ function TaskCard({ task, requestSavingDataToStorage, shouldBeFocused, removeFoc
             style={style}
             {...attributes}
             {...listeners}
-            onClick={() => handleClickOnTask(task.id)}
+            onClick={() => openCardDetails(task.id)}
             className={`bg-mainBackgroundColor p-2.5 md:h-[100px] md:min-h-[100px]
         items-center flex text-left hover-ring-2 hover:ring-inset
         hover:ring-rose-500 relative task m-1 w-full md:w-[150px] touch-manipulation`}
