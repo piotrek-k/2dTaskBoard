@@ -103,4 +103,35 @@ describe('NewBoardStorage', () => {
 
         expect(result).toEqual(boardState1);
     });
+
+    it('should remove redundant files from board folder', async () => {
+        const storageHandlerMock = mock<IStorageHandler>();
+
+        const boardState1 = {
+            columns: [
+                { id: '1', title: 'To Do' },
+                { id: '2', title: 'In Progress' },
+                { id: '3', title: 'Done' }
+            ],
+            rows: [
+                { id: 'abc123', title: 'Row 1' } as RowInStorage
+            ],
+            tasks: [
+                { id: 'ddd123', title: 'Task 1', columnId: '1', rowId: 'abc123' } as TaskInStorage
+            ]
+        };
+        storageHandlerMock.listFilesInDirectory.mockResolvedValue(['board.json', 'board2.json', 'board3.json.conflict']);
+        storageHandlerMock.getContentFromDirectory.mockReturnValue(
+            Promise.resolve(
+                JSON.stringify(boardState1)
+            )
+        );
+
+        const boardStorage = new BoardStorage(storageHandlerMock);
+
+        await boardStorage.getKanbanState();
+
+        expect(storageHandlerMock.deleteFile).toHaveBeenCalledWith('board2.json', ['board']);
+        expect(storageHandlerMock.deleteFile).toHaveBeenCalledWith('board3.json.conflict', ['board']);
+    });
 });

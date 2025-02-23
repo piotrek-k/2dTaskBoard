@@ -62,6 +62,14 @@ export class BoardStorage {
         result.rows = this.removeDuplicateValues(result.rows) as RowInStorage[];
         result.tasks = this.removeDuplicateValues(result.tasks) as TaskInStorage[];
 
+        for (const fileName of allFilesInDirectory) {
+            if (fileName === this.defaultFileName) {
+                continue;
+            }
+
+            await this.storageHandler.deleteFile(fileName, this.pathToStorage);
+        }
+        
         this.saveBoardToCache(result);
 
         return result;
