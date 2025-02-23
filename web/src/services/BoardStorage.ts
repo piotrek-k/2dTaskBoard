@@ -41,6 +41,16 @@ export class BoardStorage {
             }
 
             const parsedFileContents = JSON.parse(fileContents) as KanbanDataContainer;
+            parsedFileContents.rows.forEach(row => {
+                if (row.lastModificationDate?.toString().length > 0) {
+                    row.lastModificationDate = new Date(row.lastModificationDate);
+                }
+            });
+            parsedFileContents.tasks.forEach(task => {
+                if (task.lastModificationDate?.toString().length > 0) {
+                    task.lastModificationDate = new Date(task.lastModificationDate);
+                }
+            });
 
             result.rows = [...result.rows, ...parsedFileContents.rows];
             result.tasks = [...result.tasks, ...parsedFileContents.tasks];
@@ -59,8 +69,8 @@ export class BoardStorage {
         }
 
         result.columns = this.defaultColumns;
-        result.rows = this.removeDuplicateValues(result.rows) as RowInStorage[];
-        result.tasks = this.removeDuplicateValues(result.tasks) as TaskInStorage[];
+        result.rows = this.mergeElementsWithTheSameId(result.rows) as RowInStorage[];
+        result.tasks = this.mergeElementsWithTheSameId(result.tasks) as TaskInStorage[];
 
         for (const fileName of allFilesInDirectory) {
             if (fileName === this.defaultFileName) {
@@ -69,16 +79,23 @@ export class BoardStorage {
 
             await this.storageHandler.deleteFile(fileName, this.pathToStorage);
         }
-        
+
         this.saveBoardToCache(result);
 
         return result;
     }
 
-    private removeDuplicateValues(array: ISynchronizable[]): ISynchronizable[] {
-        return array.filter((value, index, self) => {
-            return self.findIndex(v => v.id === value.id) === index;
+    private mergeElementsWithTheSameId(array: ISynchronizable[]): ISynchronizable[] {
+        const uniqueItemsMap = new Map<string, ISynchronizable>();
+
+        array.forEach(item => {
+            const existingItem = uniqueItemsMap.get(item.id);
+            if (!existingItem || item.lastModificationDate > existingItem.lastModificationDate) {
+                uniqueItemsMap.set(item.id, item);
+            }
         });
+
+        return Array.from(uniqueItemsMap.values());
     }
 
     public async saveKanbanState(boardStateContainer: KanbanDataContainer) {

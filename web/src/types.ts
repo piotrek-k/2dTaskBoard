@@ -2,6 +2,7 @@ export type Id = string;
 
 export interface ISynchronizable {
     id: Id;
+    lastModificationDate: Date;
 }
 
 export type RowInStorage = ISynchronizable & {
