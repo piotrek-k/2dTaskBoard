@@ -50,6 +50,7 @@ function KanbanBoard() {
     const [navMenuOpened, setNavMenuOpened] = useState(false);
 
     const storageIsReady = useStorageHandlerStatus();
+    const [nameOfDirectory, setNameOfDirectory] = useState<string>("");
 
     const [cardDetailsToBeOpened, setCardDetailsToBeOpened] = useState<Id | null>(null);
 
@@ -114,6 +115,8 @@ function KanbanBoard() {
         const startFetch = async () => {
             if (storageIsReady) {
                 await loadBoard();
+
+                setNameOfDirectory(await fileSystemHandler.getNameOfStorage());
             }
         };
 
@@ -209,7 +212,10 @@ function KanbanBoard() {
             <nav className="bg-gray-800 py-2 px-4">
                 <div className="container mx-auto flex justify-between items-center">
                     <h1 className="text-white text-lg font-semibold">2dTaskBoard</h1>
-                    <div className="hidden md:flex space-x-3">
+                    <div className="hidden md:flex md:flex-row space-x-3">
+                        {nameOfDirectory &&
+                            <span className="text-white text-sm flex items-center">Directory: {nameOfDirectory}</span>
+                        }
                         <button
                             onClick={() => { switchArchiveView() }}
                             className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
@@ -236,7 +242,7 @@ function KanbanBoard() {
                         <MenuIcon />
                     </div>
                 </div>
-                {navMenuOpened ? <div className="flex flex-col my-5">
+                {navMenuOpened ? <div className="flex flex-col mt-5 md:hidden">
                     <button
                         onClick={() => { switchArchiveView() }}
                         className="flex items-center bg-gray-700 text-white px-3 py-1 text-sm"
@@ -260,6 +266,9 @@ function KanbanBoard() {
 
                         <span className="p-2">Load Different Directory</span>
                     </button>
+                    {nameOfDirectory &&
+                        <span className="text-white text-sm flex items-center pt-4">Directory: {nameOfDirectory}</span>
+                    }
                 </div> : <></>}
             </nav>
 
