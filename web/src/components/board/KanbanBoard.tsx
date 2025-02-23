@@ -96,8 +96,8 @@ function KanbanBoard() {
         touchSensor
     );
 
-    const loadBoard = useCallback(async () => {
-        const dataContainer = await boardStorage.getKanbanState();
+    const loadBoard = useCallback(async (disableCache: boolean = false) => {
+        const dataContainer = await boardStorage.getKanbanState(disableCache);
 
         if (dataContainer == undefined) {
             throw new Error("Data storage not set");
@@ -147,7 +147,7 @@ function KanbanBoard() {
     const saveBoardAndReload = useCallback(async () => {
         await saveBoard();
 
-        await loadBoard();
+        await loadBoard(true);
     }, [saveBoard, loadBoard]);
 
     async function switchArchiveView() {
