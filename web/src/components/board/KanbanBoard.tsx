@@ -316,6 +316,7 @@ function KanbanBoard() {
 
                 tasks[activeIndex].columnId = tasks[overIndex].columnId;
                 tasks[activeIndex].rowId = tasks[overIndex].rowId;
+                tasks[activeIndex].lastModificationDate = new Date();
 
                 return arrayMove(tasks, activeIndex, overIndex);
             });
@@ -328,6 +329,7 @@ function KanbanBoard() {
 
                 tasks[activeIndex].columnId = over.data.current?.column.id;
                 tasks[activeIndex].rowId = over.data.current?.row.id;
+                tasks[activeIndex].lastModificationDate = new Date();
 
                 return arrayMove(tasks, activeIndex, activeIndex);
             });
@@ -345,7 +347,8 @@ function KanbanBoard() {
                 columnId,
                 rowId,
                 position: getLowestPositionForTask(),
-                title: newTitle
+                title: newTitle,
+                lastModificationDate: new Date()
             };
 
             const newTaskMetadata: TaskStoredMetadata = {
@@ -371,6 +374,8 @@ function KanbanBoard() {
     }
 
     async function modifyTask(task: TaskInStorage) {
+        task.lastModificationDate = new Date();
+
         setTasks([task, ...tasks.filter(x => x.id != task.id)]);
     }
 
@@ -385,6 +390,7 @@ function KanbanBoard() {
 
     function moveRowUp(rowId: Id) {
         const rowIndex = rows.findIndex((row) => row.id === rowId);
+        rows[rowIndex].lastModificationDate = new Date();
 
         if (rowIndex === 0) return;
 
@@ -394,6 +400,7 @@ function KanbanBoard() {
 
     function moveRowDown(rowId: Id) {
         const rowIndex = rows.findIndex((row) => row.id === rowId);
+        rows[rowIndex].lastModificationDate = new Date();
 
         if (rowIndex === rows.length - 1) return;
 
@@ -403,6 +410,7 @@ function KanbanBoard() {
 
     function moveRowTop(rowId: Id) {
         const rowIndex = rows.findIndex((row) => row.id === rowId);
+        rows[rowIndex].lastModificationDate = new Date();
 
         if (rowIndex === 0) return;
 
@@ -412,6 +420,7 @@ function KanbanBoard() {
 
     function moveRowBottom(rowId: Id) {
         const rowIndex = rows.findIndex((row) => row.id === rowId);
+        rows[rowIndex].lastModificationDate = new Date();
 
         if (rowIndex === rows.length - 1) return;
 
@@ -455,7 +464,8 @@ function KanbanBoard() {
             const rowToAdd: RowInStorage = {
                 id: newId,
                 position: getHighestPositionForRow(),
-                title: newTitle
+                title: newTitle,
+                lastModificationDate: new Date()
             };
 
             await taskStorage.createNewRowMetadata(rowToAdd.id, newTitle);
