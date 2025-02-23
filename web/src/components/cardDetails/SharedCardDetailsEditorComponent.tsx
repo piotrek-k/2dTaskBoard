@@ -38,6 +38,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const storageIsReady = useStorageHandlerStatus();
     const cardTitleRef = useRef<HTMLInputElement>(null);
+    const saveButtonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         if (storageIsReady) {
@@ -61,6 +62,12 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             }
         })();
     }, [taskName, card.title]);
+
+    useEffect(() => {
+        if (saveButtonRef.current) {
+            saveButtonRef.current.focus();
+        }
+    }, [saveButtonRef]);
 
     useEffect(() => {
         setContextHasUnsavedChanges(hasUnsavedChanges);
@@ -209,7 +216,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
                 <div className='flex flex-row justify-between items-center py-2'>
                     <Link to={`/card/${card.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-3 bg-gray-700 rounded-md text-base hover:bg-gray-600 transition-colors duration-200">
                         <LinkIcon />
-                    </Link> 
+                    </Link>
                     <div className='flex flex-row gap-2'>
                         {!isReadOnly ? <>
                             {allowDelete &&
@@ -227,7 +234,9 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
                                 onClick={() => {
                                     setUseEditMode(!useEditMode);
                                 }}
-                                className="flex items-center px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-blue-800 text-white transition-colors duration-200">
+                                className="flex items-center px-4 py-2 rounded-md font-semibold bg-gray-700 hover:bg-blue-800 text-white transition-colors duration-200"
+                                ref={saveButtonRef}
+                            >
 
                                 Switch edit mode
                             </button>
