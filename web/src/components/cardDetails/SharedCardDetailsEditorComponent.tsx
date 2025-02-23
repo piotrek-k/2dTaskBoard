@@ -12,6 +12,7 @@ import { CardStoredMetadata } from '../../dataTypes/CardMetadata';
 import CustomMDEditor from '../customMarkdownRenderers/CustomMDEditor';
 import TrashIcon from '../../icons/TrashIcon';
 import { Id } from '../../types';
+import LinkIcon from '../../icons/LinkIcon';
 
 interface Props {
     card: CardStoredMetadata;
@@ -206,11 +207,9 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
         <>
             <div className='flex flex-col'>
                 <div className='flex flex-row justify-between items-center py-2'>
-                    <div className="px-2 py-1 bg-gray-700 rounded-md text-base">
-                        <Link to={`/card/${card.id}`} target="_blank" rel="noopener noreferrer" className="px-2 py-1 bg-gray-700 rounded-md text-base hover:bg-gray-600 transition-colors duration-200">
-                            #{card.id}
-                        </Link>
-                    </div>
+                    <Link to={`/card/${card.id}`} target="_blank" rel="noopener noreferrer" className="px-3 py-3 bg-gray-700 rounded-md text-base hover:bg-gray-600 transition-colors duration-200">
+                        <LinkIcon />
+                    </Link> 
                     <div className='flex flex-row gap-2'>
                         {!isReadOnly ? <>
                             {allowDelete &&
