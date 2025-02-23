@@ -66,7 +66,7 @@ function createWindow(port) {
     },
   });
 
-  mainWindow.loadURL(`http://localhost:${port}`);
+  mainWindow.loadURL(`http://localhost:${port}/board`);
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()

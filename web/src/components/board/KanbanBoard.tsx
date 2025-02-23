@@ -25,6 +25,7 @@ import boardStorage from '../../services/BoardStorage';
 import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
 import TaskDetails from '../cardDetails/TaskDetails';
 import ConfirmationDialogContext, { ConfirmationDialogContextProps } from '../../context/ConfirmationDialogContext';
+import { Link } from 'react-router-dom';
 
 const lockForCreatingNewElements = new Mutex();
 
@@ -211,7 +212,9 @@ function KanbanBoard() {
 
             <nav className="bg-gray-800 py-2 px-4">
                 <div className="container mx-auto flex justify-between items-center">
-                    <h1 className="text-white text-lg font-semibold">2dTaskBoard</h1>
+                    <h1 className="text-white text-lg font-semibold">
+                        <Link to='/'>2dTaskBoard</Link>
+                    </h1>
                     <div className="hidden md:flex md:flex-row space-x-3">
                         {nameOfDirectory &&
                             <span className="text-white text-sm flex items-center">Directory: {nameOfDirectory}</span>
