@@ -39,6 +39,6 @@ export default defineConfig(({ mode }) => {
     build: {
       chunkSizeWarningLimit: 1600
     },
-    base: '/2dTaskBoard',
+    base: '/2dTaskBoard/',
   }
 })
