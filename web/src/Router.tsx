@@ -5,7 +5,7 @@ import CardDetailsStandaloneContainer from './pages/cardView/CardDetailsStandalo
 
 const Router = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/2dTaskBoard">
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/board" element={<App />} />
