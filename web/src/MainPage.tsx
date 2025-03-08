@@ -9,7 +9,7 @@ function MainPage() {
             <div className="relative w-full h-96 mb-12 bg-cover bg-center rounded-lg overflow-hidden">
                 <div className="absolute inset-0 bg-black opacity-60"></div>
                 <img
-                    src="/screenshot.png"
+                    src="/2dTaskBoard/screenshot.png"
                     alt="Panoramic view"
                     className="absolute inset-0 w-full h-full object-cover filter blur-sm"
                 />
