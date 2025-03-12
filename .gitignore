@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 release-builds
+
+.flatpak-builder
+appfiles

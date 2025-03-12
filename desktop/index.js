@@ -32,9 +32,9 @@ const findAvailablePort = (port, callback) => {
 const startLocalServer = (port, done, fallback = true) => {
   localServerApp.use(express.json({ limit: "100mb" }));
   localServerApp.use(cors());
-  localServerApp.use(express.static(__dirname + "/dist"));
+  localServerApp.use(express.static(__dirname + "/appfiles"));
   localServerApp.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "appfiles", "index.html"));
   });
 
   const server = localServerApp.listen(port, () => {
