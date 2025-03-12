@@ -7,3 +7,9 @@ Run:
 ```
 flatpak run org.flathub.electron-sample-app
 ```
+
+To build `generated-sources.json` use `flatpak-node-generator`.
+
+```
+flatpak-node-generator npm package-lock.json --no-requests-cache
+```
