@@ -115,7 +115,7 @@ function KanbanBoard() {
     useEffect(() => {
         const startFetch = async () => {
             if (storageIsReady) {
-                await loadBoard();
+                await loadBoard(true);
 
                 setNameOfDirectory(await fileSystemHandler.getNameOfStorage());
             }
@@ -127,7 +127,7 @@ function KanbanBoard() {
     async function loadFromDifferentSource() {
         await fileSystemHandler.chooseDifferentSource();
 
-        await loadBoard();
+        await loadBoard(true);
     }
 
     const saveBoard = useCallback(async () => {
