@@ -34,7 +34,7 @@ const startLocalServer = (port, done, fallback = true) => {
   localServerApp.use(cors());
   localServerApp.use(express.static(__dirname + "/dist"));
   localServerApp.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "dist/2dTaskBoard", "index.html"));
   });
 
   const server = localServerApp.listen(port, () => {
@@ -66,7 +66,7 @@ function createWindow(port) {
     },
   });
 
-  mainWindow.loadURL(`http://localhost:${port}/board`);
+  mainWindow.loadURL(`http://localhost:${port}/2dTaskBoard/board`);
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
