@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "rm -rf dist && npm run build --prefix ../web && cp -r ../web/dist . && electron-builder"
+    "build": "rm -rf dist && npm run build --prefix ../web && cp -r ../web/dist . && electron-builder",
+    "dist": "electron-builder"
   },
   "author": "Piotr Kozerski <piotr.kozerski@pm.me>",
   "license": "ISC",
@@ -35,7 +36,7 @@
       "target": "dmg"
     },
     "linux": {
-      "target": ["deb", "AppImage"]
+      "target": ["dir"]
     }
   }
 }
