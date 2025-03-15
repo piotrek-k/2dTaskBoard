@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "rm -rf dist && npm run build --prefix ../web && cp -r ../web/dist . && electron-builder",
+    "build": "rm -rf dist && npm run build --prefix ../web && mkdir -p ./dist/2dTaskBoard && cp -r ../web/dist/* ./dist/2dTaskBoard/ && electron-builder",
     "dist": "electron-builder"
   },
   "author": "Piotr Kozerski <piotr.kozerski@pm.me>",
