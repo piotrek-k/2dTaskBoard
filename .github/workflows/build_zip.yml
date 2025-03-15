@@ -1,0 +1,38 @@
+name: Add dist folder to GitHub Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.18.0"
+
+      - name: Install dependencies (web)
+        run: |
+          cd web
+          npm install
+
+      - name: Build app (web)
+        run: |
+          cd web
+          npm run build
+
+      - name: Zip dist folder
+        run: |
+          cd web/dist
+          zip -r ../../dist.zip .
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist.zip
