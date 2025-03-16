@@ -16,9 +16,9 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         manifest: {
-          name: '2d task board',
-          short_name: '2d task board',
-          description: '2d task board',
+          name: '2dTaskBoard',
+          short_name: '2dTaskBoard',
+          description: '2d task boardTask management productivity app with markdown support',
           theme_color: '#1f2937',
           icons: [
             {
@@ -33,6 +33,11 @@ export default defineConfig(({ mode }) => {
             },
           ],
         },
+        workbox: {
+          modifyURLPrefix: {
+            "": "/2dTaskBoard/", // Prepend "2dTaskBoard/" to all asset paths
+          }
+        }
       }),
       nodePolyfills()
     ],
