@@ -11,7 +11,7 @@
   "author": "Piotr Kozerski <piotr.kozerski@pm.me>",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^33.0.2",
+    "electron": "^35.0.2",
     "electron-builder": "^25.1.8"
   },
   "dependencies": {
@@ -36,7 +36,9 @@
       "target": "dmg"
     },
     "linux": {
-      "target": ["dir"]
+      "target": [
+        "dir"
+      ]
     }
   }
 }
