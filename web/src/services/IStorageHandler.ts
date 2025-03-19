@@ -6,6 +6,7 @@ export interface IStorageHandler {
     storageReady(): boolean;
     getReadinessWatcher(): EventWatcher<boolean>;
 
+    checkIfFileSystemHasAlreadyBeenAccessed(): Promise<boolean>;
     getContent(dataContainerName: string): Promise<string>;
     getContentFromDirectory(dataContainerName: string, folderNames: string[]): Promise<string>;
     getContentFromDirectoryComplexFolderPath(dataContainerName: string, folderNames: FolderToFollow[]): Promise<string>;
