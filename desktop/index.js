@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, Menu } = require("electron");
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
@@ -13,9 +13,9 @@ const findAvailablePort = (port, callback) => {
   console.log("Trying another port...", port);
 
   const server = net.createServer();
-  // server.unref();
+  
   server.on("error", () => {
-    if(port > BASE_PORT + 10) {
+    if (port > BASE_PORT + 10) {
       console.error("Could not find an available port");
       process.exit(1);
     }
@@ -60,16 +60,34 @@ function createWindow(port) {
 
   const mainWindow = new BrowserWindow({
     width: 1000,
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-    },
+    height: 600
   });
 
-  mainWindow.loadURL(`http://localhost:${port}/2dTaskBoard/board`);
+  const template = [
+    {
+      label: 'File',
+      submenu: [{ role: 'quit' }]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    }
+  ];
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+
+  mainWindow.loadURL(`http://localhost:${port}/2dTaskBoard/board`);
 }
 
 app.whenReady().then(() => {
