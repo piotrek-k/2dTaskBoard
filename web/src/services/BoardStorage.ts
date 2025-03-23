@@ -35,6 +35,18 @@ export class BoardStorage {
             return;
         }
 
+        if (allFilesInDirectory.length === 0) {
+            const newKanbanState = {
+                columns: this.defaultColumns,
+                rows: [],
+                tasks: []
+            } as KanbanDataContainer;
+
+            await this.saveKanbanState(newKanbanState);
+
+            return newKanbanState
+        }
+
         const result: KanbanDataContainer = {
             columns: [],
             rows: [],
@@ -62,18 +74,6 @@ export class BoardStorage {
 
             result.rows = [...result.rows, ...parsedFileContents.rows];
             result.tasks = [...result.tasks, ...parsedFileContents.tasks];
-        }
-
-        if (result.columns.length === 0 && result.rows.length === 0 && result.tasks.length === 0) {
-            const newKanbanState = {
-                columns: this.defaultColumns,
-                rows: [],
-                tasks: []
-            } as KanbanDataContainer;
-
-            await this.saveKanbanState(newKanbanState);
-
-            return newKanbanState
         }
 
         result.columns = this.defaultColumns;
