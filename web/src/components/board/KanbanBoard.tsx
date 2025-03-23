@@ -19,7 +19,6 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import ModalContext, { ModalContextProps } from '../../context/ModalContext';
 import { MetadataType, TaskMetadataViewModel, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import MenuIcon from '../../icons/MenuIcon';
-import { debounce } from 'lodash';
 import { Mutex } from 'async-mutex';
 import boardStorage from '../../services/BoardStorage';
 import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
@@ -119,14 +118,17 @@ function KanbanBoard() {
 
                 setNameOfDirectory(await fileSystemHandler.getNameOfStorage());
             }
+            else {
+                setDataLoaded(false);
+            }
         };
 
         startFetch();
     }, [storageIsReady, loadBoard]);
 
     async function loadFromDifferentSource() {
+        setDataLoaded(false);
         await fileSystemHandler.chooseDifferentSource();
-
         await loadBoard(true);
     }
 
@@ -134,25 +136,20 @@ function KanbanBoard() {
         if (activeTask) {
             console.log("Preventing board save as one of tasks is active");
         }
-        else {
+        else if (dataLoaded) {
             console.log("Saving board state");
             await boardStorage.saveKanbanState(boardState);
         }
-    }, [boardState, activeTask]);
-
-    const debouncedSaveBoard = useMemo(() => debounce(saveBoard, 500), [saveBoard]);
-
-    useEffect(() => {
-        return () => {
-            debouncedSaveBoard.cancel();
-        };
-    }, [debouncedSaveBoard]);
+        else {
+            console.warn("Preventing save as data is not loaded yet");
+        }
+    }, [boardState, activeTask, dataLoaded]);
 
     const saveBoardAndReload = useCallback(async () => {
         await saveBoard();
 
         await loadBoard(true);
-    }, [saveBoard, loadBoard]);
+    }, [saveBoard, loadBoard, boardState]);
 
     async function switchArchiveView() {
         await loadBoard();
@@ -162,9 +159,9 @@ function KanbanBoard() {
 
     useEffect(() => {
         if (dataLoaded) {
-            debouncedSaveBoard();
+            saveBoard();
         }
-    }, [boardState, dataLoaded, debouncedSaveBoard]);
+    }, [boardState, dataLoaded, saveBoard]);
 
     const removeTask = useCallback(async (taskId: Id) => {
         setTasks(tasks => tasks.filter(task => task.id !== taskId));
