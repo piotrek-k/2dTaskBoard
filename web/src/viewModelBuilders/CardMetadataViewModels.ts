@@ -24,6 +24,10 @@ export class CardMetadataViewModels {
         }
 
         const boardState = await this.boardStorage.getKanbanState();
+        if(boardState == undefined) {
+            throw new Error('Board state is undefined');
+        }
+
         const extendedRow = this.addBoardContextToRow(metadata, boardState);
 
         return extendedRow;
@@ -60,6 +64,10 @@ export class CardMetadataViewModels {
         }
 
         const boardState = await boardStorage.getKanbanState();
+        if(boardState == undefined) {
+            throw new Error('Board state is undefined');
+        }
+
         const extendedTask = this.addBoardContextToTask(metadata, boardState);
 
         return extendedTask;

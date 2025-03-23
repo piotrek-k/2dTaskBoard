@@ -71,13 +71,13 @@ function KanbanBoard() {
     useHotkeys('a', focusPreviousColumn, { enabled: !modalOpen });
     useHotkeys('d', focusNextColumn, { enabled: !modalOpen });
 
-    useEffect(() => {
-        console.log("currentyActiveRowId (KB): ", currentyActiveRowId);
-    }, [currentyActiveRowId]);
+    // useEffect(() => {
+    //     console.log("currentyActiveRowId (KB): ", currentyActiveRowId);
+    // }, [currentyActiveRowId]);
 
-    useEffect(() => {
-        console.log("currentyActiveColumnId (KB): ", currentyActiveColumnId);
-    }, [currentyActiveColumnId]);
+    // useEffect(() => {
+    //     console.log("currentyActiveColumnId (KB): ", currentyActiveColumnId);
+    // }, [currentyActiveColumnId]);
 
 
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
@@ -101,7 +101,8 @@ function KanbanBoard() {
         const dataContainer = await boardStorage.getKanbanState(disableCache);
 
         if (dataContainer == undefined) {
-            throw new Error("Data storage not set");
+            console.warn("Could not load board. Filesystem possibly not ready yet");
+            return;
         }
 
         setTasks([...dataContainer.tasks]);
@@ -128,8 +129,13 @@ function KanbanBoard() {
 
     async function loadFromDifferentSource() {
         setDataLoaded(false);
-        await fileSystemHandler.chooseDifferentSource();
-        await loadBoard(true);
+        const newHandle = await fileSystemHandler.chooseDifferentSource();
+        if (newHandle) {
+            await loadBoard(true);
+        }
+        else {
+            console.warn("Loading from different source failed");
+        }
     }
 
     const saveBoard = useCallback(async () => {

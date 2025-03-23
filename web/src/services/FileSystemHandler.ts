@@ -71,7 +71,7 @@ class FileSystemHandler implements IStorageHandler {
 
         this.directoryHandle = handle;
 
-        this.registerPossibleSourceChange(true);
+        this.registerPossibleSourceChange(handle != null);
 
         return handle;
     }
@@ -103,7 +103,7 @@ class FileSystemHandler implements IStorageHandler {
         return false;
     }
 
-    public async chooseDifferentSource(): Promise<FileSystemDirectoryHandle> {
+    public async chooseDifferentSource(): Promise<FileSystemDirectoryHandle | null> {
         this.registerPossibleSourceChange(false);
 
         const db = await this.getDbInstance();
@@ -115,7 +115,8 @@ class FileSystemHandler implements IStorageHandler {
             this.isHandleActive = false;
             this.readinessWatcher.notify(false);
 
-            throw error;
+            console.info("Couldn't retrieve directoryHandle. Setting handle state to inactive.", error);
+            return null;
         }
 
         const stateOfHandle = await this.verifyExistingHandle(this.directoryHandle);

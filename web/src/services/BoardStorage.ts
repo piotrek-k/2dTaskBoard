@@ -19,13 +19,21 @@ export class BoardStorage {
     constructor(private storageHandler: IStorageHandler) {
     }
 
-    public async getKanbanState(disableCache: boolean = false): Promise<KanbanDataContainer> {
+    public async getKanbanState(disableCache: boolean = false): Promise<KanbanDataContainer | undefined> {
         if (this.boardStateCache && !disableCache && Date.now() - this.timeOfLastCacheSet < this.cacheTimeout) {
             console.log("Loading board state from cache");
             return this.boardStateCache;
         }
 
-        const allFilesInDirectory = await this.storageHandler.listFilesInDirectory(this.pathToStorage);
+        let allFilesInDirectory: string[] = [];
+
+        try {
+            allFilesInDirectory = await this.storageHandler.listFilesInDirectory(this.pathToStorage);
+        }
+        catch (error) {
+            console.warn("Getting board state was not possible. Probably no directory chosen yet.", error);
+            return;
+        }
 
         const result: KanbanDataContainer = {
             columns: [],
@@ -115,6 +123,10 @@ export class BoardStorage {
 
     public async addRowToBoard(row: RowInStorage, tasks: TaskInStorage[]) {
         const currentBoardState = await this.getKanbanState(true);
+
+        if(!currentBoardState) {
+            throw new Error("Cannot add row to board. Filesystem possibly not initialized.");
+        }
 
         currentBoardState?.rows.unshift(row);
         currentBoardState?.tasks.push(...tasks);
