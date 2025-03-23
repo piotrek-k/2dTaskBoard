@@ -104,6 +104,8 @@ class FileSystemHandler implements IStorageHandler {
     }
 
     public async chooseDifferentSource(): Promise<FileSystemDirectoryHandle> {
+        this.registerPossibleSourceChange(false);
+
         const db = await this.getDbInstance();
 
         try {
