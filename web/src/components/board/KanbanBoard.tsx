@@ -56,12 +56,12 @@ function KanbanBoard() {
 
     const [
         handleRowFocusChange,
-        currentyActiveRowId,
+        ,
         focusNextRow,
         focusPreviousRow,
         focusNextColumn,
         focusPreviousColumn,
-        currentyActiveColumnId,
+        ,
         focusRequest,
         setFocusRequest
     ] = useBoardFocusManager(rows, columns, tasks);
@@ -70,15 +70,6 @@ function KanbanBoard() {
     useHotkeys('s', focusNextRow, { enabled: !modalOpen });
     useHotkeys('a', focusPreviousColumn, { enabled: !modalOpen });
     useHotkeys('d', focusNextColumn, { enabled: !modalOpen });
-
-    // useEffect(() => {
-    //     console.log("currentyActiveRowId (KB): ", currentyActiveRowId);
-    // }, [currentyActiveRowId]);
-
-    // useEffect(() => {
-    //     console.log("currentyActiveColumnId (KB): ", currentyActiveColumnId);
-    // }, [currentyActiveColumnId]);
-
 
     // sensor below requires dnd-kit to detect drag only after 3px distance of mouse move
     const mouseSensor = useSensor(MouseSensor, {
