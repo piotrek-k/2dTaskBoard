@@ -5,7 +5,7 @@
 html,
 body,
 #root {
-  @apply bg-black text-white box-border;
+  @apply bg-gradient-to-bl from-zinc-950 to-zinc-900 text-white box-border;
 }
 
 .task > ::-webkit-scrollbar {
