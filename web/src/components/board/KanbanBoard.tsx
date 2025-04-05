@@ -282,36 +282,51 @@ function KanbanBoard() {
                             <ColumnHeaderContainer
                                 headerNames={headerNames}
                             />
-                            <SortableContext items={rowsId}>
-                                {rows.map((row) => (
-                                    // row.isVisible &&
-                                    <div
-                                        key={row.id}
-                                    >
-                                        <RowContainer
-                                            row={row}
-                                            columns={columns}
-                                            createTask={createTask}
-                                            removeRow={removeRow}
-                                            tasks={tasks.filter((task) => task.rowId === row.id)}
-                                            requestSavingDataToStorage={saveBoardAndReload}
-                                            rowNavigation={{
-                                                moveUp: moveRowUp,
-                                                moveDown: moveRowDown,
-                                                moveTop: moveRowTop,
-                                                moveBottom: moveRowBottom,
-                                                archive: archiveRow
-                                            }}
-                                            handleRowFocusChange={handleRowFocusChange}
-                                            focusRequest={focusRequest}
-                                            setFocusRequest={setFocusRequest}
-                                            modifyTask={modifyTask}
-                                            openCardDetails={openCardDetails}
-                                            requestRemovingCard={requestRemovingCard}
-                                        />
+                            {rows.length > 0 ?
+                                <SortableContext items={rowsId}>
+                                    {rows.map((row) => (
+                                        // row.isVisible &&
+                                        <div
+                                            key={row.id}
+                                        >
+                                            <RowContainer
+                                                row={row}
+                                                columns={columns}
+                                                createTask={createTask}
+                                                removeRow={removeRow}
+                                                tasks={tasks.filter((task) => task.rowId === row.id)}
+                                                requestSavingDataToStorage={saveBoardAndReload}
+                                                rowNavigation={{
+                                                    moveUp: moveRowUp,
+                                                    moveDown: moveRowDown,
+                                                    moveTop: moveRowTop,
+                                                    moveBottom: moveRowBottom,
+                                                    archive: archiveRow
+                                                }}
+                                                handleRowFocusChange={handleRowFocusChange}
+                                                focusRequest={focusRequest}
+                                                setFocusRequest={setFocusRequest}
+                                                modifyTask={modifyTask}
+                                                openCardDetails={openCardDetails}
+                                                requestRemovingCard={requestRemovingCard}
+                                            />
+                                        </div>
+                                    ))}
+                                </SortableContext>
+                                :
+                                <div className="flex items-center justify-center h-[50vh] text-gray-500 text-lg text-center">
+                                    <div className="inline">
+                                        Click
+                                        <span className="inline-flex items-center font-semibold text-blue-500 mx-2">
+                                            <span className="w-4 h-4 mr-1 inline-block align-middle">
+                                                <PlusIcon className="w-full h-full" />
+                                            </span>
+                                            Add Row
+                                        </span>
+                                        on the top bar to get started
                                     </div>
-                                ))}
-                            </SortableContext>
+                                </div>
+                            }
                             {createPortal(
                                 <DragOverlay>
                                     {
