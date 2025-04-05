@@ -1,15 +1,21 @@
-import { useEffect, useState } from 'react'
-import { Id } from '../../types';
+import { useEffect, useMemo, useState } from 'react'
+import { ColumnInStorage, Id } from '../../types';
 import archiveStorage, { RowWithTasks } from '../../services/ArchiveStorage';
 import { useStorageHandlerStatus } from '../../hooks/useStorageHandlerStatus';
 import RowArchiveView from './RowArchiveView';
 import { ArchiveStored } from '../../dataTypes/ArchiveStructures';
 import boardStorage from '../../services/BoardStorage';
+import ColumnHeaderContainer from '../board/ColumnHeaderContainer';
 
-function ArchiveView() {
-   
+interface Props {
+    columns: ColumnInStorage[];
+}
+
+function ArchiveView({ columns }: Props) {
+
     const storageIsReady = useStorageHandlerStatus();
     const [archive, setArchive] = useState<ArchiveStored | null>(null);
+    const headerNames = useMemo(() => columns.map((col) => col.title), [columns]);
 
     useEffect(() => {
         const startFetch = async () => {
@@ -28,7 +34,7 @@ function ArchiveView() {
             throw new Error("Row not found in archive");
         }
 
-        const convertedData : RowWithTasks = archiveStorage.convertArchivedRowToBoardRow(archivedRow);
+        const convertedData: RowWithTasks = archiveStorage.convertArchivedRowToBoardRow(archivedRow);
 
         boardStorage.addRowToBoard(convertedData.row, convertedData.tasks);
 
@@ -43,6 +49,9 @@ function ArchiveView() {
         <>
             <div className="m-auto flex gap-2 flex-col w-full">
                 <div className='flex flex-col'>
+                    <ColumnHeaderContainer
+                        headerNames={headerNames}
+                    />
                     {archive?.rows.map((archivedRow) => (
                         <RowArchiveView archivedRow={archivedRow} key={archivedRow.id} restoreFromArchive={restoreFromArchive} />
                     ))}

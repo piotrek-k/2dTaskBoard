@@ -214,11 +214,11 @@ function KanbanBoard() {
                             <span className="text-white text-sm flex items-center">Directory: {nameOfDirectory}</span>
                         }
                         <button
-                            onClick={() => { switchArchiveView() }}
-                            className="flex items-center bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                            onClick={() => switchArchiveView()}
+                            className={`flex items-center px-3 py-1 rounded text-sm text-white ${showArchive ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'}`}
                         >
                             <ArchiveIcon />
-                            Show archive
+                            {showArchive ? "Hide archive" : "Show archive"}
                         </button>
                         <button
                             onClick={() => createNewRow()}
@@ -346,7 +346,7 @@ function KanbanBoard() {
                         </div>
                     </div>
                 </DndContext> :
-                    <ArchiveView />
+                    <ArchiveView columns={columns} />
                 }
 
             </div>
