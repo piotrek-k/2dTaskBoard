@@ -60,20 +60,22 @@ function CardDetailsStandalone() {
 
     return (
         <>
-            {task ? <TaskDetails
-                task={task}
-                requestSavingDataToStorage={requestSavingDataToStorage}
-                isReadOnly={false}
-                requestRemovingCard={() => { throw new Error("Not implemented"); }}
-                allowDelete={false} /> :
-                row ? <RowDetails
-                    row={row}
+            <div className='m-4'>
+                {task ? <TaskDetails
+                    task={task}
                     requestSavingDataToStorage={requestSavingDataToStorage}
                     isReadOnly={false}
                     requestRemovingCard={() => { throw new Error("Not implemented"); }}
-                    allowDelete={false}
-                /> :
-                    <div>Loading...</div>}
+                    allowDelete={false} /> :
+                    row ? <RowDetails
+                        row={row}
+                        requestSavingDataToStorage={requestSavingDataToStorage}
+                        isReadOnly={false}
+                        requestRemovingCard={() => { throw new Error("Not implemented"); }}
+                        allowDelete={false}
+                    /> :
+                        <div>Loading...</div>}
+            </div>
         </>
     )
 }
