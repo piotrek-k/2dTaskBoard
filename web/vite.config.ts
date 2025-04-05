@@ -22,12 +22,12 @@ export default defineConfig(({ mode }) => {
           theme_color: '#1f2937',
           icons: [
             {
-              src: '/logo2.png',
+              src: '/2dTaskBoard/logo2.png',
               sizes: '192x192',
               type: 'image/png',
             },
             {
-              src: '/logo.png',
+              src: '/2dTaskBoard/logo.png',
               sizes: '512x512',
               type: 'image/png',
             },
