@@ -12,11 +12,13 @@ export function RestoreAccessToStoragePopup() {
     const showDirectoryPickerIsAvailable = 'showDirectoryPicker' in window;
 
     const [hasFileSystemBeenAlreadyUsed, setHasFileSystemBeenAlreadyUsed] = useState<boolean | null>(null);
+    const [existingHandleDirectoryName, setExistingHandleDirectoryName] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchData() {
-            const res = await fileSystemHandler.checkIfFileSystemHasAlreadyBeenAccessed();
-            setHasFileSystemBeenAlreadyUsed(res);
+            const [fsAlreadyUsed, handleDirectoryName] = await fileSystemHandler.checkIfFileSystemHasAlreadyBeenAccessed();
+            setHasFileSystemBeenAlreadyUsed(fsAlreadyUsed);
+            setExistingHandleDirectoryName(handleDirectoryName);
         }
         fetchData();
     }, []);
@@ -47,7 +49,11 @@ export function RestoreAccessToStoragePopup() {
                     <FolderIcon className="w-12 h-12 mx-auto" />
                     <div className="p-4">
                         {hasFileSystemBeenAlreadyUsed ?
-                            'We have lost access to the directory where your tasks are stored. Please click the button below to regain access.' :
+                            (
+                                existingHandleDirectoryName === '' ?
+                                    'We have lost access to the directory where your tasks are stored. Please click the button below to regain access.' :
+                                    <span>Continuing session with directory: <i>"{existingHandleDirectoryName}"</i>.</span>
+                            ) :
                             'To get started, choose a directory where you want to store your tasks.'
                         }
                     </div>
@@ -74,7 +80,7 @@ export function RestoreAccessToStoragePopup() {
                             >
                                 <PlusIcon />
                                 <div className='px-2'>
-                                    Click to regain access
+                                    Let's get started
                                 </div>
                             </button>
 

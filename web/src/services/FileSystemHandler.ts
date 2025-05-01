@@ -36,12 +36,12 @@ class FileSystemHandler implements IStorageHandler {
         return this.isHandleActive;
     }
 
-    public async checkIfFileSystemHasAlreadyBeenAccessed(): Promise<boolean> {
+    public async checkIfFileSystemHasAlreadyBeenAccessed(): Promise<[boolean, string]> {
         const db = await this.getDbInstance();
 
         const handle = await db.get('handles', 'directoryHandle');
 
-        return handle != null;
+        return [handle != null, handle?.name ?? ''];
     }
 
     public async restoreHandle(): Promise<FileSystemDirectoryHandle> {
