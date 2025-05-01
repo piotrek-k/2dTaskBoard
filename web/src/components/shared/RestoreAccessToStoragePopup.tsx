@@ -21,7 +21,7 @@ export function RestoreAccessToStoragePopup() {
             setExistingHandleDirectoryName(handleDirectoryName);
         }
         fetchData();
-    }, []);
+    }, [storageReady]);
 
     return (
         <>
