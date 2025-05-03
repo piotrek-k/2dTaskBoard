@@ -4,4 +4,4 @@ Name=2dTaskBoard
 Comment=Task management productivity app with markdown support
 Categories=Utility;
 Icon=io.github.piotrek_k._2dTaskBoard
-Exec=/app/main/task-board-desktop
+Exec=run.sh
