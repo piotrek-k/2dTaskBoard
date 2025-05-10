@@ -13,6 +13,7 @@ import CustomMDEditor from '../customMarkdownRenderers/CustomMDEditor';
 import TrashIcon from '../../icons/TrashIcon';
 import { Id } from '../../types';
 import LinkIcon from '../../icons/LinkIcon';
+import Mermaid from '../customMarkdownRenderers/Mermaid';
 
 interface Props {
     card: CardStoredMetadata;
@@ -163,7 +164,8 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             source={taskContent}
             components={{
                 img: (props: any) => <CustomImageRenderer props={props} cardMetadata={card} />,
-                a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />
+                a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />,
+                code: Mermaid
             }}
             style={{
                 maxWidth: '100%',
@@ -203,7 +205,8 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             previewOptions={{
                 components: {
                     img: (props: any) => <CustomImageRenderer props={props} cardMetadata={card} />,
-                    a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />
+                    a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />,
+                    code: Mermaid
                 }
             }}
             className="min-h-[50vw]"
