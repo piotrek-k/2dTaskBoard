@@ -51,6 +51,10 @@ const Mermaid = ({ children = null, className = "", ...props }: MermaidProps) =>
     useEffect(() => {
         if (container && isMermaid && demoid.current && code) {
             const renderMermaid = async () => {
+                if (isCodeEmptyOrBackticksOnly(code)) {
+                    return;
+                }
+
                 try {
                     if (await mermaid.parse(code)) {
                         const { svg, bindFunctions } = await mermaid.render(demoid.current, code);
@@ -100,5 +104,9 @@ const Mermaid = ({ children = null, className = "", ...props }: MermaidProps) =>
     }
     return <code className={className}>{children}</code>;
 };
+
+function isCodeEmptyOrBackticksOnly(code: string) {
+    return code.trim() === "" || /^`+$/.test(code.trim());
+}
 
 export default Mermaid;
