@@ -36,7 +36,8 @@ export default defineConfig(({ mode }) => {
         workbox: {
           modifyURLPrefix: {
             "": "/2dTaskBoard/", // Prepend "2dTaskBoard/" to all asset paths
-          }
+          },
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024 // Set limit to 3 MiB
         }
       }),
       nodePolyfills()
