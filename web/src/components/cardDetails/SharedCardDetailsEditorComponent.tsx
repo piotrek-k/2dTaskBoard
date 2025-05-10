@@ -165,7 +165,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             components={{
                 img: (props: any) => <CustomImageRenderer props={props} cardMetadata={card} />,
                 a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />,
-                code:(props: any) => <Mermaid props={props} />
+                code: Mermaid
             }}
             style={{
                 maxWidth: '100%',
@@ -205,7 +205,8 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
             previewOptions={{
                 components: {
                     img: (props: any) => <CustomImageRenderer props={props} cardMetadata={card} />,
-                    a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />
+                    a: (props: any) => <LinkRenderer props={props} cardMetadata={card} />,
+                    code: Mermaid
                 }
             }}
             className="min-h-[50vw]"
