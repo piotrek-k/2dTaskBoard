@@ -37,7 +37,8 @@
     },
     "linux": {
       "target": [
-        "dir"
+        "dir",
+        "AppImage"
       ]
     }
   }

@@ -1,0 +1,66 @@
+name: Create Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.18.0"
+
+      - name: Get tag name
+        id: get_tag
+        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies (web)
+        run: |
+          cd web
+          npm install
+
+      - name: Install dependencies (desktop)
+        run: |
+          cd desktop
+          npm install
+
+      - name: Build web app
+        run: |
+          cd web
+          npm run build
+          
+      - name: Setup for building
+        run: |
+          cd desktop
+          mkdir -p ./dist/2dTaskBoard
+          cp -r ../web/dist/* ./dist/2dTaskBoard/
+
+      - name: Build Linux AppImage
+        run: |
+          cd desktop
+          npx electron-builder --linux AppImage
+
+      - name: Build Windows exe
+        run: |
+          cd desktop
+          npx electron-builder --windows nsis
+          
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            desktop/release-builds/*.AppImage
+            desktop/release-builds/*.exe
+          tag_name: ${{ steps.get_tag.outputs.TAG }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
