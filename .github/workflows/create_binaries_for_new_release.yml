@@ -1,9 +1,12 @@
 name: Create Release Binaries
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag for this release (e.g., v0.4.4)'
+        required: true
+        type: string
 
 jobs:
   build-and-release:
@@ -22,7 +25,7 @@ jobs:
 
       - name: Get tag name
         id: get_tag
-        run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: echo "TAG=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
 
       - name: Install dependencies (web)
         run: |
