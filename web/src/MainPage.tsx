@@ -1,6 +1,6 @@
 import React from 'react'
-import { FaColumns, FaDesktop, FaFolder, FaMarkdown, FaDollarSign } from 'react-icons/fa'
-import { MdOfflinePin } from 'react-icons/md'
+import { FaColumns, FaDesktop, FaFolder, FaMarkdown, FaDollarSign, FaWindows, FaLinux, FaMobile } from 'react-icons/fa'
+import { MdOfflinePin, MdCloudDownload } from 'react-icons/md'
 import { Link } from 'react-router-dom';
 
 function MainPage() {
@@ -57,6 +57,44 @@ function MainPage() {
                 />
             </div>
 
+            <div className="mt-20 mb-16">
+                <h2 className="text-3xl font-bold text-white mb-10">
+                    <MdCloudDownload className="inline-block mr-2 mb-1" />
+                    Download
+                </h2>
+                <div className="grid md:grid-cols-3 gap-6">
+                    <DownloadCard
+                        icon={<FaMobile className="text-4xl text-blue-400" />}
+                        title="Web App (PWA)"
+                        description="Use directly in your browser or install as a Progressive Web App for a native-like experience."
+                        buttonText="Use Web App"
+                        buttonLink="https://www.piotrek-k.pl/2dTaskBoard/board"
+                    />
+                    <DownloadCard
+                        icon={<FaLinux className="text-4xl text-yellow-400" />}
+                        title="Linux"
+                        description="Download the AppImage for easy installation on any Linux distribution or get it from Flathub."
+                        buttons={[
+                            {
+                                text: "Download AppImage",
+                                link: "https://github.com/piotrek-k/2dTaskBoard/releases"
+                            },
+                            {
+                                text: "Get on Flathub",
+                                link: "https://flathub.org/apps/io.github.piotrek_k._2dTaskBoard"
+                            }
+                        ]}
+                    />
+                    <DownloadCard
+                        icon={<FaWindows className="text-4xl text-blue-500" />}
+                        title="Windows"
+                        description="Download the installer for Windows to use 2dTaskBoard on your PC."
+                        buttonText="Download for Windows"
+                        buttonLink="https://github.com/piotrek-k/2dTaskBoard/releases"
+                    />
+                </div>
+            </div>
+
             <footer className="mt-12 text-center text-gray-800 text-sm">
                 <p>&copy; 2024 - {new Date().getFullYear()} "2dTaskBoard" Piotr Kozerski</p>
             </footer>
@@ -71,6 +109,51 @@ function FeatureSection({ icon, title, description }: { icon: React.ReactNode; t
             <div>
                 <h2 className="text-xl font-semibold text-white mb-2">{title}</h2>
                 <p>{description}</p>
+            </div>
+        </div>
+    )
+}
+
+function DownloadCard({
+    icon,
+    title,
+    description,
+    buttonText,
+    buttonLink,
+    buttons
+}: {
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    buttonText?: string;
+    buttonLink?: string;
+    buttons?: Array<{ text: string, link: string }>;
+}) {
+    return (
+        <div className="bg-gray-800 rounded-lg p-6 flex flex-col items-center text-center transition-transform hover:scale-105 hover:shadow-xl h-full">
+            <div className="mb-4">{icon}</div>
+            <h3 className="text-xl font-semibold text-white mb-3">{title}</h3>
+            <p className="text-gray-300 mb-5 flex-grow">{description}</p>
+
+            <div className="mt-auto w-full">
+                {buttonText && buttonLink && (
+                    <a
+                        href={buttonLink}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors mb-3 w-full block"
+                    >
+                        {buttonText}
+                    </a>
+                )}
+
+                {buttons && buttons.map((button, index) => (
+                    <a
+                        key={index}
+                        href={button.link}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors mb-3 w-full block"
+                    >
+                        {button.text}
+                    </a>
+                ))}
             </div>
         </div>
     )
