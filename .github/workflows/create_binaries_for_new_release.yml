@@ -27,6 +27,22 @@ jobs:
         id: get_tag
         run: echo "TAG=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
 
+      - name: Verify version in package.json matches release tag
+        run: |
+          # Extract version without the 'v' prefix
+          VERSION=$(echo "${{ steps.get_tag.outputs.TAG }}" | sed 's/^v//')
+          
+          # Check if desktop/package.json version matches
+          CURRENT_VERSION=$(node -p "require('./desktop/package.json').version")
+          
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            echo "::error::Version mismatch: package.json version ($CURRENT_VERSION) does not match release tag version ($VERSION)"
+            echo "Please update the version in desktop/package.json to match the release tag."
+            exit 1
+          else
+            echo "Version in package.json ($CURRENT_VERSION) matches release tag"
+          fi
+
       - name: Install dependencies (web)
         run: |
           cd web
