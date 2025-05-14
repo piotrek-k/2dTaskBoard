@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Autobuild and deploy if on release branch
 
 on:
   push:
