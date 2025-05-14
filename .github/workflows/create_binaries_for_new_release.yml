@@ -53,11 +53,17 @@ jobs:
           cd desktop
           npx electron-builder --linux AppImage
 
+      - name: Install Wine for Windows build
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y wine wine32 wine64 mono-complete
+
       - name: Build Windows exe
         run: |
           cd desktop
-          npx electron-builder --windows nsis
-          
+          npx electron-builder --windows nsis --x64
+      
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         with:
