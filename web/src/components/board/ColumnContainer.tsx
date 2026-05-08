@@ -123,6 +123,7 @@ function ColumnContainer(props: Props) {
             border-x-columnBackgroundColor
             hover:bg-mainBackgroundColor hover:text-rose-500
             active:bg-black text-gray-500`}
+                data-testid="add-task-btn"
                 ref={addTaskButtonRef}
                 onClick={() => {
                     createTask(column.id, row.id)

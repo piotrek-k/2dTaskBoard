@@ -150,7 +150,7 @@ function RowContainer({ row, columns, createTask, removeRow, openCardDetails, re
                             <button onClick={() => rowNavigation.moveDown(row.id)}><MoveDownIcon /></button>
                             <button onClick={() => rowNavigation.moveTop(row.id)}><MoveTopIcon /></button>
                             <button onClick={() => rowNavigation.moveBottom(row.id)}><MoveBottomIcon /></button>
-                            <button onClick={() => rowNavigation.archive(row.id)}><ArchiveIcon /></button>
+                            <button data-testid="archive-row-btn" onClick={() => rowNavigation.archive(row.id)}><ArchiveIcon /></button>
                         </div>
                     </div>
                 </div>

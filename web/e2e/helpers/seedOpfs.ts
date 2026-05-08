@@ -1,9 +1,40 @@
 import type { Page } from '@playwright/test';
-import type { KanbanDataContainer } from '../../src/types';
+import type { KanbanDataContainer, ColumnInStorage, Id, RowInStorage, TaskInStorage } from '../../src/types';
 import { MetadataType } from '../../src/dataTypes/CardMetadata';
 
-export async function seedBoard(page: Page, boardData: KanbanDataContainer): Promise<void> {
-    const dataJson = JSON.stringify(boardData);
+type SeedTask = TaskInStorage & { content?: string };
+type SeedRow = RowInStorage & { content?: string };
+
+interface ArchivedSeedTask {
+    id: Id;
+    title?: string;
+}
+
+interface ArchivedSeedColumn {
+    id: Id;
+    tasks: ArchivedSeedTask[];
+}
+
+interface ArchivedSeedRow {
+    id: Id;
+    title?: string;
+    columns: ArchivedSeedColumn[];
+}
+
+export interface SeedBoardData {
+    columns: ColumnInStorage[];
+    rows: SeedRow[];
+    tasks: SeedTask[];
+    archivedRows?: ArchivedSeedRow[];
+}
+
+export async function seedBoard(page: Page, boardData: SeedBoardData): Promise<void> {
+    const boardJson: KanbanDataContainer = {
+        columns: boardData.columns,
+        rows: boardData.rows.map(({ content: _content, ...rest }) => rest),
+        tasks: boardData.tasks.map(({ content: _content, ...rest }) => rest),
+    };
+    const dataJson = JSON.stringify(boardJson);
 
     const rowMetadataFiles: Record<string, string> = {};
     for (const row of boardData.rows) {
@@ -13,6 +44,45 @@ export async function seedBoard(page: Page, boardData: KanbanDataContainer): Pro
     const taskMetadataFiles: Record<string, string> = {};
     for (const task of boardData.tasks) {
         taskMetadataFiles[task.id] = JSON.stringify({ id: task.id, title: task.title, type: MetadataType.Task });
+    }
+
+    const rowContentFiles: Record<string, string> = {};
+    for (const row of boardData.rows) {
+        if (row.content !== undefined) {
+            rowContentFiles[row.id] = row.content;
+        }
+    }
+
+    const taskContentFiles: Record<string, string> = {};
+    for (const task of boardData.tasks) {
+        if (task.content !== undefined) {
+            taskContentFiles[task.id] = task.content;
+        }
+    }
+
+    const archivedRowsJsonl = (boardData.archivedRows ?? [])
+        .map(row => JSON.stringify({
+            id: row.id,
+            columns: row.columns.map(col => ({
+                id: col.id,
+                tasks: col.tasks.map(t => t.id),
+            })),
+        }))
+        .join('\n');
+
+    const archivedRowMetadataFiles: Record<string, string> = {};
+    const archivedTaskMetadataFiles: Record<string, string> = {};
+    for (const row of boardData.archivedRows ?? []) {
+        if (row.title !== undefined) {
+            archivedRowMetadataFiles[row.id] = JSON.stringify({ id: row.id, title: row.title, type: MetadataType.Row });
+        }
+        for (const col of row.columns) {
+            for (const task of col.tasks) {
+                if (task.title !== undefined) {
+                    archivedTaskMetadataFiles[task.id] = JSON.stringify({ id: task.id, title: task.title, type: MetadataType.Task });
+                }
+            }
+        }
     }
 
     await page.addInitScript(`
@@ -41,6 +111,53 @@ export async function seedBoard(page: Page, boardData: KanbanDataContainer): Pro
 
                 const taskMetadata = ${JSON.stringify(taskMetadataFiles)};
                 for (const [id, json] of Object.entries(taskMetadata)) {
+                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                    const fh = await dir.getFileHandle('metadata.md', { create: true });
+                    const w = await fh.createWritable();
+                    await w.write(json);
+                    await w.close();
+                }
+
+                // Write tasks/{id}/content.md for rows/tasks that have content
+                const rowContentFiles = ${JSON.stringify(rowContentFiles)};
+                for (const [id, content] of Object.entries(rowContentFiles)) {
+                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                    const fh = await dir.getFileHandle('content.md', { create: true });
+                    const w = await fh.createWritable();
+                    await w.write(content);
+                    await w.close();
+                }
+
+                const taskContentFiles = ${JSON.stringify(taskContentFiles)};
+                for (const [id, content] of Object.entries(taskContentFiles)) {
+                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                    const fh = await dir.getFileHandle('content.md', { create: true });
+                    const w = await fh.createWritable();
+                    await w.write(content);
+                    await w.close();
+                }
+
+                // Write archive.jsonl if archived rows were provided
+                const archivedRowsJsonl = ${JSON.stringify(archivedRowsJsonl)};
+                if (archivedRowsJsonl) {
+                    const archiveFh = await root.getFileHandle('archive.jsonl', { create: true });
+                    const archiveWritable = await archiveFh.createWritable();
+                    await archiveWritable.write(archivedRowsJsonl);
+                    await archiveWritable.close();
+                }
+
+                // Write metadata.md for archived rows and tasks that include titles
+                const archivedRowMetadata = ${JSON.stringify(archivedRowMetadataFiles)};
+                for (const [id, json] of Object.entries(archivedRowMetadata)) {
+                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                    const fh = await dir.getFileHandle('metadata.md', { create: true });
+                    const w = await fh.createWritable();
+                    await w.write(json);
+                    await w.close();
+                }
+
+                const archivedTaskMetadata = ${JSON.stringify(archivedTaskMetadataFiles)};
+                for (const [id, json] of Object.entries(archivedTaskMetadata)) {
                     const dir = await tasksDir.getDirectoryHandle(id, { create: true });
                     const fh = await dir.getFileHandle('metadata.md', { create: true });
                     const w = await fh.createWritable();
