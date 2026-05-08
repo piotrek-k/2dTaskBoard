@@ -38,3 +38,15 @@ Do not add features, overloads, or configuration options that aren't required by
 ## TypeScript
 
 - Abstract out code that interacts with external APIs (e.g., File System) behind interfaces (`IStorageHandler`) to allow for easier testing and future extensibility
+
+## Data Storage Architecture
+
+Data is split across two separate storage locations. Understanding this split is critical:
+
+**`board/board.json`** — stores the board *structure*: row/task IDs, positions, and column assignments. Does **not** store display titles.
+
+**`tasks/{id}/metadata.md`** — stores the *display title* for each row and task. Both rows and tasks have their own file here. This is what `RowContainer` and `TaskCard` display — loaded asynchronously via `CardMetadataViewModels.getRowMetadataViewModel` / `getTaskMetadataViewModel`. If `metadata.md` is missing, the UI falls back to `"Row {id}"` / `"Task {id}"`.
+
+**`tasks/{id}/content.md`** — stores the full markdown body of a task.
+
+**`archive.jsonl`** — archived rows, one JSON object per line.
