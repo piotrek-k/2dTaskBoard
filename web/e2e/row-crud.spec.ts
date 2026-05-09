@@ -42,7 +42,7 @@ test('edits a row title and reflects the update on the board', async ({ page }) 
 
     await page.getByLabel('Close modal').click();
 
-    await expect(page.getByText('Updated Row')).toBeVisible();
+    await expect(page.getByTestId('row-title').filter({ hasText: 'Updated Row' })).toBeVisible();
 });
 
 test('deletes a row after confirmation and removes it and its tasks from the board', async ({ page }) => {

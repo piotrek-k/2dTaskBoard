@@ -135,6 +135,7 @@ function RowContainer({ row, columns, createTask, removeRow, openCardDetails, re
                                 m-[12px]
                                 md:h-[100px]
                                 "
+                            data-testid="row-title"
                             ref={elementRef}
                             onClick={() => {
                                 handleClickOnRowDetails(row.id);

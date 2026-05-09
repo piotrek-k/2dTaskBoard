@@ -49,7 +49,7 @@ test('edits a task title and reflects the update on the board', async ({ page })
 
     await page.getByLabel('Close modal').click();
 
-    await expect(page.getByText('Updated Title')).toBeVisible();
+    await expect(page.locator('.task').filter({ hasText: 'Updated Title' })).toBeVisible();
 });
 
 test('deletes a task after confirmation and removes it from the board', async ({ page }) => {
