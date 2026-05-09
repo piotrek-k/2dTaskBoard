@@ -90,79 +90,83 @@ export async function seedBoard(page: Page, boardData: SeedBoardData): Promise<v
             const seedingPromise = (async () => {
                 const root = await navigator.storage.getDirectory();
 
-                // Write board/board.json
-                const boardDir = await root.getDirectoryHandle('board', { create: true });
-                const boardFile = await boardDir.getFileHandle('board.json', { create: true });
-                const boardWritable = await boardFile.createWritable();
-                await boardWritable.write(${JSON.stringify(dataJson)});
-                await boardWritable.close();
+                if (!sessionStorage.getItem('opfs-seeded')) {
+                    // Write board/board.json
+                    const boardDir = await root.getDirectoryHandle('board', { create: true });
+                    const boardFile = await boardDir.getFileHandle('board.json', { create: true });
+                    const boardWritable = await boardFile.createWritable();
+                    await boardWritable.write(${JSON.stringify(dataJson)});
+                    await boardWritable.close();
 
-                // Write tasks/{id}/metadata.md for each row and task
-                const tasksDir = await root.getDirectoryHandle('tasks', { create: true });
+                    // Write tasks/{id}/metadata.md for each row and task
+                    const tasksDir = await root.getDirectoryHandle('tasks', { create: true });
 
-                const rowMetadata = ${JSON.stringify(rowMetadataFiles)};
-                for (const [id, json] of Object.entries(rowMetadata)) {
-                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
-                    const fh = await dir.getFileHandle('metadata.md', { create: true });
-                    const w = await fh.createWritable();
-                    await w.write(json);
-                    await w.close();
-                }
+                    const rowMetadata = ${JSON.stringify(rowMetadataFiles)};
+                    for (const [id, json] of Object.entries(rowMetadata)) {
+                        const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                        const fh = await dir.getFileHandle('metadata.md', { create: true });
+                        const w = await fh.createWritable();
+                        await w.write(json);
+                        await w.close();
+                    }
 
-                const taskMetadata = ${JSON.stringify(taskMetadataFiles)};
-                for (const [id, json] of Object.entries(taskMetadata)) {
-                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
-                    const fh = await dir.getFileHandle('metadata.md', { create: true });
-                    const w = await fh.createWritable();
-                    await w.write(json);
-                    await w.close();
-                }
+                    const taskMetadata = ${JSON.stringify(taskMetadataFiles)};
+                    for (const [id, json] of Object.entries(taskMetadata)) {
+                        const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                        const fh = await dir.getFileHandle('metadata.md', { create: true });
+                        const w = await fh.createWritable();
+                        await w.write(json);
+                        await w.close();
+                    }
 
-                // Write tasks/{id}/content.md for rows/tasks that have content
-                const rowContentFiles = ${JSON.stringify(rowContentFiles)};
-                for (const [id, content] of Object.entries(rowContentFiles)) {
-                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
-                    const fh = await dir.getFileHandle('content.md', { create: true });
-                    const w = await fh.createWritable();
-                    await w.write(content);
-                    await w.close();
-                }
+                    // Write tasks/{id}/content.md for rows/tasks that have content
+                    const rowContentFiles = ${JSON.stringify(rowContentFiles)};
+                    for (const [id, content] of Object.entries(rowContentFiles)) {
+                        const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                        const fh = await dir.getFileHandle('content.md', { create: true });
+                        const w = await fh.createWritable();
+                        await w.write(content);
+                        await w.close();
+                    }
 
-                const taskContentFiles = ${JSON.stringify(taskContentFiles)};
-                for (const [id, content] of Object.entries(taskContentFiles)) {
-                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
-                    const fh = await dir.getFileHandle('content.md', { create: true });
-                    const w = await fh.createWritable();
-                    await w.write(content);
-                    await w.close();
-                }
+                    const taskContentFiles = ${JSON.stringify(taskContentFiles)};
+                    for (const [id, content] of Object.entries(taskContentFiles)) {
+                        const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                        const fh = await dir.getFileHandle('content.md', { create: true });
+                        const w = await fh.createWritable();
+                        await w.write(content);
+                        await w.close();
+                    }
 
-                // Write archive.jsonl if archived rows were provided
-                const archivedRowsJsonl = ${JSON.stringify(archivedRowsJsonl)};
-                if (archivedRowsJsonl) {
-                    const archiveFh = await root.getFileHandle('archive.jsonl', { create: true });
-                    const archiveWritable = await archiveFh.createWritable();
-                    await archiveWritable.write(archivedRowsJsonl);
-                    await archiveWritable.close();
-                }
+                    // Write archive.jsonl if archived rows were provided
+                    const archivedRowsJsonl = ${JSON.stringify(archivedRowsJsonl)};
+                    if (archivedRowsJsonl) {
+                        const archiveFh = await root.getFileHandle('archive.jsonl', { create: true });
+                        const archiveWritable = await archiveFh.createWritable();
+                        await archiveWritable.write(archivedRowsJsonl);
+                        await archiveWritable.close();
+                    }
 
-                // Write metadata.md for archived rows and tasks that include titles
-                const archivedRowMetadata = ${JSON.stringify(archivedRowMetadataFiles)};
-                for (const [id, json] of Object.entries(archivedRowMetadata)) {
-                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
-                    const fh = await dir.getFileHandle('metadata.md', { create: true });
-                    const w = await fh.createWritable();
-                    await w.write(json);
-                    await w.close();
-                }
+                    // Write metadata.md for archived rows and tasks that include titles
+                    const archivedRowMetadata = ${JSON.stringify(archivedRowMetadataFiles)};
+                    for (const [id, json] of Object.entries(archivedRowMetadata)) {
+                        const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                        const fh = await dir.getFileHandle('metadata.md', { create: true });
+                        const w = await fh.createWritable();
+                        await w.write(json);
+                        await w.close();
+                    }
 
-                const archivedTaskMetadata = ${JSON.stringify(archivedTaskMetadataFiles)};
-                for (const [id, json] of Object.entries(archivedTaskMetadata)) {
-                    const dir = await tasksDir.getDirectoryHandle(id, { create: true });
-                    const fh = await dir.getFileHandle('metadata.md', { create: true });
-                    const w = await fh.createWritable();
-                    await w.write(json);
-                    await w.close();
+                    const archivedTaskMetadata = ${JSON.stringify(archivedTaskMetadataFiles)};
+                    for (const [id, json] of Object.entries(archivedTaskMetadata)) {
+                        const dir = await tasksDir.getDirectoryHandle(id, { create: true });
+                        const fh = await dir.getFileHandle('metadata.md', { create: true });
+                        const w = await fh.createWritable();
+                        await w.write(json);
+                        await w.close();
+                    }
+
+                    sessionStorage.setItem('opfs-seeded', '1');
                 }
 
                 // Polyfill permission methods so FileSystemHandler.verifyExistingHandle passes.

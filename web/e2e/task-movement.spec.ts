@@ -27,15 +27,31 @@ test('moves a task to the next column via the M keyboard shortcut', async ({ pag
     await taskCard.focus();
     await page.keyboard.press('m');
 
-    // The task should now be visible (it moved to In Progress — still on the board)
-    await expect(page.locator('.task').filter({ hasText: 'Movable Task' })).toBeVisible();
+    // The task should now be in the In Progress column
+    const inProgressColumn = page.getByTestId('column-2');
+    await expect(inProgressColumn.locator('.task').filter({ hasText: 'Movable Task' })).toBeVisible();
+    await expect(page.getByTestId('column-1').locator('.task').filter({ hasText: 'Movable Task' })).not.toBeVisible();
 
-    // Reload the page and verify the task persisted in the new column (In Progress)
+    // Wait for the board save to complete in OPFS before reloading
+    await page.waitForFunction(async () => {
+        try {
+            const root = await navigator.storage.getDirectory();
+            const boardDir = await root.getDirectoryHandle('board');
+            const boardFile = await boardDir.getFileHandle('board.json');
+            const file = await boardFile.getFile();
+            const board = JSON.parse(await file.text());
+            return board.tasks.some((t: { id: string; columnId: string }) => t.id === 'tm-task-1' && t.columnId === '2');
+        } catch {
+            return false;
+        }
+    });
+
+    // Reload the page and verify the task persisted in the In Progress column
     await page.reload();
     await page.getByRole('button', { name: /choose directory/i }).waitFor({ state: 'hidden', timeout: 1000 }).catch(() => {});
 
-    const taskAfterReload = page.locator('.task').filter({ hasText: 'Movable Task' });
-    await expect(taskAfterReload).toBeVisible();
+    await expect(page.getByTestId('column-2').locator('.task').filter({ hasText: 'Movable Task' })).toBeVisible();
+    await expect(page.getByTestId('column-1').locator('.task').filter({ hasText: 'Movable Task' })).not.toBeVisible();
 });
 
 test('moves a task between columns via drag and drop', async ({ page }) => {
@@ -58,9 +74,44 @@ test('moves a task between columns via drag and drop', async ({ page }) => {
     const source = page.locator('.task').filter({ hasText: 'Draggable Task' }).first();
     const target = page.locator('.task').filter({ hasText: 'Target Task' }).first();
 
-    await source.dragTo(target);
+    const sourceBounds = await source.boundingBox();
+    const targetBounds = await target.boundingBox();
 
-    // After dragging, both tasks should still be visible (now in column 2)
-    await expect(page.locator('.task').filter({ hasText: 'Draggable Task' }).first()).toBeVisible();
-    await expect(page.locator('.task').filter({ hasText: 'Target Task' }).first()).toBeVisible();
+    const sourceX = sourceBounds!.x + sourceBounds!.width / 2;
+    const sourceY = sourceBounds!.y + sourceBounds!.height / 2;
+    const targetX = targetBounds!.x + targetBounds!.width / 2;
+    const targetY = targetBounds!.y + targetBounds!.height / 2;
+
+    await page.mouse.move(sourceX, sourceY);
+    await page.mouse.down();
+    await page.mouse.move(sourceX + 5, sourceY, { steps: 5 });
+    await page.mouse.move(targetX, targetY, { steps: 20 });
+    await page.mouse.up();
+
+    // Draggable Task should now be in column 2 (In Progress), no longer in column 1
+    await expect(page.getByTestId('column-2').locator('.task').filter({ hasText: 'Draggable Task' })).toBeVisible();
+    await expect(page.getByTestId('column-1').locator('.task').filter({ hasText: 'Draggable Task' })).not.toBeVisible();
+    // Target Task stays in column 2
+    await expect(page.getByTestId('column-2').locator('.task').filter({ hasText: 'Target Task' })).toBeVisible();
+
+    // Wait for OPFS save to complete before reloading
+    await page.waitForFunction(async () => {
+        try {
+            const root = await navigator.storage.getDirectory();
+            const boardDir = await root.getDirectoryHandle('board');
+            const boardFile = await boardDir.getFileHandle('board.json');
+            const file = await boardFile.getFile();
+            const board = JSON.parse(await file.text());
+            return board.tasks.some((t: { id: string; columnId: string }) => t.id === 'tm-task-2' && t.columnId === '2');
+        } catch {
+            return false;
+        }
+    });
+
+    // Reload and verify persistence
+    await page.reload();
+
+    await expect(page.getByTestId('column-2').locator('.task').filter({ hasText: 'Draggable Task' })).toBeVisible();
+    await expect(page.getByTestId('column-1').locator('.task').filter({ hasText: 'Draggable Task' })).not.toBeVisible();
+    await expect(page.getByTestId('column-2').locator('.task').filter({ hasText: 'Target Task' })).toBeVisible();
 });

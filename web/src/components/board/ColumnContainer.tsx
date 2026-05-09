@@ -86,6 +86,7 @@ function ColumnContainer(props: Props) {
         <div
             ref={columnRef}
             style={style}
+            data-testid={`column-${column.id}`}
             className="
             bg-columnBackgroundColor
             md:min-h-[200px]
