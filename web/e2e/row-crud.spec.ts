@@ -68,3 +68,51 @@ test('deletes a row after confirmation and removes it and its tasks from the boa
     await expect(page.getByText('Row To Delete')).not.toBeVisible();
     await expect(page.getByText('Task In Row')).not.toBeVisible();
 });
+
+test('changes row order via the move down button', async ({ page }) => {
+    await seedBoard(page, {
+        columns: COLUMNS,
+        rows: [
+            { id: 'rc-row-3', title: 'Row Alpha', position: 0, lastModificationDate: new Date('2026-01-01') },
+            { id: 'rc-row-4', title: 'Row Beta', position: 1, lastModificationDate: new Date('2026-01-01') },
+        ],
+        tasks: [],
+    });
+
+    await page.goto('/2dTaskBoard/board');
+
+    const rowTitles = page.getByTestId('row-title');
+    await expect(rowTitles.first()).toContainText('Row Alpha');
+    await expect(rowTitles.nth(1)).toContainText('Row Beta');
+
+    // Click the move-down button on Row Alpha — it should move below Row Beta
+    const rowAlphaNavButtons = rowTitles.filter({ hasText: 'Row Alpha' }).locator('xpath=..').locator('[data-testid="move-row-down-btn"]');
+    await rowAlphaNavButtons.click();
+
+    await expect(rowTitles.first()).toContainText('Row Beta');
+    await expect(rowTitles.nth(1)).toContainText('Row Alpha');
+});
+
+test('changes row order via the move up button', async ({ page }) => {
+    await seedBoard(page, {
+        columns: COLUMNS,
+        rows: [
+            { id: 'rc-row-5', title: 'Row First', position: 0, lastModificationDate: new Date('2026-01-01') },
+            { id: 'rc-row-6', title: 'Row Second', position: 1, lastModificationDate: new Date('2026-01-01') },
+        ],
+        tasks: [],
+    });
+
+    await page.goto('/2dTaskBoard/board');
+
+    const rowTitles = page.getByTestId('row-title');
+    await expect(rowTitles.first()).toContainText('Row First');
+    await expect(rowTitles.nth(1)).toContainText('Row Second');
+
+    // Click the move-up button on Row Second — it should move above Row First
+    const rowSecondNavButtons = rowTitles.filter({ hasText: 'Row Second' }).locator('xpath=..').locator('[data-testid="move-row-up-btn"]');
+    await rowSecondNavButtons.click();
+
+    await expect(rowTitles.first()).toContainText('Row Second');
+    await expect(rowTitles.nth(1)).toContainText('Row First');
+});

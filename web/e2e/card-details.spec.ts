@@ -83,3 +83,41 @@ test('opens standalone card view in a new tab via the link icon', async ({ page 
     await expect(newTab).toHaveURL(/\/card\/cd-task-3/);
     await expect(newTab.getByText('Standalone Task')).toBeVisible();
 });
+
+test('Switch edit mode button toggles between rendered markdown and text editor', async ({ page }) => {
+    await seedBoard(page, {
+        columns: COLUMNS,
+        rows: [
+            { id: 'cd-row-4', title: 'Feature Row', position: 0, lastModificationDate: new Date('2026-01-01') },
+        ],
+        tasks: [
+            {
+                id: 'cd-task-4',
+                title: 'Edit Mode Task',
+                columnId: '1',
+                rowId: 'cd-row-4',
+                position: 0,
+                lastModificationDate: new Date('2026-01-01'),
+                content: '## Markdown Heading',
+            },
+        ],
+    });
+
+    await page.goto('/2dTaskBoard/board');
+    await page.getByText('Edit Mode Task').click();
+
+    // Initially the rendered markdown view is shown — heading is visible, editor textarea is hidden
+    await expect(page.getByRole('heading', { name: 'Markdown Heading' })).toBeVisible();
+    await expect(page.locator('.w-md-editor-text-input')).not.toBeVisible();
+
+    // Click "Switch edit mode" to enter edit mode — the text editor (textarea) becomes visible
+    await page.getByRole('button', { name: 'Switch edit mode' }).click();
+
+    await expect(page.locator('.w-md-editor-text-input')).toBeVisible();
+
+    // Click "Switch edit mode" again to return to rendered view — textarea is gone
+    await page.getByRole('button', { name: 'Switch edit mode' }).click();
+
+    await expect(page.locator('.w-md-editor-text-input')).not.toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Markdown Heading' })).toBeVisible();
+});
