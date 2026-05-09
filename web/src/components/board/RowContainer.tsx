@@ -135,6 +135,7 @@ function RowContainer({ row, columns, createTask, removeRow, openCardDetails, re
                                 m-[12px]
                                 md:h-[100px]
                                 "
+                            data-testid="row-title"
                             ref={elementRef}
                             onClick={() => {
                                 handleClickOnRowDetails(row.id);
@@ -146,11 +147,11 @@ function RowContainer({ row, columns, createTask, removeRow, openCardDetails, re
                         <div className='flex flex-grow'></div>
 
                         <div className='flex flex-row flex-none p-2.5 text-gray-500'>
-                            <button onClick={() => rowNavigation.moveUp(row.id)}><MoveUpIcon /></button>
-                            <button onClick={() => rowNavigation.moveDown(row.id)}><MoveDownIcon /></button>
-                            <button onClick={() => rowNavigation.moveTop(row.id)}><MoveTopIcon /></button>
-                            <button onClick={() => rowNavigation.moveBottom(row.id)}><MoveBottomIcon /></button>
-                            <button onClick={() => rowNavigation.archive(row.id)}><ArchiveIcon /></button>
+                            <button data-testid="move-row-up-btn" onClick={() => rowNavigation.moveUp(row.id)}><MoveUpIcon /></button>
+                            <button data-testid="move-row-down-btn" onClick={() => rowNavigation.moveDown(row.id)}><MoveDownIcon /></button>
+                            <button data-testid="move-row-top-btn" onClick={() => rowNavigation.moveTop(row.id)}><MoveTopIcon /></button>
+                            <button data-testid="move-row-bottom-btn" onClick={() => rowNavigation.moveBottom(row.id)}><MoveBottomIcon /></button>
+                            <button data-testid="archive-row-btn" onClick={() => rowNavigation.archive(row.id)}><ArchiveIcon /></button>
                         </div>
                     </div>
                 </div>

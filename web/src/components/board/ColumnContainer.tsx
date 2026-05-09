@@ -86,6 +86,7 @@ function ColumnContainer(props: Props) {
         <div
             ref={columnRef}
             style={style}
+            data-testid={`column-${column.id}`}
             className="
             bg-columnBackgroundColor
             md:min-h-[200px]
@@ -123,6 +124,7 @@ function ColumnContainer(props: Props) {
             border-x-columnBackgroundColor
             hover:bg-mainBackgroundColor hover:text-rose-500
             active:bg-black text-gray-500`}
+                data-testid="add-task-btn"
                 ref={addTaskButtonRef}
                 onClick={() => {
                     createTask(column.id, row.id)

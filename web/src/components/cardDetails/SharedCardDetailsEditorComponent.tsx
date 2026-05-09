@@ -224,6 +224,7 @@ function SharedCardDetailsEditorComponent({ card, requestSavingDataToStorage, is
                         {!isReadOnly ? <>
                             {allowDelete &&
                                 <button
+                                    data-testid="delete-card-btn"
                                     onClick={() => {
                                         requestRemovingCard(card.id);
                                     }}

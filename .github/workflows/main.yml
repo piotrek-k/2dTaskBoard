@@ -69,6 +69,37 @@ jobs:
       #     cd desktop
       #     npm run build
 
+  e2e_job:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    name: E2E tests
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.18.0"
+
+      - name: Install dependencies (web)
+        run: |
+          cd web
+          npm install
+
+      - name: Install Playwright browsers
+        run: |
+          cd web
+          npx playwright install --with-deps chromium
+
+      - name: Run E2E tests (web)
+        run: |
+          cd web
+          npm run test:e2e
+
   github-pages-deploy:
     if: startsWith(github.ref, 'refs/heads/release')
     environment:
