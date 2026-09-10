@@ -5,10 +5,12 @@ import settingsProvider, { SettingsProvider } from "./SettingsProvider";
 import { FileSystemDirectory, recursivelyLoadDirectoryTree } from "../tools/filesystemTree";
 import { ComparisionType, FolderToFollow } from "../dataTypes/FileSystemStructures";
 
-class FileSystemHandler implements IStorageHandler {
+export class FileSystemHandler implements IStorageHandler {
     directoryHandle: FileSystemDirectoryHandle | undefined;
 
     readinessWatcher: EventWatcher<boolean> = new EventWatcher<boolean>();
+
+    private directoryHandleCache: Map<string, FileSystemDirectoryHandle> = new Map();
 
     constructor(private settings: SettingsProvider) {
     }
@@ -57,7 +59,7 @@ class FileSystemHandler implements IStorageHandler {
             console.log("State of handle:", stateOfHandle);
 
             if (stateOfHandle) {
-                this.directoryHandle = handle;
+                this.replaceRootDirectoryHandle(handle);
 
                 this.registerPossibleSourceChange(true);
 
@@ -69,7 +71,7 @@ class FileSystemHandler implements IStorageHandler {
 
         handle = await this.chooseDifferentSource();
 
-        this.directoryHandle = handle;
+        this.replaceRootDirectoryHandle(handle);
 
         this.registerPossibleSourceChange(handle != null);
 
@@ -109,9 +111,9 @@ class FileSystemHandler implements IStorageHandler {
         const db = await this.getDbInstance();
 
         try {
-            this.directoryHandle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
+            this.replaceRootDirectoryHandle(await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle);
         } catch (error) {
-            this.directoryHandle = undefined;
+            this.replaceRootDirectoryHandle(undefined);
             this.isHandleActive = false;
             this.readinessWatcher.notify(false);
 
@@ -377,6 +379,43 @@ class FileSystemHandler implements IStorageHandler {
         }
     }
 
+    private replaceRootDirectoryHandle(handle: FileSystemDirectoryHandle | undefined) {
+        this.directoryHandle = handle;
+        this.directoryHandleCache.clear();
+    }
+
+    private buildDirectoryHandleCacheKey(folderNames: FolderToFollow[]): string {
+        return folderNames
+            .map(folder => `${ComparisionType[folder.comparisionType]}:${folder.name}`)
+            .join('/');
+    }
+
+    private async resolveChildDirectory(
+        parentDirectory: FileSystemDirectoryHandle,
+        folderName: FolderToFollow,
+        createIfNotExist: boolean
+    ): Promise<FileSystemDirectoryHandle | null> {
+        if (folderName.comparisionType == ComparisionType.Exact) {
+            try {
+                return await parentDirectory.getDirectoryHandle(folderName.name, { create: createIfNotExist });
+            } catch (error) {
+                return null;
+            }
+        }
+
+        if (folderName.comparisionType == ComparisionType.Regex) {
+            const entries = await (parentDirectory as any).values();
+
+            for await (const entry of entries) {
+                if (entry.kind === 'directory' && new RegExp(folderName.name).test(entry.name)) {
+                    return await parentDirectory.getDirectoryHandle(entry.name, { create: createIfNotExist });
+                }
+            }
+        }
+
+        return null;
+    }
+
     private async followDirectoriesComplex(folderNames: FolderToFollow[], createIfNotExist: boolean = true): Promise<FileSystemDirectoryHandle | null> {
         if (this.directoryHandle == null) {
             this.directoryHandle = await this.restoreHandle();
@@ -387,31 +426,27 @@ class FileSystemHandler implements IStorageHandler {
         }
 
         let targetDir = this.directoryHandle;
+        const resolvedPath: FolderToFollow[] = [];
 
         for (const folderName of folderNames) {
-            if (folderName.comparisionType == ComparisionType.Exact) {
-                try {
-                    targetDir = await targetDir.getDirectoryHandle(folderName.name, { create: createIfNotExist });
-                } catch (error) {
-                    return null;
-                }
-            }
-            else if (folderName.comparisionType == ComparisionType.Regex) {
-                const entries = await (targetDir as any).values();
+            resolvedPath.push(folderName);
 
-                let found = false;
-                for await (const entry of entries) {
-                    if (entry.kind === 'directory' && new RegExp(folderName.name).test(entry.name)) {
-                        targetDir = await targetDir.getDirectoryHandle(entry.name, { create: createIfNotExist });
-                        found = true;
-                        break;
-                    }
-                }
+            const cacheKey = this.buildDirectoryHandleCacheKey(resolvedPath);
+            const cachedDirectory = this.directoryHandleCache.get(cacheKey);
 
-                if (!found) {
-                    return null;
-                }
+            if (cachedDirectory) {
+                targetDir = cachedDirectory;
+                continue;
             }
+
+            const nextDirectory = await this.resolveChildDirectory(targetDir, folderName, createIfNotExist);
+
+            if (nextDirectory == null) {
+                return null;
+            }
+
+            this.directoryHandleCache.set(cacheKey, nextDirectory);
+            targetDir = nextDirectory;
         }
 
         return targetDir;
