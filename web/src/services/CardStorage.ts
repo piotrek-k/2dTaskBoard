@@ -36,11 +36,6 @@ export class CardStorage implements ICardStorage {
             );
         } catch (e) {
             console.log("couldn't find content for ", cardId);
-
-            fileContents = await this.storageHandler.getContentFromDirectory(
-                'content.md',
-                [TASKS_DIRECTORY_NAME, `${cardId}`]
-            );
         }
 
         return new ContentMdFile(fileContents);
@@ -87,14 +82,7 @@ export class CardStorage implements ICardStorage {
             console.log("couldn't find metadata for ", cardId);
         }
 
-        if (content.length == 0 || content == undefined) {
-            content = await this.storageHandler.getContentFromDirectory(
-                'metadata.md',
-                [TASKS_DIRECTORY_NAME, `${cardId}`]
-            );
-        }
-
-        if (content.length === 0) {
+        if (content.length === 0 || content == undefined) {
             return undefined;
         }
 
@@ -111,6 +99,36 @@ export class CardStorage implements ICardStorage {
 
     public async getTaskMetadata(taskId: Id): Promise<TaskStoredMetadata | undefined> {
         return await this.getCardMetadata<TaskStoredMetadata>(taskId);
+    }
+
+    public peekCardMetadata<T extends CardStoredMetadata>(cardId: Id): T | undefined {
+        if (cardId in this.cache) {
+            return this.cache[cardId] as T;
+        }
+
+        return undefined;
+    }
+
+    public clearCardMetadataCache() {
+        for (const cachedCardId of Object.keys(this.cache)) {
+            delete this.cache[cachedCardId];
+        }
+    }
+
+    public async prefetchCardMetadata(cardIds: Id[], concurrency = 4): Promise<void> {
+        const uniqueCardIds = [...new Set(cardIds)];
+        let nextCardIndex = 0;
+
+        const loadNextCard = async () => {
+            while (nextCardIndex < uniqueCardIds.length) {
+                const currentCardIndex = nextCardIndex;
+                nextCardIndex++;
+                await this.getCardMetadata(uniqueCardIds[currentCardIndex]);
+            }
+        };
+
+        const workerCount = Math.min(concurrency, uniqueCardIds.length);
+        await Promise.all(Array.from({ length: workerCount }, () => loadNextCard()));
     }
 
     public async saveCardContent(cardId: Id, contentWithoutProperties: string, cardStoredMetadata: CardStoredMetadata) {

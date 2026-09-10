@@ -12,12 +12,20 @@ export interface IArchiveStorage {
     getArchive(): Promise<ArchiveStored>;
 }
 
-class ArchiveStorage implements IArchiveStorage {
+export class ArchiveStorage implements IArchiveStorage {
     constructor(private storageHandler: IStorageHandler) {
     }
 
+    private async readArchiveFileContents(): Promise<string> {
+        try {
+            return await this.storageHandler.getContent('archive.jsonl');
+        } catch {
+            return '';
+        }
+    }
+
     async getArchive(): Promise<ArchiveStored> {
-        const fileContents = await this.storageHandler.getContent('archive.jsonl');
+        const fileContents = await this.readArchiveFileContents();
 
         const lines = fileContents.trim().split('\n').reverse();
         const archive: ArchiveStored = { rows: [] as ArchivedStoredRow[] };
@@ -53,7 +61,7 @@ class ArchiveStorage implements IArchiveStorage {
     async addToArchive(archivedRow: ArchivedStoredRow): Promise<void> {
         const jsonl = JSON.stringify(archivedRow) + '\n';
 
-        let existingContent = await this.storageHandler.getContent('archive.jsonl');
+        let existingContent = await this.readArchiveFileContents();
         existingContent = existingContent.endsWith('\n') ? existingContent + '\n' : existingContent;
 
         const newContent = existingContent + jsonl;
@@ -81,7 +89,7 @@ class ArchiveStorage implements IArchiveStorage {
 
     async removeFromArchive(rowId: Id): Promise<void> {
 
-        const existingContent = await this.storageHandler.getContent('archive.jsonl');
+        const existingContent = await this.readArchiveFileContents();
 
         const rows = existingContent.split('\n').filter(line => line.trim() !== '');
 

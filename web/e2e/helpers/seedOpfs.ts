@@ -2,8 +2,8 @@ import type { Page } from '@playwright/test';
 import type { KanbanDataContainer, ColumnInStorage, Id, RowInStorage, TaskInStorage } from '../../src/types';
 import { MetadataType } from '../../src/dataTypes/CardMetadata';
 
-type SeedTask = TaskInStorage & { content?: string };
-type SeedRow = RowInStorage & { content?: string };
+type SeedTask = TaskInStorage & { content?: string; omitMetadata?: boolean };
+type SeedRow = RowInStorage & { content?: string; omitMetadata?: boolean };
 
 interface ArchivedSeedTask {
     id: Id;
@@ -31,18 +31,26 @@ export interface SeedBoardData {
 export async function seedBoard(page: Page, boardData: SeedBoardData): Promise<void> {
     const boardJson: KanbanDataContainer = {
         columns: boardData.columns,
-        rows: boardData.rows.map(({ content: _content, ...rest }) => rest),
-        tasks: boardData.tasks.map(({ content: _content, ...rest }) => rest),
+        rows: boardData.rows.map(({ content: _content, omitMetadata: _omitMetadata, ...rest }) => rest),
+        tasks: boardData.tasks.map(({ content: _content, omitMetadata: _omitMetadata, ...rest }) => rest),
     };
     const dataJson = JSON.stringify(boardJson);
 
     const rowMetadataFiles: Record<string, string> = {};
     for (const row of boardData.rows) {
+        if (row.omitMetadata) {
+            continue;
+        }
+
         rowMetadataFiles[row.id] = JSON.stringify({ id: row.id, title: row.title, type: MetadataType.Row });
     }
 
     const taskMetadataFiles: Record<string, string> = {};
     for (const task of boardData.tasks) {
+        if (task.omitMetadata) {
+            continue;
+        }
+
         taskMetadataFiles[task.id] = JSON.stringify({ id: task.id, title: task.title, type: MetadataType.Task });
     }
 
