@@ -100,4 +100,49 @@ describe('CardStorage', () => {
         expect(result).toEqual(updatedMetadata);
         expect(storageHandlerMock.getContentFromDirectoryComplexFolderPath).toHaveBeenCalledTimes(2);
     });
+
+    it('should return cached metadata from peek without calling storage', async () => {
+        storageHandlerMock.getContentFromDirectoryComplexFolderPath.mockResolvedValue(
+            JSON.stringify(TASK_METADATA)
+        );
+
+        expect(cardStorage.peekCardMetadata<TaskStoredMetadata>(TASK_ID)).toBeUndefined();
+
+        await cardStorage.getCardMetadata<TaskStoredMetadata>(TASK_ID);
+
+        expect(cardStorage.peekCardMetadata<TaskStoredMetadata>(TASK_ID)).toEqual(TASK_METADATA);
+        expect(storageHandlerMock.getContentFromDirectoryComplexFolderPath).toHaveBeenCalledTimes(1);
+    });
+
+    it('should hit storage again after the metadata cache is cleared', async () => {
+        storageHandlerMock.getContentFromDirectoryComplexFolderPath.mockResolvedValue(
+            JSON.stringify(TASK_METADATA)
+        );
+
+        await cardStorage.getCardMetadata<TaskStoredMetadata>(TASK_ID);
+        cardStorage.clearCardMetadataCache();
+        const result = await cardStorage.getCardMetadata<TaskStoredMetadata>(TASK_ID);
+
+        expect(result).toEqual(TASK_METADATA);
+        expect(storageHandlerMock.getContentFromDirectoryComplexFolderPath).toHaveBeenCalledTimes(2);
+    });
+
+    it('should prefetch metadata without exceeding the concurrency cap', async () => {
+        const cardIds = ['task-1', 'task-2', 'task-3', 'task-4', 'task-5', 'task-6'];
+        let inFlightReads = 0;
+        let maximumInFlightReads = 0;
+
+        storageHandlerMock.getContentFromDirectoryComplexFolderPath.mockImplementation(async () => {
+            inFlightReads++;
+            maximumInFlightReads = Math.max(maximumInFlightReads, inFlightReads);
+            await new Promise(resolve => setTimeout(resolve, 20));
+            inFlightReads--;
+            return JSON.stringify(TASK_METADATA);
+        });
+
+        await cardStorage.prefetchCardMetadata(cardIds, 2);
+
+        expect(maximumInFlightReads).toBeLessThanOrEqual(2);
+        expect(storageHandlerMock.getContentFromDirectoryComplexFolderPath).toHaveBeenCalledTimes(cardIds.length);
+    });
 });

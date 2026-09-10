@@ -113,6 +113,36 @@ export class CardStorage implements ICardStorage {
         return await this.getCardMetadata<TaskStoredMetadata>(taskId);
     }
 
+    public peekCardMetadata<T extends CardStoredMetadata>(cardId: Id): T | undefined {
+        if (cardId in this.cache) {
+            return this.cache[cardId] as T;
+        }
+
+        return undefined;
+    }
+
+    public clearCardMetadataCache() {
+        for (const cachedCardId of Object.keys(this.cache)) {
+            delete this.cache[cachedCardId];
+        }
+    }
+
+    public async prefetchCardMetadata(cardIds: Id[], concurrency = 4): Promise<void> {
+        const uniqueCardIds = [...new Set(cardIds)];
+        let nextCardIndex = 0;
+
+        const loadNextCard = async () => {
+            while (nextCardIndex < uniqueCardIds.length) {
+                const currentCardIndex = nextCardIndex;
+                nextCardIndex++;
+                await this.getCardMetadata(uniqueCardIds[currentCardIndex]);
+            }
+        };
+
+        const workerCount = Math.min(concurrency, uniqueCardIds.length);
+        await Promise.all(Array.from({ length: workerCount }, () => loadNextCard()));
+    }
+
     public async saveCardContent(cardId: Id, contentWithoutProperties: string, cardStoredMetadata: CardStoredMetadata) {
         const contentMdFile = await this.getCardContent(cardId);
         contentMdFile.setJustMarkdownContent(contentWithoutProperties);

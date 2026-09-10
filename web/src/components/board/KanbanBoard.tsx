@@ -89,12 +89,21 @@ function KanbanBoard() {
     );
 
     const loadBoard = useCallback(async (disableCache: boolean = false) => {
+        if (disableCache) {
+            taskStorage.clearCardMetadataCache();
+        }
+
         const dataContainer = await boardStorage.getKanbanState(disableCache);
 
         if (dataContainer == undefined) {
             console.warn("Could not load board. Filesystem possibly not ready yet");
             return;
         }
+
+        await taskStorage.prefetchCardMetadata([
+            ...dataContainer.rows.map(row => row.id),
+            ...dataContainer.tasks.map(task => task.id)
+        ]);
 
         setTasks([...dataContainer.tasks]);
         setRows([...dataContainer.rows]);
@@ -270,7 +279,11 @@ function KanbanBoard() {
             </nav>
 
             <div className="flex-grow overflow-auto scrollbar-thin">
-                {!showArchive ? <DndContext
+                {!dataLoaded ?
+                    <div className="flex items-center justify-center h-[50vh] text-gray-500 text-lg text-center">
+                        Loading board…
+                    </div>
+                : !showArchive ? <DndContext
                     sensors={sensors}
                     onDragStart={onDragStart}
                     onDragEnd={onDragEnd}

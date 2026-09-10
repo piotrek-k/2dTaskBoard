@@ -14,7 +14,21 @@ import { FocusRequest } from '../../hooks/useBoardFocusManager';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { RowMetadataViewModel } from '../../dataTypes/CardMetadata';
 import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
+import taskStorage from '../../services/CardStorage';
 import ConfirmationDialogContext, { ConfirmationDialogContextProps } from '../../context/ConfirmationDialogContext';
+
+function peekRowViewModel(row: RowInStorage): RowViewModel | null {
+    const cachedMetadata = taskStorage.peekCardMetadata(row.id);
+
+    if (!cachedMetadata) {
+        return null;
+    }
+
+    return {
+        id: row.id,
+        title: cachedMetadata.title
+    };
+}
 
 interface Props {
     row: RowInStorage;
@@ -36,7 +50,7 @@ function RowContainer({ row, columns, createTask, removeRow, openCardDetails, re
 
     const elementRef = useRef<HTMLDivElement>(null);
 
-    const [rowViewModel, setRowViewModel] = useState<RowViewModel | null>(null);
+    const [rowViewModel, setRowViewModel] = useState<RowViewModel | null>(() => peekRowViewModel(row));
 
     const { setModalOpen, setModalContent } = useContext(ModalContext) as ModalContextProps;
     const { setConfirmationDialogOpen, setSettings } = useContext(ConfirmationDialogContext) as ConfirmationDialogContextProps;

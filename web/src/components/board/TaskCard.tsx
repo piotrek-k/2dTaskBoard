@@ -3,8 +3,24 @@ import { Id, TaskInStorage } from '../../types';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useHotkeys } from 'react-hotkeys-hook';
-import { TaskMetadataViewModel } from '../../dataTypes/CardMetadata';
+import { MetadataType, TaskMetadataViewModel, TaskStoredMetadata } from '../../dataTypes/CardMetadata';
 import cardMetadataViewModelsBuilder from '../../viewModelBuilders/CardMetadataViewModels';
+import taskStorage from '../../services/CardStorage';
+
+function peekTaskViewModel(task: TaskInStorage): TaskMetadataViewModel | null {
+    const cachedMetadata = taskStorage.peekCardMetadata<TaskStoredMetadata>(task.id);
+
+    if (!cachedMetadata) {
+        return null;
+    }
+
+    return {
+        ...cachedMetadata,
+        type: MetadataType.Task,
+        columnId: task.columnId,
+        rowId: task.rowId
+    };
+}
 
 interface Props {
     task: TaskInStorage;
@@ -19,7 +35,7 @@ interface Props {
 function TaskCard({ task, shouldBeFocused, removeFocusRequest, moveTaskToNextColumn, openCardDetails }: Props) {
 
 
-    const [taskViewModel, setTaskViewModel] = useState<TaskMetadataViewModel | null>(null);
+    const [taskViewModel, setTaskViewModel] = useState<TaskMetadataViewModel | null>(() => peekTaskViewModel(task));
 
     useEffect(() => {
         const fetchTaskMetadata = async () => {

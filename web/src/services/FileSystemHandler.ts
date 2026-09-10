@@ -110,8 +110,10 @@ export class FileSystemHandler implements IStorageHandler {
 
         const db = await this.getDbInstance();
 
+        let selectedDirectoryHandle: FileSystemDirectoryHandle;
+
         try {
-            this.replaceRootDirectoryHandle(await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle);
+            selectedDirectoryHandle = await (window as any).showDirectoryPicker() as FileSystemDirectoryHandle;
         } catch (error) {
             this.replaceRootDirectoryHandle(undefined);
             this.isHandleActive = false;
@@ -121,14 +123,16 @@ export class FileSystemHandler implements IStorageHandler {
             return null;
         }
 
-        const stateOfHandle = await this.verifyExistingHandle(this.directoryHandle);
+        this.replaceRootDirectoryHandle(selectedDirectoryHandle);
+
+        const stateOfHandle = await this.verifyExistingHandle(selectedDirectoryHandle);
 
         if (stateOfHandle) {
-            await db.put('handles', this.directoryHandle, 'directoryHandle');
+            await db.put('handles', selectedDirectoryHandle, 'directoryHandle');
 
             this.registerPossibleSourceChange(true);
 
-            return this.directoryHandle;
+            return selectedDirectoryHandle;
         }
 
         throw new Error("No valid directory handle selected");
