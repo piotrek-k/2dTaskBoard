@@ -507,14 +507,14 @@ function KanbanBoard() {
         setRows(newRows);
     }
 
-    function archiveRow(rowId: Id) {
-        archiveStorage.addToArchive(
+    async function archiveRow(rowId: Id) {
+        await archiveStorage.addToArchive(
             archiveStorage.createArchiveRow(
                 rows.find(row => row.id === rowId) as RowInStorage,
                 tasks.filter(task => task.rowId === rowId),
                 columns
             )
-        )
+        );
 
         setRows(rows => {
             return rows.filter(row => {

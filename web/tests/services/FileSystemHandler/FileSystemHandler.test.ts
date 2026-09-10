@@ -63,9 +63,20 @@ describe('FileSystemHandler directory handle cache', () => {
         await fileSystemHandler.getContentFromDirectory('metadata.md', ['tasks', 'task-2']);
 
         expect(rootDirectory.getDirectoryHandle).toHaveBeenCalledTimes(1);
-        expect(rootDirectory.getDirectoryHandle).toHaveBeenCalledWith('tasks', { create: true });
+        expect(rootDirectory.getDirectoryHandle).toHaveBeenCalledWith('tasks', { create: false });
         expect(tasksDirectory.getDirectoryHandle).toHaveBeenCalledTimes(2);
-        expect(tasksDirectory.getDirectoryHandle).toHaveBeenCalledWith('task-1', { create: true });
-        expect(tasksDirectory.getDirectoryHandle).toHaveBeenCalledWith('task-2', { create: true });
+        expect(tasksDirectory.getDirectoryHandle).toHaveBeenCalledWith('task-1', { create: false });
+        expect(tasksDirectory.getDirectoryHandle).toHaveBeenCalledWith('task-2', { create: false });
+    });
+
+    it('should not create a missing file when reading content', async () => {
+        const firstTaskDirectory = tasksDirectory.childDirectories['task-1'];
+
+        await expect(
+            fileSystemHandler.getContentFromDirectory('missing.md', ['tasks', 'task-1'])
+        ).rejects.toThrow('File not found: missing.md');
+
+        expect(firstTaskDirectory.getFileHandle).toHaveBeenCalledWith('missing.md', { create: false });
+        expect(firstTaskDirectory.childFiles['missing.md']).toBeUndefined();
     });
 });

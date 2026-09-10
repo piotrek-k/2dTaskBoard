@@ -24,10 +24,12 @@ Each test calls `seedBoard(page, data)` from `e2e/helpers/seedOpfs.ts` **before*
 
 ## Critical: Two Files Must Be Seeded Per Row/Task
 
-The UI title displayed in `RowContainer` and `TaskCard` comes from `tasks/{id}/metadata.md`, **not** from `board.json`. If you seed only `board.json`, the board will render with empty/fallback titles. Always seed both:
+The UI title displayed in `RowContainer` and `TaskCard` comes from `tasks/{id}/metadata.md`, **not** from `board.json`. If you seed only `board.json`, the board will render with empty/fallback titles. Always seed both unless the test is specifically about missing metadata:
 
 - `board/board.json` — structure (IDs, positions, column assignments)
 - `tasks/{id}/metadata.md` — display title for each row and task
+
+Set `omitMetadata: true` on a seeded row or task to skip writing `metadata.md` (used to assert fallback titles and that reads do not create the file).
 
 See the Data Storage Architecture section in `project-conventions.instructions.md` for the full storage layout.
 

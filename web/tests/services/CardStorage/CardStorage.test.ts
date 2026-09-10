@@ -61,11 +61,22 @@ describe('CardStorage', () => {
 
     it('should return undefined when metadata.md is empty', async () => {
         storageHandlerMock.getContentFromDirectoryComplexFolderPath.mockResolvedValue('');
-        storageHandlerMock.getContentFromDirectory.mockResolvedValue('');
 
         const result = await cardStorage.getCardMetadata<TaskStoredMetadata>(TASK_ID);
 
         expect(result).toBeUndefined();
+        expect(storageHandlerMock.getContentFromDirectory).not.toHaveBeenCalled();
+    });
+
+    it('should return undefined when metadata.md cannot be found', async () => {
+        storageHandlerMock.getContentFromDirectoryComplexFolderPath.mockRejectedValue(
+            new Error('Directory not found')
+        );
+
+        const result = await cardStorage.getCardMetadata<TaskStoredMetadata>(TASK_ID);
+
+        expect(result).toBeUndefined();
+        expect(storageHandlerMock.getContentFromDirectory).not.toHaveBeenCalled();
     });
 
     it('should clear cached metadata when saving so the next read hits storage', async () => {

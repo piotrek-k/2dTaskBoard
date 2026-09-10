@@ -187,13 +187,13 @@ export class FileSystemHandler implements IStorageHandler {
             throw new Error("Directory handle not set up");
         }
 
-        const targetDir = await this.followDirectoriesComplex(folderNames);
+        const targetDir = await this.followDirectoriesComplex(folderNames, false);
 
         if (targetDir == null) {
             throw new Error("Directory not found");
         }
 
-        const fileHandle = await targetDir.getFileHandle(dataContainerName, { create: true });
+        const fileHandle = await targetDir.getFileHandle(dataContainerName, { create: false });
 
         const file = await fileHandle.getFile();
         return await file.text();

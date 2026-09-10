@@ -81,6 +81,20 @@ describe('CardMetadataViewModels', () => {
         });
     });
 
+    it('should return a fallback task view model when task metadata is missing', async () => {
+        cardStorageMock.getTaskMetadata.mockResolvedValue(undefined);
+
+        const result = await viewModels.getTaskMetadataViewModel(TASK_ID);
+
+        expect(result).toEqual({
+            id: TASK_ID,
+            title: 'Task ' + TASK_ID,
+            columnId: undefined,
+            rowId: undefined,
+            type: MetadataType.Task
+        });
+    });
+
     it('should attach column and row ids from board state to a task', async () => {
         cardStorageMock.getTaskMetadata.mockResolvedValue({ ...TASK_METADATA });
         vi.spyOn(boardStorage, 'getKanbanState').mockResolvedValue(BOARD_STATE);

@@ -36,11 +36,6 @@ export class CardStorage implements ICardStorage {
             );
         } catch (e) {
             console.log("couldn't find content for ", cardId);
-
-            fileContents = await this.storageHandler.getContentFromDirectory(
-                'content.md',
-                [TASKS_DIRECTORY_NAME, `${cardId}`]
-            );
         }
 
         return new ContentMdFile(fileContents);
@@ -87,14 +82,7 @@ export class CardStorage implements ICardStorage {
             console.log("couldn't find metadata for ", cardId);
         }
 
-        if (content.length == 0 || content == undefined) {
-            content = await this.storageHandler.getContentFromDirectory(
-                'metadata.md',
-                [TASKS_DIRECTORY_NAME, `${cardId}`]
-            );
-        }
-
-        if (content.length === 0) {
+        if (content.length === 0 || content == undefined) {
             return undefined;
         }
 

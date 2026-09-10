@@ -49,10 +49,6 @@ export class CardMetadataViewModels {
     public async getTaskMetadataViewModel(taskId: Id): Promise<TaskMetadataViewModel | undefined> {
         const metadata = await this.cardStorage.getTaskMetadata(taskId);
 
-        if (metadata?.type != MetadataType.Task) {
-            throw new Error('Wrong type');
-        }
-
         if (!metadata) {
             return {
                 id: taskId,
@@ -61,6 +57,10 @@ export class CardMetadataViewModels {
                 rowId: undefined,
                 type: MetadataType.Task
             };
+        }
+
+        if (metadata.type != MetadataType.Task) {
+            throw new Error('Wrong type');
         }
 
         const boardState = await boardStorage.getKanbanState();
